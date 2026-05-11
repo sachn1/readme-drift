@@ -30,7 +30,7 @@ def _make_finding(
         line_number=line,
         line_text=f"Use `{symbol}` to do things.",
         matched_text=f"`{symbol}`",
-        readme_paths=[Path("README.md")],
+        readme_path=Path("README.md"),
     )
     return StalenessFinding(change=change, readme_matches=[match])
 
@@ -54,12 +54,6 @@ def test_skipped_result():
     result = CheckResult(skipped=True, skip_reason="no Python files changed")
     assert result.passed
     assert "skipped" in format_report(result)
-
-
-def test_readme_updated():
-    result = CheckResult(readme_was_updated=True, readme_paths=[Path("README.md")])
-    assert result.passed
-    assert "✅" in format_report(result)
 
 
 def test_report_shows_line_number():

@@ -45,9 +45,6 @@ def run_check(
             readme_paths=readme_paths,
         )
 
-    if diff.readme_changed:
-        return CheckResult(readme_was_updated=True, readme_paths=readme_paths)
-
     # Collect all symbol changes across all changed Python files
     all_changes: list[SymbolChange] = []
     for py_file in diff.changed_py_files:

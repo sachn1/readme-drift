@@ -26,6 +26,8 @@ python = ">=3.11"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.0"
+ruff = ">=0.4"
+commitizen = ">=3.0"
 
 [tool.poetry.scripts]
 readme-check = "readme_check.cli:main"
@@ -36,6 +38,13 @@ Issues = "https://github.com/sachn1/readme-check/issues"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version_provider = "poetry"
+version_scheme = "semver2"
+tag_format = "v$version"
+update_changelog_on_bump = false
 
 [tool.ruff]
 line-length = 88

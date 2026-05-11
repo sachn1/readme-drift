@@ -10,9 +10,6 @@ def format_report(result: CheckResult) -> str:
     if result.skipped:
         return f"readme-check: skipped ({result.skip_reason})"
 
-    if result.readme_was_updated:
-        return "readme-check: ✅ README was updated alongside code changes."
-
     if not result.findings:
         return "readme-check: ✅ No README staleness detected."
 

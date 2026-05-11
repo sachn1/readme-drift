@@ -1,0 +1,62 @@
+name: Bump Version
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+
+jobs:
+  bump:
+    name: Bump Version
+    runs-on: ubuntu-latest
+    # Skip the bump commit itself to avoid an infinite trigger loop
+    if: "!startsWith(github.event.head_commit.message, 'bump:')"
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry and Commitizen
+        run: pip install poetry commitizen
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # On develop: bump to the next RC (e.g. 0.1.0 -> 0.2.0-rc.1, then 0.2.0-rc.2, ...)
+      # Exit code 21 means "no conventional commits found - nothing to bump"; treat as success.
+      - name: Bump RC version
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          EXIT=0
+          cz bump --prerelease rc --yes || EXIT=$?
+          if [ "$EXIT" -ne 0 ] && [ "$EXIT" -ne 21 ]; then
+            exit $EXIT
+          fi
+
+      # On master: strip -rc.N from the current version (e.g. 0.2.0-rc.3 -> 0.2.0).
+      # Skips silently if the current version is already a release (no RC present).
+      - name: Promote RC to release
+        if: github.ref == 'refs/heads/master'
+        run: |
+          CURRENT=$(poetry version -s)
+          if [[ "$CURRENT" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-rc\.[0-9]+$ ]]; then
+            RELEASE="${BASH_REMATCH[1]}"
+            poetry version "$RELEASE"
+            git add pyproject.toml
+            git commit -m "bump: version $CURRENT -> $RELEASE"
+            git tag "v$RELEASE"
+          fi
+
+      - name: Push
+        run: git push --follow-tags

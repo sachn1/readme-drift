@@ -5,8 +5,8 @@ from pathlib import Path
 
 from .models import GitDiffResult
 
-_README_EXTENSION_CANDIDATES = [".md", ".rst", ".txt", ""]
-_readme_names = {f"readme{ext}" for ext in _README_EXTENSION_CANDIDATES}
+_readme_extension_candidates = [".md", ".rst", ".txt", ""]
+_README_NAMES = {f"readme{ext}" for ext in _readme_extension_candidates}
 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> str:
@@ -34,6 +34,7 @@ def _read_new_content(
 ) -> str:
     if staged:
         try:
+            # 0 means "staged version" in git show syntax
             return _run(["git", "show", f":0:{py_file}"], cwd=root)
         except RuntimeError:
             return ""
@@ -87,11 +88,9 @@ def get_diff(
 
     changed_files_output = _run(diff_args, cwd=root)
     if not changed_files_output:
-        return GitDiffResult(changed_py_files=[], readme_changed=False)
+        return GitDiffResult(changed_py_files=[])
 
     changed_files = [Path(f) for f in changed_files_output.splitlines()]
-
-    readme_changed = any(f.name.lower() in _readme_names for f in changed_files)
 
     changed_py_files = [f for f in changed_files if f.suffix == ".py"]
 
@@ -109,7 +108,6 @@ def get_diff(
 
     return GitDiffResult(
         changed_py_files=changed_py_files,
-        readme_changed=readme_changed,
         old_file_contents=old_contents,
         new_file_contents=new_contents,
     )
@@ -125,6 +123,6 @@ def find_readmes(repo_root: Path) -> list[Path]:
             if path.is_dir():
                 if path.name != ".git":
                     queue.append(path)
-            elif path.name.lower() in _readme_names:
+            elif path.name.lower() in _README_NAMES:
                 found.append(path)
     return found

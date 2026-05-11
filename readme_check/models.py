@@ -19,7 +19,6 @@ class GitDiffResult:
     """Files that changed in a git diff, plus their old and new source contents."""
 
     changed_py_files: list[Path]
-    readme_changed: bool
     old_file_contents: dict[str, str] = field(default_factory=dict)
     new_file_contents: dict[str, str] = field(default_factory=dict)
 
@@ -88,14 +87,13 @@ class CheckResult:
     """The overall result of a readme-check run."""
 
     findings: list[StalenessFinding] = field(default_factory=list)
-    readme_was_updated: bool = False
     readme_paths: list[Path] = field(default_factory=list)
     skipped: bool = False
     skip_reason: str = ""
 
     @property
     def passed(self) -> bool:
-        return self.skipped or self.readme_was_updated or len(self.findings) == 0
+        return self.skipped or len(self.findings) == 0
 
     @property
     def failed(self) -> bool:

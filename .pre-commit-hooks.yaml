@@ -1,0 +1,6 @@
+- id: readme-check
+  name: Check README for stale references
+  language: python
+  entry: readme-check --staged
+  pass_filenames: false
+  types: [python]

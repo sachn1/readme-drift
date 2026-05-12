@@ -33,15 +33,22 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # On develop: bump to the next RC (e.g. 0.1.0 -> 0.2.0-rc.1, then 0.2.0-rc.2, ...)
-      # Exit code 21 means "no conventional commits found - nothing to bump"; treat as success.
+      # On develop: bump to the next RC (e.g. 0.1.0 -> 0.2.0-rc.0, then 0.2.0-rc.1, ...)
+      # cz bump updates pyproject.toml and creates a commit, but tag creation can be
+      # unreliable with version_provider=poetry in CI -- so we create the tag explicitly.
+      # Exit code 21 means "no conventional commits found - nothing to bump".
       - name: Bump RC version
         if: github.ref == 'refs/heads/develop'
         run: |
+          OLD_VERSION=$(poetry version -s)
           EXIT=0
           cz bump --prerelease rc --yes || EXIT=$?
           if [ "$EXIT" -ne 0 ] && [ "$EXIT" -ne 21 ]; then
             exit $EXIT
+          fi
+          NEW_VERSION=$(poetry version -s)
+          if [ "$NEW_VERSION" != "$OLD_VERSION" ]; then
+            git tag "v$NEW_VERSION"
           fi
 
       # On master: strip -rc.N from the current version (e.g. 0.2.0-rc.3 -> 0.2.0).

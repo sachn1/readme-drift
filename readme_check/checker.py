@@ -5,6 +5,7 @@ from pathlib import Path
 from .ast_diff import diff_apis
 from .git import find_readmes, get_diff, get_repo_root
 from .models import (
+    ChangeType,
     CheckResult,
     GitDiffResult,
     ReadmeMatch,
@@ -96,4 +97,6 @@ def _symbols_from_changes(changes: list[SymbolChange]) -> list[str]:
 
 def _primary_name(change: SymbolChange) -> str:
     """The symbol name most likely to appear in the README for this change."""
+    if change.change_type == ChangeType.RENAMED:
+        return change.old_signature or change.name
     return change.name

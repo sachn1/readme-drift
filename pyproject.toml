@@ -49,3 +49,4 @@ update_changelog_on_bump = false
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+exclude = ["docs", "*.md"]

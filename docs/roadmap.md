@@ -62,3 +62,6 @@ README is the most visible documentation file, but several others frequently ref
 - `--fix` flag to open the README at the stale line in `$EDITOR`
 - JSON output mode for integration with other tools
 - VS Code extension
+- **Bidirectional README consistency check** — currently the tool is code-change-driven: it only runs when Python files change. Two possible approaches for the inverse direction:
+  1. Keep the existing behaviour and add nothing (README changes that introduce wrong names are out of scope)
+  2. When the README changes, extract all backtick/word-boundary symbol-like tokens from it and verify each one exists as an exact match (not a substring) in the current public API — flagging references that don't correspond to any known symbol

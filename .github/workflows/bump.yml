@@ -48,7 +48,7 @@ jobs:
           fi
           NEW_VERSION=$(poetry version -s)
           if [ "$NEW_VERSION" != "$OLD_VERSION" ]; then
-            git tag "v$NEW_VERSION"
+            git tag -a "v$NEW_VERSION" -m "version v$NEW_VERSION"
           fi
 
       # On master: strip -rc.N from the current version (e.g. 0.2.0-rc.3 -> 0.2.0).
@@ -62,7 +62,7 @@ jobs:
             poetry version "$RELEASE"
             git add pyproject.toml
             git commit -m "bump: version $CURRENT -> $RELEASE"
-            git tag "v$RELEASE"
+            git tag -a "v$RELEASE" -m "version v$RELEASE"
           fi
 
       - name: Push

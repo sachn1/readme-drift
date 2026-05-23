@@ -104,3 +104,51 @@ def test_private_methods_ignored():
     new = "class A:\n    def _hidden(self, extra): pass\n"
     changes = diff_apis(old, new)
     assert changes == []
+
+
+def test_class_methods_not_in_functions():
+    # Regression: ast.walk picked up methods as top-level functions, causing
+    # every method change to be reported twice (once as ClassName.method, once
+    # as bare method).
+    api = extract_public_api(OLD_SOURCE)
+    assert "connect" not in api.functions
+    assert "disconnect" not in api.functions
+    assert "helper" in api.functions
+
+
+def test_rename_detection_no_double_match():
+    # Regression: two removed functions with identical params could both be
+    # matched to the same added function, producing two RENAMED findings.
+    old = "def foo(x, y): pass\ndef baz(x, y): pass\n"
+    new = "def bar(x, y): pass\n"
+    changes = diff_apis(old, new)
+    renamed = [c for c in changes if c.change_type == ChangeType.RENAMED]
+    assert len(renamed) == 1, "only one function was added, so only one rename is possible"
+    removed = [c for c in changes if c.change_type == ChangeType.REMOVED]
+    assert len(removed) == 1, "the unmatched removed function must still be reported"
+
+
+def test_keyword_only_arg_change_detected():
+    # def func(a, b=1)  →  def func(a, *, b=1): b becomes keyword-only
+    old = "def func(a, b=1): pass\n"
+    new = "def func(a, *, b=1): pass\n"
+    changes = diff_apis(old, new)
+    assert any(c.change_type == ChangeType.SIGNATURE_CHANGED for c in changes)
+
+
+def test_positional_only_arg_in_signature():
+    source = "def func(a, b, /, c): pass\n"
+    api = extract_public_api(source)
+    sig = api.functions["func"]
+    assert "/" in sig
+    assert "a" in sig
+    assert "c" in sig
+
+
+def test_keyword_only_arg_in_signature():
+    source = "def func(a, *, b, c=1): pass\n"
+    api = extract_public_api(source)
+    sig = api.functions["func"]
+    assert "*" in sig
+    assert "b" in sig
+    assert "c=1" in sig

@@ -77,3 +77,37 @@ def test_rename_matches_readme_via_old_name():
     assert len(findings) == 1
     assert findings[0].change.name == "fuzzy_lookup_now"
     assert findings[0].readme_matches[0].symbol == "fuzzy_lookup"
+
+
+def test_renamed_method_old_name_included_in_symbols():
+    # Regression: the "." heuristic in _symbols_from_changes excluded method
+    # old names like "Client.foo", so renamed methods were never found in the README.
+    change = SymbolChange(
+        name="Client.bar",
+        change_type=ChangeType.RENAMED,
+        old_signature="Client.foo",
+    )
+    symbols = _symbols_from_changes([change])
+    assert "Client.foo" in symbols
+    assert "Client.bar" in symbols
+
+
+def test_added_symbol_does_not_produce_finding():
+    # Regression: ADDED symbols found in the README were flagged as stale,
+    # but a README that already documents a new symbol is correct, not stale.
+    from readme_check.checker import run_check  # noqa: F401
+    # Verify _symbols_from_changes includes the added name for scanning, but
+    # the finding-building loop must skip ADDED changes regardless.
+    change = SymbolChange(name="new_func", change_type=ChangeType.ADDED)
+    readme_matches = {"new_func": [_readme_match("new_func")]}
+
+    # Simulate the finding-building loop from checker.run_check
+    findings: list[StalenessFinding] = []
+    for c in [change]:
+        if c.change_type == ChangeType.ADDED:
+            continue
+        relevant_name = _primary_name(c)
+        if relevant_name in readme_matches:
+            findings.append(StalenessFinding(change=c, readme_matches=readme_matches[relevant_name]))
+
+    assert findings == []

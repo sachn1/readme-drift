@@ -9,8 +9,16 @@ _readme_extension_candidates = [".md", ".markdown", ".rst", ".txt", ""]
 _README_NAMES = {f"readme{ext}" for ext in _readme_extension_candidates}
 
 _SKIP_DIRS = {
-    ".git", "node_modules", "venv", ".venv", ".tox", "__pycache__",
-    ".pytest_cache", "dist", "build", ".mypy_cache",
+    ".git",
+    "node_modules",
+    "venv",
+    ".venv",
+    ".tox",
+    "__pycache__",
+    ".pytest_cache",
+    "dist",
+    "build",
+    ".mypy_cache",
 }
 
 

@@ -96,6 +96,7 @@ def test_added_symbol_does_not_produce_finding():
     # Regression: ADDED symbols found in the README were flagged as stale,
     # but a README that already documents a new symbol is correct, not stale.
     from readme_check.checker import run_check  # noqa: F401
+
     # Verify _symbols_from_changes includes the added name for scanning, but
     # the finding-building loop must skip ADDED changes regardless.
     change = SymbolChange(name="new_func", change_type=ChangeType.ADDED)
@@ -108,6 +109,8 @@ def test_added_symbol_does_not_produce_finding():
             continue
         relevant_name = _primary_name(c)
         if relevant_name in readme_matches:
-            findings.append(StalenessFinding(change=c, readme_matches=readme_matches[relevant_name]))
+            findings.append(
+                StalenessFinding(change=c, readme_matches=readme_matches[relevant_name])
+            )
 
     assert findings == []

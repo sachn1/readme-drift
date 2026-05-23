@@ -123,7 +123,9 @@ def test_rename_detection_no_double_match():
     new = "def bar(x, y): pass\n"
     changes = diff_apis(old, new)
     renamed = [c for c in changes if c.change_type == ChangeType.RENAMED]
-    assert len(renamed) == 1, "only one function was added, so only one rename is possible"
+    assert len(renamed) == 1, (
+        "only one function was added, so only one rename is possible"
+    )
     removed = [c for c in changes if c.change_type == ChangeType.REMOVED]
     assert len(removed) == 1, "the unmatched removed function must still be reported"
 

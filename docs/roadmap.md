@@ -53,7 +53,9 @@ README is the most visible documentation file, but several others frequently ref
 - Configuration file (`[tool.readme-check]` in `pyproject.toml` or a standalone `readme-check.toml`) for project-level settings
 - Symbol allowlist — symbols to always flag regardless of README mention
 - Symbol denylist — symbols to never flag (e.g. internal ones that leak into public API by naming convention)
-- Path exclusions — skip checking specific files or directories
+- Source path exclusions — skip diffing specific Python files or directories
+- README path configuration — explicit include list (`readme_paths`) and additional exclude dirs, so pre-commit users can pin exactly which README files are scanned instead of relying on recursive discovery
+- `SymbolChange` model cleanup — `old_signature` currently stores the old *name* for renames and the old *signature string* for signature changes; introduce a dedicated `old_name` field for renames to make the model unambiguous
 
 ---
 

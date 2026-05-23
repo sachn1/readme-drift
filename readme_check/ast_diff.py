@@ -10,34 +10,69 @@ def _is_public(name: str) -> bool:
     return not name.startswith("_")
 
 
+def _positional_args_with_defaults(
+    arg_list: list[ast.arg],
+    offset: int,
+    num_all: int,
+    defaults: list[ast.expr],
+) -> list[str]:
+    """Format a slice of positional args, resolving the shared defaults array."""
+    num_defaults = len(defaults)
+    result = []
+    for i, arg in enumerate(arg_list):
+        if arg.arg in ("self", "cls"):
+            continue
+        default_index = (offset + i) - (num_all - num_defaults)
+        if default_index >= 0:
+            result.append(f"{arg.arg}={ast.unparse(defaults[default_index])}")
+        else:
+            result.append(arg.arg)
+    return result
+
+
+def _kwonly_args(
+    kwonlyargs: list[ast.arg],
+    kw_defaults: list[ast.expr | None],
+) -> list[str]:
+    """Format keyword-only args with their optional defaults."""
+    result = []
+    for arg, default in zip(kwonlyargs, kw_defaults):
+        if default is not None:
+            result.append(f"{arg.arg}={ast.unparse(default)}")
+        else:
+            result.append(arg.arg)
+    return result
+
+
 def _format_signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
     """Format a function/method signature as a readable string."""
     assert isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-    args = []
     func_args = node.args
+    num_all = len(func_args.posonlyargs) + len(func_args.args)
 
-    # Positional args
-    num_defaults = len(func_args.defaults)
-    num_args = len(func_args.args)
-    for i, arg in enumerate(func_args.args):
-        if arg.arg == "self" or arg.arg == "cls":
-            continue
-        default_index = i - (num_args - num_defaults)
-        if default_index >= 0:
-            default = func_args.defaults[default_index]
-            args.append(f"{arg.arg}={ast.unparse(default)}")
-        else:
-            args.append(arg.arg)
+    posonly = _positional_args_with_defaults(
+        func_args.posonlyargs, 0, num_all, func_args.defaults
+    )
+    regular = _positional_args_with_defaults(
+        func_args.args, len(func_args.posonlyargs), num_all, func_args.defaults
+    )
 
-    # *args
+    parts = [*posonly]
+    if posonly:
+        parts.append("/")
+    parts.extend(regular)
+
     if func_args.vararg:
-        args.append(f"*{func_args.vararg.arg}")
+        parts.append(f"*{func_args.vararg.arg}")
+    elif func_args.kwonlyargs:
+        parts.append("*")
 
-    # **kwargs
+    parts.extend(_kwonly_args(func_args.kwonlyargs, func_args.kw_defaults))
+
     if func_args.kwarg:
-        args.append(f"**{func_args.kwarg.arg}")
+        parts.append(f"**{func_args.kwarg.arg}")
 
-    return f"{node.name}({', '.join(args)})"
+    return f"{node.name}({', '.join(parts)})"
 
 
 def extract_public_api(source: str) -> PublicAPI:
@@ -63,7 +98,7 @@ def extract_public_api(source: str) -> PublicAPI:
 
     api = PublicAPI()
 
-    for node in ast.walk(tree):
+    for node in ast.iter_child_nodes(tree):
         if isinstance(node, ast.ClassDef) and _is_public(node.name):
             method_sigs: set[str] = set()
             for item in node.body:
@@ -164,6 +199,8 @@ def _diff_signatures(
 
     for r in removed:
         for a in added:
+            if a in matched_added:
+                continue
             old_sig = old[r]
             new_sig = new[a]
             # Same params, different name → likely rename

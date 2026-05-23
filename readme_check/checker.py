@@ -69,9 +69,12 @@ def run_check(
         ).items():
             all_readme_matches.setdefault(symbol, []).extend(matches)
 
-    # Build findings: only changes whose symbols appear in any README
+    # Build findings: only removals/renames/sig-changes whose symbols appear in any README.
+    # ADDED symbols are not stale — a README that already documents a new symbol is correct.
     findings: list[StalenessFinding] = []
     for change in all_changes:
+        if change.change_type == ChangeType.ADDED:
+            continue
         relevant_name = _primary_name(change)
         if relevant_name in all_readme_matches:
             findings.append(
@@ -89,8 +92,8 @@ def _symbols_from_changes(changes: list[SymbolChange]) -> list[str]:
     symbols: set[str] = set()
     for change in changes:
         symbols.add(change.name)
-        # For renames, also search for the old name
-        if change.old_signature and "." not in change.old_signature:
+        # For renames, also search for the old name (what the README still references)
+        if change.change_type == ChangeType.RENAMED and change.old_signature:
             symbols.add(change.old_signature)
     return list(symbols)
 

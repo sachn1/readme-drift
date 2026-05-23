@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from .ast_diff import diff_apis
+from .config_diff import diff_config
 from .git import find_readmes, get_diff, get_repo_root
 from .models import (
     ChangeType,
@@ -39,10 +40,10 @@ def run_check(
 
     diff: GitDiffResult = get_diff(base_ref=base_ref, repo_root=root, staged=staged)
 
-    if not diff.changed_py_files:
+    if not diff.changed_py_files and not diff.changed_config_files:
         return CheckResult(
             skipped=True,
-            skip_reason="no Python files changed",
+            skip_reason="no Python or config files changed",
             readme_paths=readme_paths,
         )
 
@@ -52,8 +53,14 @@ def run_check(
         key = str(py_file)
         old_source = diff.old_file_contents.get(key, "")
         new_source = diff.new_file_contents.get(key, "")
-        changes = diff_apis(old_source, new_source, file=key)
-        all_changes.extend(changes)
+        all_changes.extend(diff_apis(old_source, new_source, file=key))
+
+    # Collect key-path changes across all changed config files
+    for cfg_file in diff.changed_config_files:
+        key = str(cfg_file)
+        old_source = diff.old_file_contents.get(key, "")
+        new_source = diff.new_file_contents.get(key, "")
+        all_changes.extend(diff_config(old_source, new_source, file=key))
 
     if not all_changes:
         return CheckResult(readme_paths=readme_paths)

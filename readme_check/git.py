@@ -3,6 +3,7 @@
 import subprocess
 from pathlib import Path
 
+from .config_diff import CONFIG_SUFFIXES
 from .models import GitDiffResult
 
 _readme_extension_candidates = [".md", ".markdown", ".rst", ".txt", ""]
@@ -106,6 +107,9 @@ def get_diff(
     changed_files = [Path(f) for f in changed_files_output.splitlines()]
 
     changed_py_files = [f for f in changed_files if f.suffix == ".py"]
+    changed_config_files = [
+        f for f in changed_files if f.suffix.lower() in CONFIG_SUFFIXES
+    ]
 
     old_contents: dict[str, str] = {}
     new_contents: dict[str, str] = {}
@@ -113,14 +117,15 @@ def get_diff(
     # When diffing vs a ref, old is that ref; in staged mode, old is HEAD.
     old_ref = base_ref if not staged else "HEAD"
 
-    for py_file in changed_py_files:
-        new_contents[str(py_file)] = _read_new_content(
-            py_file, root, resolved_root, staged
+    for tracked_file in changed_py_files + changed_config_files:
+        new_contents[str(tracked_file)] = _read_new_content(
+            tracked_file, root, resolved_root, staged
         )
-        old_contents[str(py_file)] = _read_old_content(py_file, root, old_ref)
+        old_contents[str(tracked_file)] = _read_old_content(tracked_file, root, old_ref)
 
     return GitDiffResult(
         changed_py_files=changed_py_files,
+        changed_config_files=changed_config_files,
         old_file_contents=old_contents,
         new_file_contents=new_contents,
     )

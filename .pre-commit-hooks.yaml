@@ -3,4 +3,4 @@
   language: python
   entry: readme-check --staged
   pass_filenames: false
-  types: [python]
+  types_or: [python, yaml, json, toml]

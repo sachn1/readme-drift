@@ -19,7 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Quality Assurance",
 ]
-packages = [{ include = "readme_check" }]
+packages = [{ include = "readme_drift" }]
 
 [tool.poetry.dependencies]
 python = ">=3.11"
@@ -31,11 +31,11 @@ ruff = ">=0.4"
 commitizen = ">=3.0"
 
 [tool.poetry.scripts]
-readme-check = "readme_check.cli:main"
+readme-drift = "readme_drift.cli:main"
 
 [tool.poetry.urls]
-Homepage = "https://github.com/sachn1/readme-check"
-Issues = "https://github.com/sachn1/readme-check/issues"
+Homepage = "https://github.com/sachn1/readme-drift"
+Issues = "https://github.com/sachn1/readme-drift/issues"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

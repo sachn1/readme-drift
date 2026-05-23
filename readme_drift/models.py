@@ -1,4 +1,4 @@
-"""Shared data models for readme-check."""
+"""Shared data models for readme-drift."""
 
 from dataclasses import dataclass, field
 from enum import Enum
@@ -85,7 +85,7 @@ class StalenessFinding:
 
 @dataclass
 class CheckResult:
-    """The overall result of a readme-check run."""
+    """The overall result of a readme-drift run."""
 
     findings: list[StalenessFinding] = field(default_factory=list)
     readme_paths: list[Path] = field(default_factory=list)

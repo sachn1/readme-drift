@@ -31,7 +31,7 @@ Config file coverage and PyPI distribution.
 **PyPI release:**
 - `pyyaml` added as a runtime dependency (TOML and JSON use stdlib)
 - Automated publish to PyPI on version tag via trusted publishing (OIDC — no API token secret needed)
-- Package installable as `pip install readme-check`
+- Package installable as `pip install readme-drift`
 - Registerable as a pre-commit hooks repository
 
 **Deferred from v0.2.0 (added to later milestones):**
@@ -61,14 +61,14 @@ README is the most visible documentation file, but several others frequently ref
 - `SUPPORT.md` — support docs reference installation steps and CLI flags
 - `MIGRATION.md` — migration guides are the most likely to reference renamed or removed APIs directly
 - `docs/` folder — any Markdown files under a `docs/` directory
-- Configurable target list via `[tool.readme-check]` in `pyproject.toml`
+- Configurable target list via `[tool.readme-drift]` in `pyproject.toml`
 
 ---
 
 ## v1.2.0 — Configuration and fine-grained control
 
 **Planned:**
-- Configuration file (`[tool.readme-check]` in `pyproject.toml` or a standalone `readme-check.toml`) for project-level settings
+- Configuration file (`[tool.readme-drift]` in `pyproject.toml` or a standalone `readme-drift.toml`) for project-level settings
 - Symbol allowlist — symbols to always flag regardless of README mention
 - Symbol denylist — symbols to never flag (e.g. internal ones that leak into public API by naming convention)
 - Source path exclusions — skip diffing specific Python files or directories

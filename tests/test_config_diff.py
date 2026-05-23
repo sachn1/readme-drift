@@ -1,6 +1,6 @@
 """Tests for config_diff — JSON, TOML, and YAML key-path extraction and diffing."""
 
-from readme_check.config_diff import (
+from readme_drift.config_diff import (
     JsonExtractor,
     KeyExtractor,
     TomlExtractor,
@@ -9,7 +9,7 @@ from readme_check.config_diff import (
     _leaf,
     diff_config,
 )
-from readme_check.models import ChangeType
+from readme_drift.models import ChangeType
 
 
 # ── _flatten ─────────────────────────────────────────────────────────────────
@@ -108,9 +108,9 @@ def test_toml_invalid_returns_empty():
 
 
 def test_toml_extracts_scripts():
-    content = '[tool.poetry.scripts]\nreadme-check = "readme_check.cli:main"\n'
+    content = '[tool.poetry.scripts]\nreadme-drift = "readme_drift.cli:main"\n'
     result = TomlExtractor().extract(content)
-    assert "tool.poetry.scripts.readme-check" in result
+    assert "tool.poetry.scripts.readme-drift" in result
 
 
 # ── YamlExtractor ─────────────────────────────────────────────────────────────
@@ -211,8 +211,8 @@ def test_diff_leaf_deduplication():
 
 def test_diff_added_not_flagged_as_stale():
     # ADDED config keys should not produce staleness findings (mirrors Python behaviour).
-    from readme_check.checker import _primary_name, _symbols_from_changes
-    from readme_check.models import SymbolChange
+    from readme_drift.checker import _primary_name, _symbols_from_changes
+    from readme_drift.models import SymbolChange
 
     change = SymbolChange(name="new-script", change_type=ChangeType.ADDED)
     symbols = _symbols_from_changes([change])

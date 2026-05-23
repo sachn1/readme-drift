@@ -1,7 +1,7 @@
 """Tests for ast_diff module."""
 
-from readme_check.ast_diff import diff_apis, extract_public_api
-from readme_check.models import ChangeType
+from readme_drift.ast_diff import diff_apis, extract_public_api
+from readme_drift.models import ChangeType
 
 OLD_SOURCE = """
 class Client:

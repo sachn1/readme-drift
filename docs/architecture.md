@@ -1,6 +1,6 @@
 # Architecture
 
-`readme-check` detects stale README references after code changes. When a public symbol — a function, method, or class — is renamed, removed, or has its signature changed, or when a config file key is removed or renamed, the tool warns if that name is still referenced in a README, before the commit lands.
+`readme-drift` detects stale README references after code changes. When a public symbol — a function, method, or class — is renamed, removed, or has its signature changed, or when a config file key is removed or renamed, the tool warns if that name is still referenced in a README, before the commit lands.
 
 ---
 

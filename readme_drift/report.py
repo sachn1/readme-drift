@@ -8,13 +8,13 @@ def format_report(result: CheckResult) -> str:
     lines: list[str] = []
 
     if result.skipped:
-        return f"readme-check: skipped ({result.skip_reason})"
+        return f"readme-drift: skipped ({result.skip_reason})"
 
     if not result.findings:
-        return "readme-check: ✅ No README staleness detected."
+        return "readme-drift: ✅ No README staleness detected."
 
     readme_label = ", ".join(sorted({p.name for p in result.readme_paths})) or "README"
-    lines.append(f"readme-check: ❌ {readme_label} may be stale:\n")
+    lines.append(f"readme-drift: ❌ {readme_label} may be stale:\n")
 
     for finding in result.findings:
         change = finding.change

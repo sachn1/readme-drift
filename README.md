@@ -1,8 +1,8 @@
-# readme-check
+# readme-drift
 
 > Detect stale README references after code changes — for pre-commit and CI.
 
-When you rename a function, change a method signature, remove a class, or rename a key in a config file, `readme-check` warns you if those names are still referenced in your README — before the commit lands.
+When you rename a function, change a method signature, remove a class, or rename a key in a config file, `readme-drift` warns you if those names are still referenced in your README — before the commit lands.
 
 ---
 
@@ -37,10 +37,10 @@ Add to your `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
-  - repo: https://github.com/sachn1/readme-check
+  - repo: https://github.com/sachn1/readme-drift
     rev: v0.2.0
     hooks:
-      - id: readme-check
+      - id: readme-drift
 ```
 
 Then install the hook:
@@ -55,20 +55,20 @@ Every `git commit` that changes `.py`, `.yml`, `.yaml`, `.json`, or `.toml` file
 
 ```bash
 # Check staged changes (same as pre-commit)
-readme-check --staged
+readme-drift --staged
 
 # Check against a specific branch (for CI / PRs)
-readme-check --base-ref origin/main
+readme-drift --base-ref origin/main
 
 # Warn only — don't fail the build
-readme-check --base-ref origin/main --warn-only
+readme-drift --base-ref origin/main --warn-only
 ```
 
 ### In CI (GitHub Actions)
 
 ```yaml
 - name: Check README staleness
-  run: readme-check --base-ref origin/${{ github.base_ref }}
+  run: readme-drift --base-ref origin/${{ github.base_ref }}
 ```
 
 ---
@@ -76,7 +76,7 @@ readme-check --base-ref origin/main --warn-only
 ## Example output
 
 ```
-readme-check: ❌ README.md may be stale:
+readme-drift: ❌ README.md may be stale:
 
   • `Client.connect` signature changed: connect(host, port) → connect(url)
     in src/client.py

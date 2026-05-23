@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from readme_check.git import find_readmes
+from readme_drift.git import find_readmes
 
 
 @pytest.fixture

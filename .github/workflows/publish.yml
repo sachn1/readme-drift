@@ -12,7 +12,7 @@ jobs:
 
     # Trusted publishing — no PYPI_TOKEN secret required.
     # One-time setup: add this repo as a trusted publisher on pypi.org for
-    # the "readme-check" project, environment "pypi".
+    # the "readme-drift" project, environment "pypi".
     environment: pypi
     permissions:
       id-token: write   # required by pypa/gh-action-pypi-publish

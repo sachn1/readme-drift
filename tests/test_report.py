@@ -2,14 +2,14 @@
 
 from pathlib import Path
 
-from readme_check.models import (
+from readme_drift.models import (
     ChangeType,
     CheckResult,
     ReadmeMatch,
     StalenessFinding,
     SymbolChange,
 )
-from readme_check.report import format_report
+from readme_drift.report import format_report
 
 
 def _make_finding(

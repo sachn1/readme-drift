@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from readme_check.scanner import find_symbol_in_readme, scan_readme_for_symbols
+from readme_drift.scanner import find_symbol_in_readme, scan_readme_for_symbols
 
 README_CONTENT = """# My Library
 

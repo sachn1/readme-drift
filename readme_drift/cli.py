@@ -1,4 +1,4 @@
-"""CLI entry point for readme-check."""
+"""CLI entry point for readme-drift."""
 
 import argparse
 import sys
@@ -9,9 +9,9 @@ from .report import format_report
 
 
 def main() -> None:
-    """Parse arguments and run readme-check."""
+    """Parse arguments and run readme-drift."""
     parser = argparse.ArgumentParser(
-        prog="readme-check",
+        prog="readme-drift",
         description="Check if README may be stale after code changes.",
     )
     parser.add_argument(

@@ -3,6 +3,7 @@
 import subprocess
 from pathlib import Path
 
+from .config_diff import CONFIG_SUFFIXES
 from .models import GitDiffResult
 
 _readme_extension_candidates = [".md", ".markdown", ".rst", ".txt", ""]
@@ -42,9 +43,21 @@ def get_repo_root() -> Path:
     return Path(root)
 
 
+def validate_repo_root(path: Path) -> Path:
+    """Validate that path is a git repository; raise ValueError if not."""
+    if not path.is_dir():
+        raise ValueError(f"repo_root is not a directory: {path}")
+    try:
+        actual = Path(_run(["git", "rev-parse", "--show-toplevel"], cwd=path))
+    except RuntimeError as exc:
+        raise ValueError(f"repo_root is not a git repository: {path}") from exc
+    return actual
+
+
 def _read_new_content(
     py_file: Path, root: Path, resolved_root: Path, staged: bool
 ) -> str:
+    """Return file content from disk (working tree) or the staging area."""
     if staged:
         try:
             # 0 means "staged version" in git show syntax
@@ -57,6 +70,7 @@ def _read_new_content(
 
 
 def _read_old_content(py_file: Path, root: Path, old_ref: str) -> str:
+    """Return file content at old_ref from git history; empty string if absent."""
     try:
         return _run(["git", "show", f"{old_ref}:{py_file}"], cwd=root)
     except RuntimeError:
@@ -85,13 +99,16 @@ def get_diff(
         Result of the git diff operation.
     """
     assert base_ref, "base_ref must not be empty"
+
+    # Prevents flag injection: a ref starting with '-' would be interpreted as a git flag.
     if base_ref.startswith("-"):
         raise ValueError(
             f"Invalid base_ref {base_ref!r}: git refs cannot start with '-'"
         )
 
     root = repo_root or get_repo_root()
-    resolved_root = root.resolve()
+
+    resolved_root = root.resolve(strict=True)
 
     diff_args = ["git", "diff", "--name-only"]
     if staged:
@@ -106,21 +123,24 @@ def get_diff(
     changed_files = [Path(f) for f in changed_files_output.splitlines()]
 
     changed_py_files = [f for f in changed_files if f.suffix == ".py"]
+    changed_config_files = [
+        f for f in changed_files if f.suffix.lower() in CONFIG_SUFFIXES
+    ]
 
     old_contents: dict[str, str] = {}
     new_contents: dict[str, str] = {}
 
-    # When diffing vs a ref, old is that ref; in staged mode, old is HEAD.
     old_ref = base_ref if not staged else "HEAD"
 
-    for py_file in changed_py_files:
-        new_contents[str(py_file)] = _read_new_content(
-            py_file, root, resolved_root, staged
+    for tracked_file in changed_py_files + changed_config_files:
+        new_contents[str(tracked_file)] = _read_new_content(
+            tracked_file, root, resolved_root, staged
         )
-        old_contents[str(py_file)] = _read_old_content(py_file, root, old_ref)
+        old_contents[str(tracked_file)] = _read_old_content(tracked_file, root, old_ref)
 
     return GitDiffResult(
         changed_py_files=changed_py_files,
+        changed_config_files=changed_config_files,
         old_file_contents=old_contents,
         new_file_contents=new_contents,
     )

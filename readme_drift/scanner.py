@@ -34,11 +34,8 @@ def find_symbol_in_readme(
     matches: list[ReadmeMatch] = []
     bare_name = _normalize(symbol_name)
 
-    # Build patterns to search for
     patterns = [
-        # Backtick exact match (with or without parens/args)
         re.compile(rf"`{re.escape(bare_name)}[^`]*`"),
-        # Word boundary plain text match (catches prose references)
         re.compile(rf"\b{re.escape(bare_name)}\b"),
     ]
 

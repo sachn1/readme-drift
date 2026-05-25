@@ -1,0 +1,34 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"   # release tags only, not -rc.N pre-releases
+
+jobs:
+  publish:
+    name: Build and publish
+    runs-on: ubuntu-latest
+
+    # Trusted publishing — no PYPI_TOKEN secret required.
+    # One-time setup: add this repo as a trusted publisher on pypi.org for
+    # the "readme-drift" project, environment "pypi".
+    environment: pypi
+    permissions:
+      id-token: write   # required by pypa/gh-action-pypi-publish
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Build wheel and sdist
+        run: poetry build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

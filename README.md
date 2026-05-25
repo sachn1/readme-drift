@@ -1,27 +1,22 @@
-# readme-check
+# readme-drift
 
 > Detect stale README references after code changes — for pre-commit and CI.
 
-When you rename a function, change a method signature, or remove a class,
-`readme-check` warns you if those symbols are referenced in your README —
-before the commit lands.
-
-**Zero dependencies. Fully open source. Works offline.**
+When you rename a function, change a method signature, remove a class, or rename a key in a config file, `readme-drift` warns you if those names are still referenced in your README — before the commit lands.
 
 ---
 
 ## How it works
 
-```
-git diff (staged or vs base branch)
-        ↓
-  AST diff of changed .py files
-  (what functions/classes/signatures changed?)
-        ↓
-  Scan README for those symbol names
-        ↓
-  If matched → fail with specific message
-  If README was also updated → pass
+```mermaid
+flowchart LR
+    A["git diff"] --> B["Changed .py files\nAST diff"]
+    A --> C["Changed config files\nKey-path diff"]
+    B --> D["Scan README\nbacktick + word-boundary"]
+    C --> D
+    D --> E{"Match?"}
+    E -->|Yes| F["❌ Fail"]
+    E -->|No| G["✅ Pass"]
 ```
 
 ---
@@ -29,7 +24,7 @@ git diff (staged or vs base branch)
 ## Installation
 
 ```bash
-pip install readme-check
+pip install readme-drift
 ```
 
 ---
@@ -42,10 +37,10 @@ Add to your `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
-  - repo: https://github.com/yourusername/readme-check
-    rev: v0.1.0
+  - repo: https://github.com/sachn1/readme-drift
+    rev: v0.2.0
     hooks:
-      - id: readme-check
+      - id: readme-drift
 ```
 
 Then install the hook:
@@ -54,45 +49,48 @@ Then install the hook:
 pre-commit install
 ```
 
-Now every `git commit` that changes `.py` files will check if the README
-needs updating.
+Every `git commit` that changes `.py`, `.yml`, `.yaml`, `.json`, or `.toml` files will now check if the README needs updating.
 
 ### As a CLI tool
 
 ```bash
 # Check staged changes (same as pre-commit)
-readme-check --staged
+readme-drift --staged
 
 # Check against a specific branch (for CI / PRs)
-readme-check --base-ref origin/main
+readme-drift --base-ref origin/main
 
 # Warn only — don't fail the build
-readme-check --base-ref origin/main --warn-only
+readme-drift --base-ref origin/main --warn-only
 ```
 
 ### In CI (GitHub Actions)
 
-Copy `.github/workflows/readme-check.yml` from this repo, or add this step:
-
 ```yaml
 - name: Check README staleness
-  run: readme-check --base-ref origin/${{ github.base_ref }}
+  run: readme-drift --base-ref origin/${{ github.base_ref }}
 ```
+
+---
+
+## Developer reference
+
+A fully annotated [Jupyter notebook](notebooks/demo.ipynb) walks through each module in depth — AST parsing, signature extraction, config diffing, the README scanner, and the complete end-to-end pipeline without git. Useful for understanding the internals or experimenting with edge cases.
 
 ---
 
 ## Example output
 
 ```
-readme-check: ❌ README.md may be stale:
+readme-drift: ❌ README.md may be stale:
 
   • `Client.connect` signature changed: connect(host, port) → connect(url)
     in src/client.py
     referenced in README.md line 42: …call `Client.connect(host, port)` to connect…
 
-  • `Client.disconnect` was removed
-    in src/client.py
-    referenced in README.md line 67: …use `Client.disconnect()` when done…
+  • `build` was removed
+    in package.json
+    referenced in README.md line 18: …run `npm run build` to compile…
 
   → Please update the README or run with --no-verify to skip.
 ```
@@ -101,21 +99,42 @@ readme-check: ❌ README.md may be stale:
 
 ## What it catches
 
+### Python files (`.py`)
+
 | Change | Detected? |
 |---|---|
-| Function renamed | ✅ |
+| Function renamed | ✅ old name flagged as removed |
 | Function removed | ✅ |
 | Method signature changed | ✅ |
 | Class removed | ✅ |
-| New function added (not in README) | ℹ️ reported as FYI |
+| Private symbol changed (`_name`) | ➖ ignored by design |
 | README updated alongside code | ✅ passes silently |
 | No Python files changed | ✅ skipped |
 
+### Config files (`.yml`, `.yaml`, `.json`, `.toml`)
+
+| Change | Detected? |
+|---|---|
+| Script key removed (`"build"` → gone) | ✅ |
+| Job name removed (`build:` → gone) | ✅ |
+| Tool section removed (`[tool.black]` → gone) | ✅ |
+| Key renamed at same level | ✅ (reported as remove + add) |
+| Value changed, key unchanged | ➖ not tracked |
+
 ## What it doesn't catch
 
-- Behavioral changes that don't affect the public API surface
-  (for that, you need an LLM — but that's a separate tool)
+- Behavioral changes that don't affect the public API or config surface
 - Symbols not mentioned in the README
+
+---
+
+## Supported README formats
+
+Any file named `readme` (case-insensitive) with the extension `.md`, `.markdown`, `.rst`, `.txt`, or no extension is scanned. All README files in the repository are discovered recursively, including per-package READMEs in monorepos.
+
+The following directories are never searched:
+
+`.git` · `node_modules` · `venv` · `.venv` · `.tox` · `__pycache__` · `.pytest_cache` · `dist` · `build` · `.mypy_cache`
 
 ---
 

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from readme_check.scanner import find_symbol_in_readme, scan_readme_for_symbols
+from readme_drift.scanner import find_symbol_in_readme, scan_readme_for_symbols
 
 README_CONTENT = """# My Library
 
@@ -70,3 +70,12 @@ def test_match_includes_line_number(readme_file):
 def test_match_includes_line_text(readme_file):
     matches = find_symbol_in_readme(readme_file, "helper")
     assert all(len(m.line_text) > 0 for m in matches)
+
+
+def test_at_most_one_match_per_line(readme_file):
+    # The README has "Plain text mentions of disconnect are also caught."
+    # which would match BOTH the backtick pattern AND the word-boundary pattern.
+    # find_symbol_in_readme must return at most one ReadmeMatch per line.
+    matches = find_symbol_in_readme(readme_file, "disconnect")
+    line_numbers = [m.line_number for m in matches]
+    assert len(line_numbers) == len(set(line_numbers)), "duplicate matches on same line"

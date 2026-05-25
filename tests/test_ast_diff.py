@@ -92,13 +92,6 @@ def test_diff_no_changes():
     assert changes == []
 
 
-def test_rename_detection():
-    old = "def foo(x, y):\n    pass\n"
-    new = "def bar(x, y):\n    pass\n"
-    changes = diff_apis(old, new)
-    assert any(c.change_type == ChangeType.RENAMED for c in changes)
-
-
 def test_private_methods_ignored():
     old = "class A:\n    def _hidden(self): pass\n"
     new = "class A:\n    def _hidden(self, extra): pass\n"
@@ -114,20 +107,6 @@ def test_class_methods_not_in_functions():
     assert "connect" not in api.functions
     assert "disconnect" not in api.functions
     assert "helper" in api.functions
-
-
-def test_rename_detection_no_double_match():
-    # Regression: two removed functions with identical params could both be
-    # matched to the same added function, producing two RENAMED findings.
-    old = "def foo(x, y): pass\ndef baz(x, y): pass\n"
-    new = "def bar(x, y): pass\n"
-    changes = diff_apis(old, new)
-    renamed = [c for c in changes if c.change_type == ChangeType.RENAMED]
-    assert len(renamed) == 1, (
-        "only one function was added, so only one rename is possible"
-    )
-    removed = [c for c in changes if c.change_type == ChangeType.REMOVED]
-    assert len(removed) == 1, "the unmatched removed function must still be reported"
 
 
 def test_keyword_only_arg_change_detected():

@@ -4,7 +4,7 @@ from pathlib import Path
 
 from readme_drift.models import (
     ChangeType,
-    CheckResult,
+    DriftCheckResult,
     ReadmeMatch,
     StalenessFinding,
     SymbolChange,
@@ -36,14 +36,14 @@ def _make_finding(
 
 
 def test_passed_no_findings():
-    result = CheckResult(findings=[])
+    result = DriftCheckResult(findings=[])
     assert result.passed
     assert "✅" in format_report(result)
 
 
 def test_failed_with_findings():
     finding = _make_finding("Client.connect", ChangeType.SIGNATURE_CHANGED)
-    result = CheckResult(findings=[finding], readme_paths=[Path("README.md")])
+    result = DriftCheckResult(findings=[finding], readme_paths=[Path("README.md")])
     assert result.failed
     report = format_report(result)
     assert "❌" in report
@@ -51,19 +51,33 @@ def test_failed_with_findings():
 
 
 def test_skipped_result():
-    result = CheckResult(skipped=True, skip_reason="no Python files changed")
+    result = DriftCheckResult(skipped=True, skip_reason="no Python files changed")
     assert result.passed
     assert "skipped" in format_report(result)
 
 
 def test_report_shows_line_number():
     finding = _make_finding("helper", ChangeType.REMOVED, line=42)
-    result = CheckResult(findings=[finding], readme_paths=[Path("README.md")])
+    result = DriftCheckResult(findings=[finding], readme_paths=[Path("README.md")])
     report = format_report(result)
     assert "42" in report
 
 
-def test_report_shows_file():
+def test_report_shows_update_hint():
+    finding = _make_finding("func", ChangeType.REMOVED)
+    result = DriftCheckResult(findings=[finding], readme_paths=[Path("README.md")])
+    assert "update" in format_report(result).lower()
+
+
+def test_report_multiple_findings():
+    findings = [
+        _make_finding("func_a", ChangeType.REMOVED),
+        _make_finding("func_b", ChangeType.SIGNATURE_CHANGED),
+    ]
+    result = DriftCheckResult(findings=findings, readme_paths=[Path("README.md")])
+    report = format_report(result)
+    assert "func_a" in report
+    assert "func_b" in report
     change = SymbolChange(
         name="foo",
         change_type=ChangeType.REMOVED,
@@ -71,6 +85,6 @@ def test_report_shows_file():
     )
     match = ReadmeMatch("foo", 10, "Use `foo` here.", "`foo`", Path("README.md"))
     finding = StalenessFinding(change=change, readme_matches=[match])
-    result = CheckResult(findings=[finding], readme_paths=[Path("README.md")])
+    result = DriftCheckResult(findings=[finding], readme_paths=[Path("README.md")])
     report = format_report(result)
     assert "src/utils.py" in report

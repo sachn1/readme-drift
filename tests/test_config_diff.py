@@ -6,13 +6,9 @@ from readme_drift.config_diff import (
     TomlExtractor,
     YamlExtractor,
     _flatten,
-    _leaf,
     diff_config,
 )
 from readme_drift.models import ChangeType
-
-
-# ── _flatten ─────────────────────────────────────────────────────────────────
 
 
 def test_flatten_flat_dict():
@@ -37,34 +33,9 @@ def test_flatten_empty():
     assert _flatten([]) == {}
 
 
-# ── _leaf ─────────────────────────────────────────────────────────────────────
-
-
-def test_leaf_simple():
-    assert _leaf("build") == "build"
-
-
-def test_leaf_dotted():
-    assert _leaf("scripts.build") == "build"
-
-
-def test_leaf_deeply_nested():
-    assert _leaf("jobs.ci.runs-on") == "runs-on"
-
-
-def test_leaf_with_array_index():
-    assert _leaf("steps[0]") == "steps"
-
-
-# ── Protocol conformance ──────────────────────────────────────────────────────
-
-
 def test_extractors_satisfy_protocol():
     for extractor in (JsonExtractor(), TomlExtractor(), YamlExtractor()):
         assert isinstance(extractor, KeyExtractor)
-
-
-# ── JsonExtractor ─────────────────────────────────────────────────────────────
 
 
 def test_json_extracts_scripts():
@@ -90,9 +61,6 @@ def test_json_extracts_top_level_keys():
     assert result["version"] == "1.0.0"
 
 
-# ── TomlExtractor ─────────────────────────────────────────────────────────────
-
-
 def test_toml_extracts_tool_sections():
     content = "[tool.ruff]\nline-length = 88\n"
     result = TomlExtractor().extract(content)
@@ -111,9 +79,6 @@ def test_toml_extracts_scripts():
     content = '[tool.poetry.scripts]\nreadme-drift = "readme_drift.cli:main"\n'
     result = TomlExtractor().extract(content)
     assert "tool.poetry.scripts.readme-drift" in result
-
-
-# ── YamlExtractor ─────────────────────────────────────────────────────────────
 
 
 def test_yaml_extracts_github_actions_jobs():
@@ -139,9 +104,6 @@ def test_yaml_extracts_top_level_name():
     content = "name: My Workflow\non: [push]\n"
     result = YamlExtractor().extract(content)
     assert result["name"] == "My Workflow"
-
-
-# ── diff_config ───────────────────────────────────────────────────────────────
 
 
 def test_diff_json_removed_script():
@@ -210,8 +172,7 @@ def test_diff_leaf_deduplication():
 
 
 def test_diff_added_not_flagged_as_stale():
-    # ADDED config keys should not produce staleness findings (mirrors Python behaviour).
-    from readme_drift.checker import _primary_name, _symbols_from_changes
+    from readme_drift.drift_checker import _symbols_from_changes
     from readme_drift.models import SymbolChange
 
     change = SymbolChange(name="new-script", change_type=ChangeType.ADDED)
@@ -224,6 +185,6 @@ def test_diff_added_not_flagged_as_stale():
     for c in [change]:
         if c.change_type == ChangeType.ADDED:
             continue
-        if _primary_name(c) in fake_matches:
+        if c.name in fake_matches:
             findings.append(c)
     assert findings == []

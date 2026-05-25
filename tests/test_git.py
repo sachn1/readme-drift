@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from readme_drift.git import find_readmes
+from readme_drift.git import find_readmes, validate_repo_root
 
 
 @pytest.fixture
@@ -80,3 +80,20 @@ def test_case_insensitive_readme_name(repo: Path):
     (repo / "readme.md").write_text("lowercase")
     found = find_readmes(repo)
     assert any(p.name == "readme.md" for p in found)
+
+
+def test_validate_repo_root_not_a_directory(tmp_path):
+    with pytest.raises(ValueError, match="not a directory"):
+        validate_repo_root(tmp_path / "nonexistent")
+
+
+def test_validate_repo_root_not_a_git_repo(tmp_path):
+    with pytest.raises(ValueError, match="not a git repository"):
+        validate_repo_root(tmp_path)
+
+
+def test_get_diff_rejects_dash_base_ref():
+    from readme_drift.git import get_diff
+
+    with pytest.raises(ValueError, match="cannot start with"):
+        get_diff(base_ref="--evil")

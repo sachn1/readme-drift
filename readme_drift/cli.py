@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .checker import run_check
+from .drift_checker import run_check
 from .report import format_report
 
 

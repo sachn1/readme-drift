@@ -11,7 +11,6 @@ class ChangeType(Enum):
     ADDED = "added"
     REMOVED = "removed"
     SIGNATURE_CHANGED = "signature_changed"
-    RENAMED = "renamed"
 
 
 @dataclass
@@ -56,8 +55,6 @@ class SymbolChange:
                     f"`{self.name}` signature changed: "
                     f"{self.old_signature} → {self.new_signature}"
                 )
-            case ChangeType.RENAMED:
-                return f"`{self.old_signature}` was renamed to `{self.name}`"
 
 
 @dataclass
@@ -80,11 +77,12 @@ class StalenessFinding:
 
     @property
     def symbol(self) -> str:
+        """Name of the changed symbol."""
         return self.change.name
 
 
 @dataclass
-class CheckResult:
+class DriftCheckResult:
     """The overall result of a readme-drift run."""
 
     findings: list[StalenessFinding] = field(default_factory=list)
@@ -94,8 +92,10 @@ class CheckResult:
 
     @property
     def passed(self) -> bool:
+        """True if no findings or the run was skipped."""
         return self.skipped or len(self.findings) == 0
 
     @property
     def failed(self) -> bool:
+        """True if there are unresolved staleness findings."""
         return not self.passed

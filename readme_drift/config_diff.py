@@ -5,7 +5,7 @@ import re
 import tomllib
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
-
+import yaml  # type: ignore[import-untyped]
 from .models import ChangeType, SymbolChange
 
 
@@ -20,9 +20,6 @@ class KeyExtractor(Protocol):
     def extract(self, content: str) -> dict[str, str]:
         """Return {dot-notation-key-path: string-value} for all leaf nodes."""
         ...
-
-
-# ── Helpers ──────────────────────────────────────────────────────────────────
 
 
 def _flatten(obj: Any, prefix: str = "") -> dict[str, str]:
@@ -40,22 +37,6 @@ def _flatten(obj: Any, prefix: str = "") -> dict[str, str]:
     return result
 
 
-def _leaf(key_path: str) -> str:
-    """Return the leaf key name from a dot-notation path.
-
-    'scripts.build'        → 'build'
-    'jobs.ci.runs-on'      → 'runs-on'
-    'steps[0]'             → 'steps'  (numeric array indices are skipped)
-    'jobs.build.steps[0]'  → 'steps'
-    """
-    parts = re.split(r"[.\[]", key_path)
-    cleaned = [p.rstrip("]") for p in parts if p.rstrip("]")]
-    # Skip trailing numeric array indices
-    while len(cleaned) > 1 and cleaned[-1].isdigit():
-        cleaned.pop()
-    return cleaned[-1] if cleaned else key_path
-
-
 def _all_segments(key_path: str) -> set[str]:
     """All meaningful name segments from a dot-notation path, no array indices."""
     parts = re.split(r"[.\[]", key_path)
@@ -64,11 +45,9 @@ def _all_segments(key_path: str) -> set[str]:
     }
 
 
-# ── Concrete extractors ───────────────────────────────────────────────────────
-
-
 class JsonExtractor:
     def extract(self, content: str) -> dict[str, str]:
+        """Parse JSON and return flat key-path → value dict."""
         if not content.strip():
             return {}
         try:
@@ -79,6 +58,7 @@ class JsonExtractor:
 
 class TomlExtractor:
     def extract(self, content: str) -> dict[str, str]:
+        """Parse TOML and return flat key-path → value dict."""
         if not content.strip():
             return {}
         try:
@@ -89,18 +69,15 @@ class TomlExtractor:
 
 class YamlExtractor:
     def extract(self, content: str) -> dict[str, str]:
+        """Parse YAML and return flat key-path → value dict."""
         if not content.strip():
             return {}
         try:
-            import yaml  # pyyaml — optional but listed as a dependency
-
             data = yaml.safe_load(content)
         except Exception:
             return {}
         return _flatten(data) if data is not None else {}
 
-
-# ── Registry ─────────────────────────────────────────────────────────────────
 
 _EXTRACTORS: dict[str, KeyExtractor] = {
     ".json": JsonExtractor(),
@@ -110,9 +87,6 @@ _EXTRACTORS: dict[str, KeyExtractor] = {
 }
 
 CONFIG_SUFFIXES: frozenset[str] = frozenset(_EXTRACTORS)
-
-
-# ── Diffing ───────────────────────────────────────────────────────────────────
 
 
 def diff_config(

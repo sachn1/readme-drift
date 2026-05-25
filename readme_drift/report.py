@@ -1,9 +1,9 @@
 """Format check results into human-readable reports."""
 
-from .models import CheckResult
+from .models import DriftCheckResult
 
 
-def format_report(result: CheckResult) -> str:
+def format_report(result: DriftCheckResult) -> str:
     """Format a CheckResult into a human-readable string."""
     lines: list[str] = []
 

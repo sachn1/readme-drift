@@ -23,6 +23,8 @@ def _positional_args_with_defaults(
         if arg.arg in ("self", "cls"):
             continue
         default_index = (offset + i) - (num_all - num_defaults)
+
+        # default_index >= 0 means this arg has a default value in the defaults array
         if default_index >= 0:
             result.append(f"{arg.arg}={ast.unparse(defaults[default_index])}")
         else:
@@ -45,14 +47,19 @@ def _kwonly_args(
 
 
 def _format_signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
-    """Format a function/method signature as a readable string."""
-    assert isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    """Format a function/method signature as a readable string.
+
+    ast.unparse is intentionally avoided: it retains self/cls and type
+    annotations, which only affects report readability — the signature
+    string is never used for detection, only for display in the output.
+    """
     func_args = node.args
     num_all = len(func_args.posonlyargs) + len(func_args.args)
 
     posonly = _positional_args_with_defaults(
         func_args.posonlyargs, 0, num_all, func_args.defaults
     )
+
     regular = _positional_args_with_defaults(
         func_args.args, len(func_args.posonlyargs), num_all, func_args.defaults
     )
@@ -190,43 +197,12 @@ def _diff_signatures(
     """Helper to diff two sets of signatures (functions or methods)."""
     changes: list[SymbolChange] = []
 
-    removed = set(old) - set(new)
-    added = set(new) - set(old)
-
-    # Detect renames: removed + added where signatures are very similar
-    matched_removed: set[str] = set()
-    matched_added: set[str] = set()
-
-    for r in removed:
-        for a in added:
-            if a in matched_added:
-                continue
-            old_sig = old[r]
-            new_sig = new[a]
-            # Same params, different name → likely rename
-            old_params = old_sig[old_sig.index("(") :]
-            new_params = new_sig[new_sig.index("(") :]
-            if old_params == new_params:
-                changes.append(
-                    SymbolChange(
-                        name=a,
-                        change_type=ChangeType.RENAMED,
-                        old_signature=r,
-                        new_signature=a,
-                        file=file,
-                    )
-                )
-                matched_removed.add(r)
-                matched_added.add(a)
-                break
-
-    for name in removed - matched_removed:
+    for name in set(old) - set(new):
         changes.append(SymbolChange(name, ChangeType.REMOVED, file=file))
 
-    for name in added - matched_added:
+    for name in set(new) - set(old):
         changes.append(SymbolChange(name, ChangeType.ADDED, file=file))
 
-    # Detect signature changes for functions that exist in both
     for name in set(old) & set(new):
         if old[name] != new[name]:
             changes.append(

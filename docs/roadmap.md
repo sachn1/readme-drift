@@ -3,7 +3,7 @@
 ## v0.1.0 — Shipped
 
 - Python file support (`.py`) via AST diffing
-- Detects renamed, removed, and signature-changed public functions, methods, and classes
+- Detects removed and signature-changed public functions, methods, and classes
 - README scanning via backtick and word-boundary regex patterns
 - Recursive README discovery — supports monorepos with per-package READMEs
 - Pre-commit hook integration
@@ -35,8 +35,22 @@ Config file coverage and PyPI distribution.
 - Registerable as a pre-commit hooks repository
 
 **Deferred from v0.2.0 (added to later milestones):**
+- Python function rename detection — the "same params = rename" heuristic was too unreliable (false positives for zero-parameter functions and any unrelated functions sharing parameter names like `host, port`); removed entirely and moved to backlog pending a reliable signal (git-level rename tracking or AST body similarity)
 - Config-key rename detection — the same-value heuristic is too ambiguous when multiple keys share a value (e.g. many jobs with `runs-on: ubuntu-latest`); deferred to backlog pending a cleaner signal
 - Full key-path matching in README (e.g. `scripts.build`) — current version matches leaf names only; full-path matching deferred to v1.2.0
+
+---
+
+## v0.3.0 — Developer control
+
+Fine-grained control for power users before the stable API freeze.
+
+**Planned:**
+- `--include-private` flag — opt in to tracking private (underscore-prefixed) functions and methods, for projects that document internal APIs
+- Configurable file exclusions — `--exclude` option (and `[tool.readme-drift]` config block) to skip specific Python files or directories from diffing; eliminates the need to track auto-generated or vendored code
+- Lazy content reads optimisation — read file contents only for files whose changed symbols actually appear in a README, avoiding unnecessary git reads for large changesets
+- Plain-text occurrence matching — configurable option (default on) to flag symbol names found outside backtick spans, catching prose references like "use the connect function"
+- **Codacy integration** — replace the per-branch coverage threshold check with Codacy (free for public repos), which analyses all branches and PRs with quality gates, coverage tracking, and PR decoration; removes the need for the `--cov-fail-under` workaround
 
 ---
 
@@ -80,7 +94,7 @@ README is the most visible documentation file, but several others frequently ref
 
 ## Backlog (unscheduled)
 
-- Config-key rename detection — needs a reliable signal beyond same-value; candidates include structural similarity of sibling keys or explicit rename hints in commit messages
+- **Python rename detection** — removed in v0.2.x; the "same params = rename" heuristic produced false positives for zero-parameter functions and any unrelated functions that happened to share parameter names. Needs a reliable signal (e.g. git-level rename tracking, or AST body similarity) before it can be reintroduced. Config-key rename detection has the same problem with shared values (e.g. `runs-on: ubuntu-latest` across many jobs).
 - `--fix` flag to open the README at the stale line in `$EDITOR`
 - JSON output mode for integration with other tools
 - VS Code extension

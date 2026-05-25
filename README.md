@@ -73,6 +73,12 @@ readme-drift --base-ref origin/main --warn-only
 
 ---
 
+## Developer reference
+
+A fully annotated [Jupyter notebook](notebooks/demo.ipynb) walks through each module in depth — AST parsing, signature extraction, config diffing, the README scanner, and the complete end-to-end pipeline without git. Useful for understanding the internals or experimenting with edge cases.
+
+---
+
 ## Example output
 
 ```
@@ -97,7 +103,7 @@ readme-drift: ❌ README.md may be stale:
 
 | Change | Detected? |
 |---|---|
-| Function renamed | ✅ |
+| Function renamed | ✅ old name flagged as removed |
 | Function removed | ✅ |
 | Method signature changed | ✅ |
 | Class removed | ✅ |
@@ -119,6 +125,16 @@ readme-drift: ❌ README.md may be stale:
 
 - Behavioral changes that don't affect the public API or config surface
 - Symbols not mentioned in the README
+
+---
+
+## Supported README formats
+
+Any file named `readme` (case-insensitive) with the extension `.md`, `.markdown`, `.rst`, `.txt`, or no extension is scanned. All README files in the repository are discovered recursively, including per-package READMEs in monorepos.
+
+The following directories are never searched:
+
+`.git` · `node_modules` · `venv` · `.venv` · `.tox` · `__pycache__` · `.pytest_cache` · `dist` · `build` · `.mypy_cache`
 
 ---
 

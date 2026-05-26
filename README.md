@@ -1,5 +1,9 @@
 # readme-drift
 
+[![PyPI version](https://img.shields.io/pypi/v/readme-drift)](https://pypi.org/project/readme-drift/)
+[![Python versions](https://img.shields.io/pypi/pyversions/readme-drift)](https://pypi.org/project/readme-drift/)
+[![License](https://img.shields.io/pypi/l/readme-drift)](https://pypi.org/project/readme-drift/)
+
 > Detect stale README references after code changes — for pre-commit and CI.
 
 When you rename a function, change a method signature, remove a class, or rename a key in a config file, `readme-drift` warns you if those names are still referenced in your README — before the commit lands.

@@ -54,7 +54,7 @@ def validate_repo_root(path: Path) -> Path:
     return actual
 
 
-def _read_new_content(
+def read_new_content(
     py_file: Path, root: Path, resolved_root: Path, staged: bool
 ) -> str:
     """Return file content from disk (working tree) or the staging area."""
@@ -69,7 +69,7 @@ def _read_new_content(
     return full_path.read_text(encoding="utf-8") if full_path.exists() else ""
 
 
-def _read_old_content(py_file: Path, root: Path, old_ref: str) -> str:
+def read_old_content(py_file: Path, root: Path, old_ref: str) -> str:
     """Return file content at old_ref from git history; empty string if absent."""
     try:
         return _run(["git", "show", f"{old_ref}:{py_file}"], cwd=root)
@@ -108,8 +108,6 @@ def get_diff(
 
     root = repo_root or get_repo_root()
 
-    resolved_root = root.resolve(strict=True)
-
     diff_args = ["git", "diff", "--name-only"]
     if staged:
         diff_args.append("--cached")
@@ -127,22 +125,9 @@ def get_diff(
         f for f in changed_files if f.suffix.lower() in CONFIG_SUFFIXES
     ]
 
-    old_contents: dict[str, str] = {}
-    new_contents: dict[str, str] = {}
-
-    old_ref = base_ref if not staged else "HEAD"
-
-    for tracked_file in changed_py_files + changed_config_files:
-        new_contents[str(tracked_file)] = _read_new_content(
-            tracked_file, root, resolved_root, staged
-        )
-        old_contents[str(tracked_file)] = _read_old_content(tracked_file, root, old_ref)
-
     return GitDiffResult(
         changed_py_files=changed_py_files,
         changed_config_files=changed_config_files,
-        old_file_contents=old_contents,
-        new_file_contents=new_contents,
     )
 
 

@@ -15,12 +15,10 @@ class ChangeType(Enum):
 
 @dataclass
 class GitDiffResult:
-    """Files that changed in a git diff, plus their old and new source contents."""
+    """Files that changed in a git diff."""
 
     changed_py_files: list[Path]
     changed_config_files: list[Path] = field(default_factory=list)
-    old_file_contents: dict[str, str] = field(default_factory=dict)
-    new_file_contents: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass

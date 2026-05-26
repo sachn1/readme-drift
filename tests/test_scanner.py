@@ -79,3 +79,25 @@ def test_at_most_one_match_per_line(readme_file):
     matches = find_symbol_in_readme(readme_file, "disconnect")
     line_numbers = [m.line_number for m in matches]
     assert len(line_numbers) == len(set(line_numbers)), "duplicate matches on same line"
+
+
+def test_plain_text_false_skips_word_boundary(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text("Use disconnect to close the connection.\n")
+    # The word appears as plain text, not in backticks — plain_text=False should miss it
+    matches = find_symbol_in_readme(readme, "disconnect", plain_text=False)
+    assert matches == []
+
+
+def test_plain_text_false_still_matches_backtick(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text("Call `disconnect` to close.\n")
+    matches = find_symbol_in_readme(readme, "disconnect", plain_text=False)
+    assert len(matches) == 1
+
+
+def test_scan_readme_plain_text_false(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text("Use helper to process data.\n")
+    results = scan_readme_for_symbols(readme, ["helper"], plain_text=False)
+    assert "helper" not in results

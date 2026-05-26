@@ -2,7 +2,9 @@
 
 from pathlib import Path
 
-from readme_drift.drift_checker import _symbols_from_changes
+import pytest
+
+from readme_drift.drift_checker import _is_excluded, _symbols_from_changes
 from readme_drift.models import ChangeType, ReadmeMatch, StalenessFinding, SymbolChange
 
 
@@ -42,3 +44,23 @@ def test_symbols_from_changes_deduplicates():
     ]
     symbols = _symbols_from_changes(changes)
     assert sorted(symbols) == ["bar", "foo"]
+
+
+@pytest.mark.parametrize(
+    "file_str, patterns, expected",
+    [
+        ("generated/models.py", ["generated/"], True),
+        ("src/models.py", ["generated/"], False),
+        ("src/models.py", ["*.py"], True),
+        ("src/models.py", ["models.py"], True),
+        ("src/models.py", ["other.py"], False),
+        ("tests/conftest.py", ["tests/"], True),
+        ("readme_drift/git.py", ["readme_drift/git.py"], True),
+    ],
+)
+def test_is_excluded(file_str, patterns, expected):
+    assert _is_excluded(Path(file_str), patterns) == expected
+
+
+def test_is_excluded_empty_patterns():
+    assert not _is_excluded(Path("src/models.py"), [])

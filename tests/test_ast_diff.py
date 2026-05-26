@@ -133,3 +133,24 @@ def test_keyword_only_arg_in_signature():
     assert "*" in sig
     assert "b" in sig
     assert "c=1" in sig
+
+
+def test_include_private_exposes_private_methods():
+    old = "class A:\n    def _hidden(self): pass\n"
+    new = "class A:\n    def _hidden(self, extra): pass\n"
+    changes = diff_apis(old, new, include_private=True)
+    assert any(c.name == "A._hidden" for c in changes)
+
+
+def test_include_private_exposes_private_functions():
+    old = "def _helper(x): pass\n"
+    new = "def _helper(x, y): pass\n"
+    changes = diff_apis(old, new, include_private=True)
+    assert any(c.name == "_helper" for c in changes)
+
+
+def test_include_private_false_ignores_private():
+    old = "def _helper(x): pass\n"
+    new = "def _helper(x, y): pass\n"
+    changes = diff_apis(old, new, include_private=False)
+    assert changes == []

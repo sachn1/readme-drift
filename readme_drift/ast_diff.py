@@ -82,7 +82,7 @@ def _format_signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
     return f"{node.name}({', '.join(parts)})"
 
 
-def extract_public_api(source: str) -> PublicAPI:
+def extract_public_api(source: str, *, include_private: bool = False) -> PublicAPI:
     """Parse Python source and extract the public API surface.
 
     Parameters
@@ -105,19 +105,21 @@ def extract_public_api(source: str) -> PublicAPI:
 
     api = PublicAPI()
 
+    is_visible = (lambda _: True) if include_private else _is_public
+
     for node in ast.iter_child_nodes(tree):
-        if isinstance(node, ast.ClassDef) and _is_public(node.name):
+        if isinstance(node, ast.ClassDef) and is_visible(node.name):
             method_sigs: set[str] = set()
             for item in node.body:
                 if isinstance(
                     item, (ast.FunctionDef, ast.AsyncFunctionDef)
-                ) and _is_public(item.name):
+                ) and is_visible(item.name):
                     sig = _format_signature(item)
                     method_sigs.add(sig)
                     api.methods[f"{node.name}.{item.name}"] = sig
             api.classes[node.name] = method_sigs
 
-        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _is_public(
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and is_visible(
             node.name
         ):
             # Only top-level functions
@@ -130,6 +132,8 @@ def diff_apis(
     old_source: str,
     new_source: str,
     file: str = "",
+    *,
+    include_private: bool = False,
 ) -> list[SymbolChange]:
     """Compare two versions of a Python file and return what changed.
 
@@ -141,14 +145,16 @@ def diff_apis(
         The source code of the new version of the Python module.
     file : str, optional
         The name of the file being compared, by default "".
+    include_private : bool, optional
+        If True, include private (underscore-prefixed) symbols, by default False.
 
     Returns
     -------
     list[SymbolChange]
         A list of changes detected between the old and new versions.
     """
-    old_api = extract_public_api(old_source)
-    new_api = extract_public_api(new_source)
+    old_api = extract_public_api(old_source, include_private=include_private)
+    new_api = extract_public_api(new_source, include_private=include_private)
 
     changes: list[SymbolChange] = []
 

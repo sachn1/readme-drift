@@ -1,10 +1,18 @@
 """Main checker: orchestrates git diff → AST diff → README scan → report."""
 
+import fnmatch
 from pathlib import Path
 
 from .ast_diff import diff_apis
 from .config_diff import diff_config
-from .git import find_readmes, get_diff, get_repo_root, validate_repo_root
+from .git import (
+    find_readmes,
+    get_diff,
+    get_repo_root,
+    read_new_content,
+    read_old_content,
+    validate_repo_root,
+)
 from .models import (
     ChangeType,
     DriftCheckResult,
@@ -16,10 +24,24 @@ from .models import (
 from .scanner import scan_readme_for_symbols
 
 
+def _is_excluded(file: Path, exclude: list[str]) -> bool:
+    """Return True if file matches any exclude pattern (glob or directory prefix)."""
+    file_str = str(file)
+    for pattern in exclude:
+        if fnmatch.fnmatch(file_str, pattern) or fnmatch.fnmatch(file.name, pattern):
+            return True
+        if file_str.startswith(pattern.rstrip("/") + "/"):
+            return True
+    return False
+
+
 def run_check(
     base_ref: str = "HEAD",
     repo_root: Path | None = None,
     staged: bool = False,
+    include_private: bool = False,
+    plain_text: bool = True,
+    exclude: list[str] | None = None,
 ) -> DriftCheckResult:
     """
     Run the full README staleness check.
@@ -28,11 +50,16 @@ def run_check(
         base_ref: Git ref to diff against.
         repo_root: Root of the repository. Auto-detected if not provided.
         staged: Check staged changes only (for pre-commit use).
+        include_private: Include private (underscore-prefixed) symbols.
+        plain_text: Match symbol names as plain text in addition to backtick spans.
+        exclude: Glob patterns for files/directories to skip.
 
     Returns:
         A DriftCheckResult describing findings.
     """
+    _exclude = exclude or []
     root = validate_repo_root(repo_root) if repo_root is not None else get_repo_root()
+    resolved_root = root.resolve(strict=True)
     readme_paths = find_readmes(root)
 
     if not readme_paths:
@@ -47,20 +74,29 @@ def run_check(
             readme_paths=readme_paths,
         )
 
-    # Collect all symbol changes across all changed Python files
-    all_changes: list[SymbolChange] = []
-    for py_file in diff.changed_py_files:
-        key = str(py_file)
-        old_source = diff.old_file_contents.get(key, "")
-        new_source = diff.new_file_contents.get(key, "")
-        all_changes.extend(diff_apis(old_source, new_source, file=key))
+    py_files = [f for f in diff.changed_py_files if not _is_excluded(f, _exclude)]
+    cfg_files = [f for f in diff.changed_config_files if not _is_excluded(f, _exclude)]
 
-    # Collect key-path changes across all changed config files
-    for cfg_file in diff.changed_config_files:
-        key = str(cfg_file)
-        old_source = diff.old_file_contents.get(key, "")
-        new_source = diff.new_file_contents.get(key, "")
-        all_changes.extend(diff_config(old_source, new_source, file=key))
+    old_ref = base_ref if not staged else "HEAD"
+
+    # Collect all symbol changes — read content lazily, skipping excluded files
+    all_changes: list[SymbolChange] = []
+    for py_file in py_files:
+        old_source = read_old_content(py_file, root, old_ref)
+        new_source = read_new_content(py_file, root, resolved_root, staged)
+        all_changes.extend(
+            diff_apis(
+                old_source,
+                new_source,
+                file=str(py_file),
+                include_private=include_private,
+            )
+        )
+
+    for cfg_file in cfg_files:
+        old_source = read_old_content(cfg_file, root, old_ref)
+        new_source = read_new_content(cfg_file, root, resolved_root, staged)
+        all_changes.extend(diff_config(old_source, new_source, file=str(cfg_file)))
 
     if not all_changes:
         return DriftCheckResult(readme_paths=readme_paths)
@@ -72,7 +108,7 @@ def run_check(
     all_readme_matches: dict[str, list[ReadmeMatch]] = {}
     for readme_path in readme_paths:
         for symbol, matches in scan_readme_for_symbols(
-            readme_path, symbols_to_search
+            readme_path, symbols_to_search, plain_text=plain_text
         ).items():
             all_readme_matches.setdefault(symbol, []).extend(matches)
 

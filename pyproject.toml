@@ -1,0 +1,55 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "readme-drift"
+version = "1.0.0-rc.1"
+description = "Detect stale README references after code changes — for pre-commit and CI."
+authors = ["Sachin Nandakumar"]
+readme = "README.md"
+license = "MIT"
+keywords = ["readme", "documentation", "pre-commit", "ci", "linting"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Quality Assurance",
+]
+packages = [{ include = "readme_drift" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+pyyaml = ">=6.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=7.0"
+pytest-cov = ">=4.0"
+ruff = ">=0.4"
+commitizen = ">=3.0"
+types-PyYAML = ">=6.0"
+
+[tool.poetry.scripts]
+readme-drift = "readme_drift.cli:main"
+
+[tool.poetry.urls]
+Homepage = "https://github.com/sachn1/readme-drift"
+Issues = "https://github.com/sachn1/readme-drift/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version_provider = "poetry"
+version_scheme = "semver2"
+tag_format = "v$version"
+update_changelog_on_bump = false
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+exclude = ["docs", "*.md", "*.ipynb"]

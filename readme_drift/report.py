@@ -1,23 +1,20 @@
 """Format check results into human-readable reports."""
 
-from .models import CheckResult
+from .models import DriftCheckResult
 
 
-def format_report(result: CheckResult) -> str:
+def format_report(result: DriftCheckResult) -> str:
     """Format a CheckResult into a human-readable string."""
     lines: list[str] = []
 
     if result.skipped:
-        return f"readme-check: skipped ({result.skip_reason})"
-
-    if result.readme_was_updated:
-        return "readme-check: ✅ README was updated alongside code changes."
+        return f"readme-drift: skipped ({result.skip_reason})"
 
     if not result.findings:
-        return "readme-check: ✅ No README staleness detected."
+        return "readme-drift: ✅ No README staleness detected."
 
     readme_label = ", ".join(sorted({p.name for p in result.readme_paths})) or "README"
-    lines.append(f"readme-check: ❌ {readme_label} may be stale:\n")
+    lines.append(f"readme-drift: ❌ {readme_label} may be stale:\n")
 
     for finding in result.findings:
         change = finding.change

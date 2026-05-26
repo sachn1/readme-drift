@@ -3,10 +3,24 @@
 import subprocess
 from pathlib import Path
 
+from .config_diff import CONFIG_SUFFIXES
 from .models import GitDiffResult
 
-_README_EXTENSION_CANDIDATES = [".md", ".rst", ".txt", ""]
-_readme_names = {f"readme{ext}" for ext in _README_EXTENSION_CANDIDATES}
+_readme_extension_candidates = [".md", ".markdown", ".rst", ".txt", ""]
+_README_NAMES = {f"readme{ext}" for ext in _readme_extension_candidates}
+
+_SKIP_DIRS = {
+    ".git",
+    "node_modules",
+    "venv",
+    ".venv",
+    ".tox",
+    "__pycache__",
+    ".pytest_cache",
+    "dist",
+    "build",
+    ".mypy_cache",
+}
 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> str:
@@ -29,11 +43,24 @@ def get_repo_root() -> Path:
     return Path(root)
 
 
-def _read_new_content(
+def validate_repo_root(path: Path) -> Path:
+    """Validate that path is a git repository; raise ValueError if not."""
+    if not path.is_dir():
+        raise ValueError(f"repo_root is not a directory: {path}")
+    try:
+        actual = Path(_run(["git", "rev-parse", "--show-toplevel"], cwd=path))
+    except RuntimeError as exc:
+        raise ValueError(f"repo_root is not a git repository: {path}") from exc
+    return actual
+
+
+def read_new_content(
     py_file: Path, root: Path, resolved_root: Path, staged: bool
 ) -> str:
+    """Return file content from disk (working tree) or the staging area."""
     if staged:
         try:
+            # 0 means "staged version" in git show syntax
             return _run(["git", "show", f":0:{py_file}"], cwd=root)
         except RuntimeError:
             return ""
@@ -42,7 +69,8 @@ def _read_new_content(
     return full_path.read_text(encoding="utf-8") if full_path.exists() else ""
 
 
-def _read_old_content(py_file: Path, root: Path, old_ref: str) -> str:
+def read_old_content(py_file: Path, root: Path, old_ref: str) -> str:
+    """Return file content at old_ref from git history; empty string if absent."""
     try:
         return _run(["git", "show", f"{old_ref}:{py_file}"], cwd=root)
     except RuntimeError:
@@ -71,13 +99,14 @@ def get_diff(
         Result of the git diff operation.
     """
     assert base_ref, "base_ref must not be empty"
+
+    # Prevents flag injection: a ref starting with '-' would be interpreted as a git flag.
     if base_ref.startswith("-"):
         raise ValueError(
             f"Invalid base_ref {base_ref!r}: git refs cannot start with '-'"
         )
 
     root = repo_root or get_repo_root()
-    resolved_root = root.resolve()
 
     diff_args = ["git", "diff", "--name-only"]
     if staged:
@@ -87,44 +116,33 @@ def get_diff(
 
     changed_files_output = _run(diff_args, cwd=root)
     if not changed_files_output:
-        return GitDiffResult(changed_py_files=[], readme_changed=False)
+        return GitDiffResult(changed_py_files=[])
 
     changed_files = [Path(f) for f in changed_files_output.splitlines()]
 
-    readme_changed = any(f.name.lower() in _readme_names for f in changed_files)
-
     changed_py_files = [f for f in changed_files if f.suffix == ".py"]
-
-    old_contents: dict[str, str] = {}
-    new_contents: dict[str, str] = {}
-
-    # When diffing vs a ref, old is that ref; in staged mode, old is HEAD.
-    old_ref = base_ref if not staged else "HEAD"
-
-    for py_file in changed_py_files:
-        new_contents[str(py_file)] = _read_new_content(
-            py_file, root, resolved_root, staged
-        )
-        old_contents[str(py_file)] = _read_old_content(py_file, root, old_ref)
+    changed_config_files = [
+        f for f in changed_files if f.suffix.lower() in CONFIG_SUFFIXES
+    ]
 
     return GitDiffResult(
         changed_py_files=changed_py_files,
-        readme_changed=readme_changed,
-        old_file_contents=old_contents,
-        new_file_contents=new_contents,
+        changed_config_files=changed_config_files,
     )
 
 
 def find_readmes(repo_root: Path) -> list[Path]:
-    """Find all README files in the repository, excluding .git."""
+    """Find all README files in the repository, skipping dev-artifact directories."""
     found = []
     queue = [repo_root]
     while queue:
         current = queue.pop()
         for path in current.iterdir():
+            if path.is_symlink():
+                continue
             if path.is_dir():
-                if path.name != ".git":
+                if path.name not in _SKIP_DIRS:
                     queue.append(path)
-            elif path.name.lower() in _readme_names:
+            elif path.name.lower() in _README_NAMES:
                 found.append(path)
     return found

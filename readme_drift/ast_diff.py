@@ -10,37 +10,79 @@ def _is_public(name: str) -> bool:
     return not name.startswith("_")
 
 
-def _format_signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
-    """Format a function/method signature as a readable string."""
-    assert isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-    args = []
-    func_args = node.args
-
-    # Positional args
-    num_defaults = len(func_args.defaults)
-    num_args = len(func_args.args)
-    for i, arg in enumerate(func_args.args):
-        if arg.arg == "self" or arg.arg == "cls":
+def _positional_args_with_defaults(
+    arg_list: list[ast.arg],
+    offset: int,
+    num_all: int,
+    defaults: list[ast.expr],
+) -> list[str]:
+    """Format a slice of positional args, resolving the shared defaults array."""
+    num_defaults = len(defaults)
+    result = []
+    for i, arg in enumerate(arg_list):
+        if arg.arg in ("self", "cls"):
             continue
-        default_index = i - (num_args - num_defaults)
+        default_index = (offset + i) - (num_all - num_defaults)
+
+        # default_index >= 0 means this arg has a default value in the defaults array
         if default_index >= 0:
-            default = func_args.defaults[default_index]
-            args.append(f"{arg.arg}={ast.unparse(default)}")
+            result.append(f"{arg.arg}={ast.unparse(defaults[default_index])}")
         else:
-            args.append(arg.arg)
+            result.append(arg.arg)
+    return result
 
-    # *args
+
+def _kwonly_args(
+    kwonlyargs: list[ast.arg],
+    kw_defaults: list[ast.expr | None],
+) -> list[str]:
+    """Format keyword-only args with their optional defaults."""
+    result = []
+    for arg, default in zip(kwonlyargs, kw_defaults):
+        if default is not None:
+            result.append(f"{arg.arg}={ast.unparse(default)}")
+        else:
+            result.append(arg.arg)
+    return result
+
+
+def _format_signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+    """Format a function/method signature as a readable string.
+
+    ast.unparse is intentionally avoided: it retains self/cls and type
+    annotations, which only affects report readability — the signature
+    string is never used for detection, only for display in the output.
+    """
+    func_args = node.args
+    num_all = len(func_args.posonlyargs) + len(func_args.args)
+
+    posonly = _positional_args_with_defaults(
+        func_args.posonlyargs, 0, num_all, func_args.defaults
+    )
+
+    regular = _positional_args_with_defaults(
+        func_args.args, len(func_args.posonlyargs), num_all, func_args.defaults
+    )
+
+    parts = [*posonly]
+    if posonly:
+        parts.append("/")
+    parts.extend(regular)
+
     if func_args.vararg:
-        args.append(f"*{func_args.vararg.arg}")
+        parts.append(f"*{func_args.vararg.arg}")
+    elif func_args.kwonlyargs:
+        parts.append("*")
 
-    # **kwargs
+    parts.extend(_kwonly_args(func_args.kwonlyargs, func_args.kw_defaults))
+
     if func_args.kwarg:
-        args.append(f"**{func_args.kwarg.arg}")
+        parts.append(f"**{func_args.kwarg.arg}")
 
-    return f"{node.name}({', '.join(args)})"
+    return f"{node.name}({', '.join(parts)})"
 
 
-def extract_public_api(source: str) -> PublicAPI:
+def extract_public_api(source: str, *, include_private: bool = False) -> PublicAPI:
     """Parse Python source and extract the public API surface.
 
     Parameters
@@ -63,19 +105,21 @@ def extract_public_api(source: str) -> PublicAPI:
 
     api = PublicAPI()
 
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ClassDef) and _is_public(node.name):
+    is_visible = (lambda _: True) if include_private else _is_public
+
+    for node in ast.iter_child_nodes(tree):
+        if isinstance(node, ast.ClassDef) and is_visible(node.name):
             method_sigs: set[str] = set()
             for item in node.body:
                 if isinstance(
                     item, (ast.FunctionDef, ast.AsyncFunctionDef)
-                ) and _is_public(item.name):
+                ) and is_visible(item.name):
                     sig = _format_signature(item)
                     method_sigs.add(sig)
                     api.methods[f"{node.name}.{item.name}"] = sig
             api.classes[node.name] = method_sigs
 
-        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and _is_public(
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and is_visible(
             node.name
         ):
             # Only top-level functions
@@ -88,6 +132,8 @@ def diff_apis(
     old_source: str,
     new_source: str,
     file: str = "",
+    *,
+    include_private: bool = False,
 ) -> list[SymbolChange]:
     """Compare two versions of a Python file and return what changed.
 
@@ -99,14 +145,16 @@ def diff_apis(
         The source code of the new version of the Python module.
     file : str, optional
         The name of the file being compared, by default "".
+    include_private : bool, optional
+        If True, include private (underscore-prefixed) symbols, by default False.
 
     Returns
     -------
     list[SymbolChange]
         A list of changes detected between the old and new versions.
     """
-    old_api = extract_public_api(old_source)
-    new_api = extract_public_api(new_source)
+    old_api = extract_public_api(old_source, include_private=include_private)
+    new_api = extract_public_api(new_source, include_private=include_private)
 
     changes: list[SymbolChange] = []
 
@@ -155,41 +203,12 @@ def _diff_signatures(
     """Helper to diff two sets of signatures (functions or methods)."""
     changes: list[SymbolChange] = []
 
-    removed = set(old) - set(new)
-    added = set(new) - set(old)
-
-    # Detect renames: removed + added where signatures are very similar
-    matched_removed: set[str] = set()
-    matched_added: set[str] = set()
-
-    for r in removed:
-        for a in added:
-            old_sig = old[r]
-            new_sig = new[a]
-            # Same params, different name → likely rename
-            old_params = old_sig[old_sig.index("(") :]
-            new_params = new_sig[new_sig.index("(") :]
-            if old_params == new_params:
-                changes.append(
-                    SymbolChange(
-                        name=a,
-                        change_type=ChangeType.RENAMED,
-                        old_signature=r,
-                        new_signature=a,
-                        file=file,
-                    )
-                )
-                matched_removed.add(r)
-                matched_added.add(a)
-                break
-
-    for name in removed - matched_removed:
+    for name in set(old) - set(new):
         changes.append(SymbolChange(name, ChangeType.REMOVED, file=file))
 
-    for name in added - matched_added:
+    for name in set(new) - set(old):
         changes.append(SymbolChange(name, ChangeType.ADDED, file=file))
 
-    # Detect signature changes for functions that exist in both
     for name in set(old) & set(new):
         if old[name] != new[name]:
             changes.append(

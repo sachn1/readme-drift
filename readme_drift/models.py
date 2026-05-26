@@ -1,4 +1,4 @@
-"""Shared data models for readme-check."""
+"""Shared data models for readme-drift."""
 
 from dataclasses import dataclass, field
 from enum import Enum
@@ -11,17 +11,14 @@ class ChangeType(Enum):
     ADDED = "added"
     REMOVED = "removed"
     SIGNATURE_CHANGED = "signature_changed"
-    RENAMED = "renamed"
 
 
 @dataclass
 class GitDiffResult:
-    """Files that changed in a git diff, plus their old and new source contents."""
+    """Files that changed in a git diff."""
 
     changed_py_files: list[Path]
-    readme_changed: bool
-    old_file_contents: dict[str, str] = field(default_factory=dict)
-    new_file_contents: dict[str, str] = field(default_factory=dict)
+    changed_config_files: list[Path] = field(default_factory=list)
 
 
 @dataclass
@@ -56,8 +53,6 @@ class SymbolChange:
                     f"`{self.name}` signature changed: "
                     f"{self.old_signature} → {self.new_signature}"
                 )
-            case ChangeType.RENAMED:
-                return f"`{self.old_signature}` was renamed to `{self.name}`"
 
 
 @dataclass
@@ -80,23 +75,25 @@ class StalenessFinding:
 
     @property
     def symbol(self) -> str:
+        """Name of the changed symbol."""
         return self.change.name
 
 
 @dataclass
-class CheckResult:
-    """The overall result of a readme-check run."""
+class DriftCheckResult:
+    """The overall result of a readme-drift run."""
 
     findings: list[StalenessFinding] = field(default_factory=list)
-    readme_was_updated: bool = False
     readme_paths: list[Path] = field(default_factory=list)
     skipped: bool = False
     skip_reason: str = ""
 
     @property
     def passed(self) -> bool:
-        return self.skipped or self.readme_was_updated or len(self.findings) == 0
+        """True if no findings or the run was skipped."""
+        return self.skipped or len(self.findings) == 0
 
     @property
     def failed(self) -> bool:
+        """True if there are unresolved staleness findings."""
         return not self.passed

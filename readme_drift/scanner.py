@@ -14,6 +14,8 @@ def _normalize(name: str) -> str:
 def find_symbol_in_readme(
     readme_path: Path,
     symbol_name: str,
+    *,
+    plain_text: bool = True,
 ) -> list[ReadmeMatch]:
     """
     Search a README file for references to a symbol name.
@@ -34,13 +36,11 @@ def find_symbol_in_readme(
     matches: list[ReadmeMatch] = []
     bare_name = _normalize(symbol_name)
 
-    # Build patterns to search for
     patterns = [
-        # Backtick exact match (with or without parens/args)
         re.compile(rf"`{re.escape(bare_name)}[^`]*`"),
-        # Word boundary plain text match (catches prose references)
-        re.compile(rf"\b{re.escape(bare_name)}\b"),
     ]
+    if plain_text:
+        patterns.append(re.compile(rf"\b{re.escape(bare_name)}\b"))
 
     for line_num, line in enumerate(lines, start=1):
         for pattern in patterns:
@@ -63,6 +63,8 @@ def find_symbol_in_readme(
 def scan_readme_for_symbols(
     readme_path: Path,
     symbols: list[str],
+    *,
+    plain_text: bool = True,
 ) -> dict[str, list[ReadmeMatch]]:
     """
     Scan README for multiple symbols.
@@ -73,7 +75,7 @@ def scan_readme_for_symbols(
     results: dict[str, list[ReadmeMatch]] = {}
 
     for symbol in symbols:
-        matches = find_symbol_in_readme(readme_path, symbol)
+        matches = find_symbol_in_readme(readme_path, symbol, plain_text=plain_text)
         if matches:
             results[symbol] = matches
 

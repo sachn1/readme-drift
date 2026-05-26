@@ -48,17 +48,22 @@ jobs:
           if [ "$EXIT" -ne 0 ] && [ "$EXIT" -ne 21 ]; then
             exit $EXIT
           fi
-          NEW_VERSION=$(poetry version -s)
-          if [ "$NEW_VERSION" != "$OLD_VERSION" ]; then
-            # Normalise to semver format: cz may produce 1.0.0rc1 instead of 1.0.0-rc.1
-            NORM=$(echo "$NEW_VERSION" | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)rc([0-9]+)$/\1-rc.\2/')
-            if [ "$NORM" != "$NEW_VERSION" ]; then
-              poetry version "$NORM"
+          NEW_RAW=$(poetry version -s)
+          if [ "$NEW_RAW" != "$OLD_VERSION" ]; then
+            # Normalise to semver format: cz may write 1.0.0rc1 (PEP 440) to pyproject.toml
+            # even when version_scheme=semver2. poetry version is a no-op for this conversion
+            # because it treats the two forms as equivalent, so we patch the file directly.
+            NORM=$(echo "$NEW_RAW" | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)rc([0-9]+)$/\1-rc.\2/')
+            if [ "$NORM" != "$NEW_RAW" ]; then
+              sed -i -E "s/^(version = \")${NEW_RAW}\"/\1${NORM}\"/" pyproject.toml
               git add pyproject.toml
               git commit --amend --no-edit
-              NEW_VERSION="$NORM"
             fi
-            git tag -a "v$NEW_VERSION" -m "version v$NEW_VERSION"
+            # cz bump already created a tag on the pre-amend commit; delete it so we can
+            # recreate it pointing at the correct (possibly amended) commit.
+            git tag -d "v${NORM}" 2>/dev/null || true
+            git tag -d "v${NEW_RAW}" 2>/dev/null || true
+            git tag -a "v${NORM}" -m "version v${NORM}"
           fi
 
       # On master: strip the RC suffix from the current version (e.g. 1.0.0-rc.1 -> 1.0.0).

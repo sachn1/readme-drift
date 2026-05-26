@@ -15,9 +15,9 @@
 
 ---
 
-## v0.2.0 — First public release ← current
+## v0.2.0 — Shipped
 
-Config file coverage and PyPI distribution.
+Config file coverage, user configurability, performance, and PyPI distribution.
 
 **Config file support:**
 - `.yml` / `.yaml` — GitHub Actions workflows, Docker Compose, Hydra, etc.
@@ -28,40 +28,35 @@ Config file coverage and PyPI distribution.
 - `KeyExtractor` protocol: new file types added by implementing one method and registering a suffix — no other module changes required
 - Pre-commit hook updated to trigger on `.yml`, `.yaml`, `.json`, and `.toml` changes in addition to `.py`
 
+**User configurability:**
+- `--include-private` flag — opt in to tracking private (underscore-prefixed) functions and methods
+- `--exclude` option — skip specific Python files or directories from diffing
+- Plain-text occurrence matching — configurable flag (default on) to flag symbol names found outside backtick spans
+- `[tool.readme-drift]` in `pyproject.toml` — project-level defaults for all CLI flags; `--repo-root` pre-parsed so config is located before argument defaults are applied
+- All boolean flags use `--flag=true/false` syntax via a shared `_parse_bool` helper — consistent across all options
+
+**Performance:**
+- Lazy content reads — file contents read only for files whose changed symbols actually appear in a README
+
+**Observability:**
+- `Makefile` — `make check` mirrors CI exactly (ruff + pytest with coverage gate)
+
 **PyPI release:**
 - `pyyaml` added as a runtime dependency (TOML and JSON use stdlib)
 - Automated publish to PyPI on version tag via trusted publishing (OIDC — no API token secret needed)
 - Package installable as `pip install readme-drift`
 - Registerable as a pre-commit hooks repository
 
-**Deferred from v0.2.0 (added to later milestones):**
-- Python function rename detection — the "same params = rename" heuristic was too unreliable (false positives for zero-parameter functions and any unrelated functions sharing parameter names like `host, port`); removed entirely and moved to backlog pending a reliable signal (git-level rename tracking or AST body similarity)
-- Config-key rename detection — the same-value heuristic is too ambiguous when multiple keys share a value (e.g. many jobs with `runs-on: ubuntu-latest`); deferred to backlog pending a cleaner signal
-- Full key-path matching in README (e.g. `scripts.build`) — current version matches leaf names only; full-path matching deferred to v1.2.0
+**Deferred to backlog:**
+- Python function rename detection — the "same params = rename" heuristic was too unreliable; deferred pending a reliable signal
+- Config-key rename detection — the same-value heuristic is too ambiguous; deferred to backlog
+- Full key-path matching in README (e.g. `scripts.build`) — current version matches leaf names only
 
 ---
 
-## v0.3.0 — Developer control
+## v1.0.0 — Stable release ← next
 
-Fine-grained control for power users, performance improvement, and observability.
-
-### User configurability
-- `--include-private` flag — opt in to tracking private (underscore-prefixed) functions and methods, for projects that document internal APIs
-- `--exclude` option — skip specific Python files or directories from diffing; eliminates the need to track auto-generated or vendored code
-- Plain-text occurrence matching — configurable flag (default on) to flag symbol names found outside backtick spans, catching prose references like "use the connect function"
-
-### Performance
-- Lazy content reads — read file contents only for files whose changed symbols actually appear in a README, avoiding unnecessary git reads for large changesets
-
-### Observability
-- **Codacy integration** — replace the per-branch `--cov-fail-under` threshold with Codacy (free for public repos), which analyses all branches and PRs with quality gates, coverage tracking, and PR decoration
-- **CodeQL** — add GitHub's free security scanner (`github/codeql-action`) for SAST on every PR; zero-cost for public repos and complements Codacy's quality focus
-
----
-
-## v1.0.0 — Stable release
-
-Promoted from v0.2.x after the public release proves stable in the wild. No new features — this milestone represents confidence in the public API surface, the pre-commit hook contract, and the PyPI packaging. Any critical bug fixes discovered post-v0.2.0 ship here.
+The first stable, production-ready release. Marks confidence in the public API surface, the pre-commit hook contract, and PyPI packaging.
 
 **Exit criteria:**
 - No open P0/P1 bugs after at least one full release cycle on PyPI
@@ -84,13 +79,11 @@ README is the most visible documentation file, but several others frequently ref
 
 ---
 
-## v1.2.0 — Configuration and fine-grained control
+## v1.2.0 — Fine-grained control
 
 **Planned:**
-- Configuration file (`[tool.readme-drift]` in `pyproject.toml` or a standalone `readme-drift.toml`) for project-level settings
 - Symbol allowlist — symbols to always flag regardless of README mention
 - Symbol denylist — symbols to never flag (e.g. internal ones that leak into public API by naming convention)
-- Source path exclusions — skip diffing specific Python files or directories
 - README path configuration — explicit include list (`readme_paths`) and additional exclude dirs, so pre-commit users can pin exactly which README files are scanned instead of relying on recursive discovery
 - `SymbolChange` model cleanup — `old_signature` currently stores the old *name* for renames and the old *signature string* for signature changes; introduce a dedicated `old_name` field for renames to make the model unambiguous
 - Full key-path matching in README (e.g. `scripts.build`) — extend scanner to recognise dot-notation config paths in addition to leaf names

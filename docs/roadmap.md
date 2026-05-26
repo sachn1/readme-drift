@@ -43,14 +43,19 @@ Config file coverage and PyPI distribution.
 
 ## v0.3.0 — Developer control
 
-Fine-grained control for power users before the stable API freeze.
+Fine-grained control for power users, performance improvement, and observability.
 
-**Planned:**
+### User configurability
 - `--include-private` flag — opt in to tracking private (underscore-prefixed) functions and methods, for projects that document internal APIs
-- Configurable file exclusions — `--exclude` option (and `[tool.readme-drift]` config block) to skip specific Python files or directories from diffing; eliminates the need to track auto-generated or vendored code
-- Lazy content reads optimisation — read file contents only for files whose changed symbols actually appear in a README, avoiding unnecessary git reads for large changesets
-- Plain-text occurrence matching — configurable option (default on) to flag symbol names found outside backtick spans, catching prose references like "use the connect function"
-- **Codacy integration** — replace the per-branch coverage threshold check with Codacy (free for public repos), which analyses all branches and PRs with quality gates, coverage tracking, and PR decoration; removes the need for the `--cov-fail-under` workaround
+- `--exclude` option — skip specific Python files or directories from diffing; eliminates the need to track auto-generated or vendored code
+- Plain-text occurrence matching — configurable flag (default on) to flag symbol names found outside backtick spans, catching prose references like "use the connect function"
+
+### Performance
+- Lazy content reads — read file contents only for files whose changed symbols actually appear in a README, avoiding unnecessary git reads for large changesets
+
+### Observability
+- **Codacy integration** — replace the per-branch `--cov-fail-under` threshold with Codacy (free for public repos), which analyses all branches and PRs with quality gates, coverage tracking, and PR decoration
+- **CodeQL** — add GitHub's free security scanner (`github/codeql-action`) for SAST on every PR; zero-cost for public repos and complements Codacy's quality focus
 
 ---
 

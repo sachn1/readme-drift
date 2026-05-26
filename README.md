@@ -73,6 +73,50 @@ readme-drift --base-ref origin/main --warn-only
 
 ---
 
+## Configuration
+
+All CLI flags can be set permanently in `pyproject.toml` under `[tool.readme-drift]`.
+CLI flags always take precedence over the file.
+
+```toml
+[tool.readme-drift]
+# Git ref to diff against. Default: "HEAD"
+base-ref = "origin/main"
+
+# Print warnings but never fail the build. Default: false
+warn-only = false
+
+# Track private (underscore-prefixed) symbols. Default: false
+include-private = false
+
+# Skip files or directories matching these glob patterns.
+# Each entry is equivalent to one --exclude flag on the CLI.
+# Default: []
+exclude = [
+    "generated/",
+    "tests/",
+    "docs/",
+]
+
+# Match symbols as plain text (word-boundary) in addition to backtick spans.
+# Default: true. Set to false to restrict matching to backtick spans only.
+plain-text-search = true
+```
+
+### Supported keys
+
+| Key | Type | CLI equivalent | Default |
+|---|---|---|---|
+| `base-ref` | string | `--base-ref` | `"HEAD"` |
+| `warn-only` | bool | `--warn-only=true/false` | `false` |
+| `include-private` | bool | `--include-private=true/false` | `false` |
+| `exclude` | list of strings | `--exclude` (repeatable) | `[]` |
+| `plain-text-search` | bool | `--plain-text-search=true/false` | `true` |
+
+`pyproject.toml` is discovered by walking up from the current directory (or `--repo-root` if set). If no `[tool.readme-drift]` section is present, all defaults apply.
+
+---
+
 ## Developer reference
 
 A fully annotated [Jupyter notebook](notebooks/demo.ipynb) walks through each module in depth — AST parsing, signature extraction, config diffing, the README scanner, and the complete end-to-end pipeline without git. Useful for understanding the internals or experimenting with edge cases.

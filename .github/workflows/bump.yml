@@ -46,7 +46,8 @@ jobs:
           OLD_VERSION=$(poetry version -s)
           EXIT=0
           poetry run cz bump --prerelease rc --yes || EXIT=$?  # --yes skips the interactive prompt
-          if [ "$EXIT" -ne 0 ] && [ "$EXIT" -ne 21 ]; then
+          # 3 = no commits found at all, 21 = commits found but none trigger an increment
+          if [ "$EXIT" -ne 0 ] && [ "$EXIT" -ne 3 ] && [ "$EXIT" -ne 21 ]; then
             exit $EXIT
           fi
           NEW_RAW=$(poetry version -s)
@@ -99,8 +100,8 @@ jobs:
           git checkout develop
           poetry version "${{ steps.promote.outputs.release_version }}"
           git add pyproject.toml
-          # Use "chore:" so this commit does not trigger another RC bump on develop
-          git commit -m "chore: sync version to ${{ steps.promote.outputs.release_version }} after release"
+          # [skip ci] prevents this commit from re-triggering the bump workflow on develop
+          git commit -m "chore: sync version to ${{ steps.promote.outputs.release_version }} after release [skip ci]"
           git push origin develop
           # Return to master so the follow-tags push below targets the correct branch
           git checkout master

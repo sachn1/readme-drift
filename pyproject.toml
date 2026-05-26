@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "readme-drift"
-version = "0.2.0-rc.2"
+version = "1.0.0-rc.0"
 description = "Detect stale README references after code changes — for pre-commit and CI."
 authors = ["Sachin Nandakumar"]
 readme = "README.md"
@@ -48,7 +48,6 @@ version_provider = "poetry"
 version_scheme = "semver2"
 tag_format = "v$version"
 update_changelog_on_bump = false
-major_version_zero = true
 
 [tool.ruff]
 line-length = 88

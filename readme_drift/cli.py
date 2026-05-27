@@ -56,6 +56,8 @@ def main() -> None:
     parser.add_argument(
         "--staged",
         type=_parse_bool,
+        nargs="?",
+        const=True,
         default=cfg.get("staged", False),
         metavar="BOOL",
         help="Check staged changes only (use in pre-commit hooks, default: false)",

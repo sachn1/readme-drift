@@ -42,7 +42,7 @@ Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/sachn1/readme-drift
-    rev: v0.2.0
+    rev: v1.0.1 # use the latest release
     hooks:
       - id: readme-drift
 ```
@@ -53,26 +53,23 @@ Then install the hook:
 pre-commit install
 ```
 
-Every `git commit` that changes `.py`, `.yml`, `.yaml`, `.json`, or `.toml` files will now check if the README needs updating.
-
-### As a CLI tool
-
-```bash
-# Check staged changes (same as pre-commit)
-readme-drift --staged
-
-# Check against a specific branch (for CI / PRs)
-readme-drift --base-ref origin/main
-
-# Warn only — don't fail the build
-readme-drift --base-ref origin/main --warn-only
-```
+No extra `args` needed — the hook automatically checks your **staged** changes (what you've `git add`-ed). Do not pass `--staged` yourself; it's already set internally and duplicating it will cause an error.
 
 ### In CI (GitHub Actions)
 
 ```yaml
 - name: Check README staleness
   run: readme-drift --base-ref origin/${{ github.base_ref }}
+```
+
+CI compares committed changes against a base branch. Do not pass `--staged` here.
+
+### As a CLI tool
+
+```bash
+readme-drift --staged                              # check staged changes
+readme-drift --base-ref origin/main               # check against a branch
+readme-drift --base-ref origin/main --warn-only   # warn but don't fail
 ```
 
 ---

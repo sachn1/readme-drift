@@ -3,108 +3,37 @@ name: Bump Version
 on:
   push:
     branches:
-      - develop
       - master
 
 jobs:
   bump:
     name: Bump Version
     runs-on: ubuntu-latest
-    # Skip the bump commit itself to avoid an infinite trigger loop
-    if: "!startsWith(github.event.head_commit.message, 'bump:')"
+    if: "!startsWith(github.event.head_commit.message, 'bump:') && !contains(github.event.head_commit.message, '[skip ci]')"
     permissions:
       contents: write
 
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # full history + all tags required for cz to compute the next version
-          token: ${{ secrets.BUMP_TOKEN }}  # PAT so the bot can push back to protected branches
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+          fetch-depth: 0
+          token: ${{ secrets.BUMP_TOKEN }}
 
       - name: Install Poetry and Commitizen
-        run: |
-          pip install poetry
-          poetry install --only dev
+        run: pip install poetry commitizen
 
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # On develop: bump to the next RC (e.g. 1.0.0-rc.1 → 1.0.0-rc.2, or 1.0.0 → 1.1.0-rc.0).
-      # cz bump with version_provider=poetry can silently write PEP 440 format (1.0.0rc1)
-      # instead of semver (1.0.0-rc.1). We normalise with sed, amend the commit if needed,
-      # and always re-create the tag so it lands on the correct final commit.
-      # Exit code 21 means no conventional commits found — nothing to bump.
-      - name: Bump RC version
-        if: github.ref == 'refs/heads/develop'
+      - name: Bump version
         run: |
-          OLD_VERSION=$(poetry version -s)
           EXIT=0
-          poetry run cz bump --prerelease rc --yes || EXIT=$?  # --yes skips the interactive prompt
-          # 3 = no commits found at all, 21 = commits found but none trigger an increment
+          cz bump --yes || EXIT=$?
           if [ "$EXIT" -ne 0 ] && [ "$EXIT" -ne 3 ] && [ "$EXIT" -ne 21 ]; then
             exit $EXIT
           fi
-          NEW_RAW=$(poetry version -s)
-          if [ "$NEW_RAW" != "$OLD_VERSION" ]; then
-            # Normalise to semver format: cz may write 1.0.0rc1 (PEP 440) to pyproject.toml
-            # even when version_scheme=semver2. poetry version is a no-op for this conversion
-            # because it treats the two forms as equivalent, so we patch the file directly.
-            NORM=$(echo "$NEW_RAW" | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)rc([0-9]+)$/\1-rc.\2/')
-            if [ "$NORM" != "$NEW_RAW" ]; then
-              sed -i -E "s/^(version = \")${NEW_RAW}\"/\1${NORM}\"/" pyproject.toml
-              git add pyproject.toml
-              git commit --amend --no-edit
-            fi
-            # cz bump already created a tag on the pre-amend commit; delete it so we can
-            # recreate it pointing at the correct (possibly amended) commit.
-            git tag -d "v${NORM}" 2>/dev/null || true
-            git tag -d "v${NEW_RAW}" 2>/dev/null || true
-            git tag -a "v${NORM}" -m "version v${NORM}"
-          fi
-
-      # On master: strip the RC suffix from pyproject.toml (e.g. 1.0.0-rc.1 → 1.0.0).
-      # We do not use cz bump here because a merge commit carries no conventional commit
-      # message, so cz would exit 21 (nothing to bump) and never produce the stable tag.
-      # Handles both semver (1.0.0-rc.1) and PEP 440 (1.0.0rc1) formats for safety.
-      # Skips silently if the current version is already a stable release.
-      - name: Promote RC to release
-        id: promote
-        if: github.ref == 'refs/heads/master'
-        run: |
-          CURRENT=$(poetry version -s)
-          if [[ "$CURRENT" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-rc\.[0-9]+$ ]] || \
-             [[ "$CURRENT" =~ ^([0-9]+\.[0-9]+\.[0-9]+)rc[0-9]+$ ]]; then
-            RELEASE="${BASH_REMATCH[1]}"
-            poetry version "$RELEASE"
-            git add pyproject.toml
-            git commit -m "bump: version $CURRENT → $RELEASE"
-            git tag -a "v$RELEASE" -m "version v$RELEASE"
-            # Step output used in the sync-develop if-condition below (env context is
-            # unreliable for dynamically set vars in if expressions)
-            echo "release_version=$RELEASE" >> "$GITHUB_OUTPUT"
-          fi
-
-      # After a stable release on master, back-fill the release version onto develop.
-      # Without this, the next RC bump on develop would start from the stale RC version
-      # and could produce e.g. 1.0.0-rc.2 even though 1.0.0 already exists on master.
-      - name: Sync develop version after release
-        if: github.ref == 'refs/heads/master' && steps.promote.outputs.release_version != ''
-        run: |
-          git fetch origin develop
-          git checkout develop
-          poetry version "${{ steps.promote.outputs.release_version }}"
-          git add pyproject.toml
-          # [skip ci] prevents this commit from re-triggering the bump workflow on develop
-          git commit -m "chore: sync version to ${{ steps.promote.outputs.release_version }} after release [skip ci]"
-          git push origin develop
-          # Return to master so the follow-tags push below targets the correct branch
-          git checkout master
 
       - name: Push
         run: git push --follow-tags

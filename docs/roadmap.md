@@ -87,6 +87,37 @@ README is the most visible documentation file, but several others frequently ref
 - README path configuration — explicit include list (`readme_paths`) and additional exclude dirs, so pre-commit users can pin exactly which README files are scanned instead of relying on recursive discovery
 - `SymbolChange` model cleanup — `old_signature` currently stores the old *name* for renames and the old *signature string* for signature changes; introduce a dedicated `old_name` field for renames to make the model unambiguous
 - Full key-path matching in README (e.g. `scripts.build`) — extend scanner to recognise dot-notation config paths in addition to leaf names
+- **Noise suppression** — built-in blocklist of short, high-frequency tokens that are valid symbol names but match too many unrelated README lines (e.g. `name`, `version`, `build`, `test`, `run`, `type`, `url`, `host`, `port`, `debug`, `true`, `false`); configurable `min-symbol-length` threshold (default: 4 characters) to skip single-character and very short tokens from plain-text matching; both the blocklist and threshold are overridable in `[tool.readme-drift]`. This is a hard prerequisite for v1.3.0 — the infra file extractors produce exactly these short tokens.
+- `--verbose` flag — print every detected symbol change and its README scan outcome (matched / not found); invaluable for diagnosing false positives and understanding why a check passed or failed
+
+---
+
+## v1.3.0 — Build and infrastructure file coverage
+
+Every Python project has files beyond `.py` and generic config that define named things the README references directly — make targets, container services, CLI entry points, environment variables. These files live in the repo, so no external knowledge is needed; the names are extractable by the same `KeyExtractor` protocol already in place.
+
+**Prerequisite:** noise suppression (v1.2.0) must land first. These extractors produce short tokens (`web`, `db`, `lint`, `test`) that are unacceptably noisy without a blocklist and minimum-length threshold.
+
+**Infrastructure changes required:**
+- Filename-keyed extractor registry alongside the existing suffix-keyed `_EXTRACTORS` — needed for `Makefile` (no suffix) and compose files (`.yml` suffix already claimed by the generic `YamlExtractor`)
+- Pre-commit hook `types_or` / `files` pattern updated to trigger on the new filenames
+
+**Planned file types:**
+
+- **`Makefile` / `GNUmakefile` / `makefile`** (filename-triggered, no suffix) — extract target names from non-indented `target:` lines and `.PHONY` declarations; catches `make lint` becoming `make check` or a `make docs` target being removed from a README's development guide
+- **`docker-compose.yml` / `docker-compose.yaml` / `compose.yml` / `compose.yaml`** (filename-triggered) — extract top-level service names from `services:` only, not the full YAML tree; catches `docker compose up web` references when a service is renamed or removed. Filename-triggered to avoid applying the deep-flatten `YamlExtractor` to compose files.
+- **`pyproject.toml`** (specialized extraction, beyond current generic TOML flattening) — extract CLI entry point names from `[project.scripts]` and `[tool.poetry.scripts]` (these are the commands users actually type after install, e.g. `readme-drift`); extract optional dependency group names from `[project.optional-dependencies]` and `[tool.poetry.group.*]` (catches `pip install pkg[dev]` or `pip install pkg[all]` references going stale)
+- **`tox.ini`** — extract `[testenv:name]` section names (e.g. `lint`, `py311`, `coverage`) via stdlib `configparser`; catches `tox -e lint` references when an environment is renamed or removed
+- **`Dockerfile`** — extract multi-stage build target names from `FROM ... AS name` lines; catches `docker build --target builder` references when a stage is renamed or removed
+- **`.env.example` / `.env.template` / `.env.sample`** — extract variable names from `KEY=value` lines; catches renamed environment variables in setup and deployment guides. Gated behind noise suppression — variable names like `HOST`, `PORT`, `DEBUG` are high-collision.
+
+**Deferred from this version:**
+- `setup.cfg` — largely superseded by `pyproject.toml`; diminishing returns
+- `Taskfile.yml` / `Taskfile.yaml` (go-task) — same suffix collision as compose files; deferred until filename-keyed registry is proven stable
+- `Cargo.toml` feature / binary / workspace member names — Rust ecosystem, separate scope
+- `requirements.txt` package names — package names frequently overlap with common English words; noise suppression alone is insufficient
+- Kubernetes manifest `metadata.name` values — insufficient signal without knowing which resource kinds the README references; k8s YAML is structurally identical to other YAML
+- Shell script internals (function names, flag parsing) — requires Bash/POSIX parsing; a different class of problem
 
 ---
 

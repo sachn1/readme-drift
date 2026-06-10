@@ -163,10 +163,36 @@ def _diff_key_paths(
     for path in old:
         all_old_segs.update(_all_segments(path))
 
+    # Build reverse maps: segment → all full paths that contained it (for
+    # key-path matching in README, e.g. "scripts.build" as well as "build").
+    removed_seg_to_paths: dict[str, list[str]] = {}
+    for path in removed_paths:
+        for seg in _all_segments(path):
+            removed_seg_to_paths.setdefault(seg, []).append(path)
+
+    added_seg_to_paths: dict[str, list[str]] = {}
+    for path in added_paths:
+        for seg in _all_segments(path):
+            added_seg_to_paths.setdefault(seg, []).append(path)
+
     for name in removed_segs - all_new_segs:
-        changes.append(SymbolChange(name, ChangeType.REMOVED, file=file))
+        changes.append(
+            SymbolChange(
+                name,
+                ChangeType.REMOVED,
+                file=file,
+                key_paths=removed_seg_to_paths.get(name, []),
+            )
+        )
 
     for name in added_segs - all_old_segs:
-        changes.append(SymbolChange(name, ChangeType.ADDED, file=file))
+        changes.append(
+            SymbolChange(
+                name,
+                ChangeType.ADDED,
+                file=file,
+                key_paths=added_seg_to_paths.get(name, []),
+            )
+        )
 
     return changes

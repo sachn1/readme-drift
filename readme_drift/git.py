@@ -131,8 +131,19 @@ def get_diff(
     )
 
 
-def find_readmes(repo_root: Path) -> list[Path]:
-    """Find all README files in the repository, skipping dev-artifact directories."""
+def find_readmes(
+    repo_root: Path, extra_skip_dirs: set[str] | None = None
+) -> list[Path]:
+    """Find all README files in the repository, skipping dev-artifact directories.
+
+    Parameters
+    ----------
+    extra_skip_dirs:
+        Additional directory *names* (not paths) to skip during traversal,
+        merged with the built-in ``_SKIP_DIRS`` set.  Mirrors the
+        ``readme-exclude-dirs`` config key.
+    """
+    skip = _SKIP_DIRS | (extra_skip_dirs or set())
     found = []
     queue = [repo_root]
     while queue:
@@ -141,7 +152,7 @@ def find_readmes(repo_root: Path) -> list[Path]:
             if path.is_symlink():
                 continue
             if path.is_dir():
-                if path.name not in _SKIP_DIRS:
+                if path.name not in skip:
                     queue.append(path)
             elif path.name.lower() in _README_NAMES:
                 found.append(path)

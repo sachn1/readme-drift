@@ -41,6 +41,12 @@ class SymbolChange:
     old_signature: str | None = None
     new_signature: str | None = None
     file: str = ""
+    # Rename tracking: the original name before a rename (distinct from old_signature,
+    # which stores the old signature string for SIGNATURE_CHANGED).
+    old_name: str | None = None
+    # Full dot-notation key paths that contained this symbol (config changes only).
+    # e.g. the leaf "build" from "scripts.build" → key_paths=["scripts.build"].
+    key_paths: list[str] = field(default_factory=list)
 
     def __str__(self) -> str:
         match self.change_type:
@@ -87,6 +93,10 @@ class DriftCheckResult:
     readme_paths: list[Path] = field(default_factory=list)
     skipped: bool = False
     skip_reason: str = ""
+    # Populated when --verbose is active; each entry is a human-readable line
+    # describing one symbol change and its fate (flagged / not in README /
+    # suppressed / denied / force-flagged via allowlist).
+    verbose_log: list[str] = field(default_factory=list)
 
     @property
     def passed(self) -> bool:

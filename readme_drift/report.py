@@ -11,7 +11,12 @@ def format_report(result: DriftCheckResult) -> str:
         return f"readme-drift: skipped ({result.skip_reason})"
 
     if not result.findings:
-        return "readme-drift: ✅ No README staleness detected."
+        report = "readme-drift: ✅ No README staleness detected."
+        if result.verbose_log:
+            report += "\n\nreadme-drift: verbose log:\n" + "\n".join(
+                f"  {entry}" for entry in result.verbose_log
+            )
+        return report
 
     readme_label = ", ".join(sorted({p.name for p in result.readme_paths})) or "README"
     lines.append(f"readme-drift: ❌ {readme_label} may be stale:\n")
@@ -21,13 +26,21 @@ def format_report(result: DriftCheckResult) -> str:
         lines.append(f"  • {change}")
         if change.file:
             lines.append(f"    in {change.file}")
-        for match in finding.readme_matches:
-            lines.append(
-                f"    referenced in {match.readme_path.name} line {match.line_number}: "
-                f"…{match.line_text}…"
-            )
+        if finding.readme_matches:
+            for match in finding.readme_matches:
+                lines.append(
+                    f"    referenced in {match.readme_path.name} line {match.line_number}: "
+                    f"…{match.line_text}…"
+                )
+        else:
+            lines.append("    (force-flagged via allowlist — not found in README)")
         lines.append("")
 
     lines.append("  → Please update the README or run with --no-verify to skip.")
+
+    if result.verbose_log:
+        lines.append("\nreadme-drift: verbose log:")
+        for entry in result.verbose_log:
+            lines.append(f"  {entry}")
 
     return "\n".join(lines)

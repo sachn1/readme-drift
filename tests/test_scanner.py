@@ -101,3 +101,73 @@ def test_scan_readme_plain_text_false(tmp_path):
     readme.write_text("Use helper to process data.\n")
     results = scan_readme_for_symbols(readme, ["helper"], plain_text=False)
     assert "helper" not in results
+
+
+# ---------------------------------------------------------------------------
+# v1.2.0 — force_backtick_only per-symbol override
+# ---------------------------------------------------------------------------
+
+
+def test_force_backtick_only_suppresses_plain_text_for_named_symbol(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text("Run the build step before deploying.\n")
+    # "build" appears as plain text only.  With force_backtick_only it should not match.
+    results = scan_readme_for_symbols(
+        readme,
+        ["build"],
+        plain_text=True,
+        force_backtick_only={"build"},
+    )
+    assert "build" not in results
+
+
+def test_force_backtick_only_still_matches_backtick(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text("Run `build` to compile.\n")
+    results = scan_readme_for_symbols(
+        readme,
+        ["build"],
+        plain_text=True,
+        force_backtick_only={"build"},
+    )
+    assert "build" in results
+
+
+def test_force_backtick_only_does_not_affect_other_symbols(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text("Run the build step. Call connect to link.\n")
+    # "build" is in force_backtick_only, "connect" is not.
+    results = scan_readme_for_symbols(
+        readme,
+        ["build", "connect"],
+        plain_text=True,
+        force_backtick_only={"build"},
+    )
+    assert "build" not in results  # plain text suppressed
+    assert "connect" in results  # plain text still active
+
+
+def test_force_backtick_only_none_behaves_normally(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text("Run the build step.\n")
+    results = scan_readme_for_symbols(
+        readme,
+        ["build"],
+        plain_text=True,
+        force_backtick_only=None,  # default — no override
+    )
+    assert "build" in results
+
+
+def test_scan_key_path_dotnotation_in_backtick(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text("Defined in `scripts.build` of package.json.\n")
+    results = scan_readme_for_symbols(readme, ["scripts.build"])
+    assert "scripts.build" in results
+
+
+def test_scan_key_path_dotnotation_plain_text(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text("The scripts.build target compiles the project.\n")
+    results = scan_readme_for_symbols(readme, ["scripts.build"], plain_text=True)
+    assert "scripts.build" in results

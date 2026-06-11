@@ -65,17 +65,27 @@ def scan_readme_for_symbols(
     symbols: list[str],
     *,
     plain_text: bool = True,
+    force_backtick_only: set[str] | None = None,
 ) -> dict[str, list[ReadmeMatch]]:
     """
     Scan README for multiple symbols.
 
     Returns a dict of symbol → list of matches.
     Only symbols that ARE found in the README are included.
+
+    Parameters
+    ----------
+    force_backtick_only:
+        A set of symbol names that must only be matched inside backtick spans,
+        even when plain_text=True.  Used by the noise-suppression layer to
+        restrict short or common tokens to the more precise backtick match.
     """
     results: dict[str, list[ReadmeMatch]] = {}
+    _backtick_only = force_backtick_only or set()
 
     for symbol in symbols:
-        matches = find_symbol_in_readme(readme_path, symbol, plain_text=plain_text)
+        use_plain = plain_text and symbol not in _backtick_only
+        matches = find_symbol_in_readme(readme_path, symbol, plain_text=use_plain)
         if matches:
             results[symbol] = matches
 

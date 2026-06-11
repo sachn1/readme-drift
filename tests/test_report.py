@@ -88,3 +88,37 @@ def test_report_multiple_findings():
     result = DriftCheckResult(findings=[finding], readme_paths=[Path("README.md")])
     report = format_report(result)
     assert "src/utils.py" in report
+
+
+def test_report_shows_verbose_log_on_pass():
+    result = DriftCheckResult(
+        findings=[],
+        verbose_log=["helper [removed] → not found in any README → skipped"],
+    )
+    report = format_report(result)
+    assert "✅" in report
+    assert "verbose log" in report
+    assert "helper" in report
+
+
+def test_report_shows_verbose_log_on_fail():
+    finding = _make_finding("connect", ChangeType.REMOVED)
+    result = DriftCheckResult(
+        findings=[finding],
+        readme_paths=[Path("README.md")],
+        verbose_log=["connect [removed] → found at README.md:5 → FLAGGED"],
+    )
+    report = format_report(result)
+    assert "❌" in report
+    assert "verbose log" in report
+    assert "FLAGGED" in report
+
+
+def test_report_force_flagged_finding_shows_allowlist_note():
+    change = SymbolChange(name="critical_api", change_type=ChangeType.REMOVED)
+    # No readme_matches — this is an allowlist force-flag
+    finding = StalenessFinding(change=change, readme_matches=[])
+    result = DriftCheckResult(findings=[finding], readme_paths=[Path("README.md")])
+    report = format_report(result)
+    assert "allowlist" in report
+    assert "critical_api" in report

@@ -158,6 +158,45 @@ def test_diff_unknown_extension_returns_empty():
     assert changes == []
 
 
+def test_key_paths_populated_for_removed_leaf():
+    old = '{"scripts": {"build": "webpack", "test": "jest"}}'
+    new = '{"scripts": {"test": "jest"}}'
+    changes = diff_config(old, new, file="package.json")
+    removed = [c for c in changes if c.name == "build"]
+    assert removed, "expected REMOVED change for 'build'"
+    assert any("scripts.build" in kp for kp in removed[0].key_paths)
+
+
+def test_key_paths_populated_for_added_leaf():
+    old = '{"scripts": {"test": "jest"}}'
+    new = '{"scripts": {"lint": "eslint", "test": "jest"}}'
+    changes = diff_config(old, new, file="package.json")
+    added = [c for c in changes if c.name == "lint"]
+    assert added, "expected ADDED change for 'lint'"
+    assert any("scripts.lint" in kp for kp in added[0].key_paths)
+
+
+def test_key_paths_contain_full_nested_path():
+    old = "[tool.black]\nline-length = 88\n"
+    new = "[tool.ruff]\nline-length = 88\n"
+    changes = diff_config(old, new, file="pyproject.toml")
+    removed = [c for c in changes if c.name == "black"]
+    assert removed
+    # key_paths should contain the full path like "tool.black.line-length" or "tool.black"
+    all_kps = [kp for r in removed for kp in r.key_paths]
+    assert any("black" in kp for kp in all_kps)
+
+
+def test_key_paths_empty_for_py_changes():
+    from readme_drift.ast_diff import diff_apis
+
+    old = "def connect(host, port): pass\n"
+    new = "def connect(url): pass\n"
+    changes = diff_apis(old, new)
+    for c in changes:
+        assert c.key_paths == [], "Python AST changes should have no key_paths"
+
+
 def test_diff_leaf_deduplication():
     # 'name' key appears in multiple job sections. When removed from all of them
     # it should be reported exactly once, not once per occurrence.

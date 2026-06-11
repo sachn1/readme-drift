@@ -54,18 +54,57 @@ Config file coverage, user configurability, performance, and PyPI distribution.
 
 ---
 
-## v1.0.0 — Stable release ← next
+## v1.0.0 — Shipped
 
-The first stable, production-ready release. Marks confidence in the public API surface, the pre-commit hook contract, and PyPI packaging.
-
-**Exit criteria:**
-- No open P0/P1 bugs after at least one full release cycle on PyPI
-- Pre-commit hook confirmed working across Python, Node, and Go project layouts
-- Public API (`SymbolChange`, `diff_apis`, `diff_config`, `run_check`) considered stable for downstream use
+The first stable, production-ready release. Public API (`SymbolChange`, `diff_apis`, `diff_config`, `run_check`) considered stable for downstream use.
 
 ---
 
-## v1.1.0 — Broader prose documentation targets
+## v1.0.1 — Shipped
+
+`--staged` bug fix and trunk-based branching simplification.
+
+**CLI:**
+- Fixed `--staged` pre-commit hook error (`expected one argument`) via argparse `nargs="?"` + `const=True`; hook entry updated to `readme-drift --staged true`
+
+**Workflow:**
+- Simplified to trunk-based: `feature/*` or `bugfix/*` → PR → `master` directly; no `develop` branch, no RC cycle
+
+---
+
+## v2.0.0 — Fine-grained control ← next release
+
+Click migration (breaking CLI syntax change), symbol filtering, noise suppression, README targeting, and verbose output. All items below are implemented on the current branch.
+
+**Breaking change:**
+- Migrated from argparse to `click` — boolean flags are now bare flags (`--staged`, `--warn-only`, `--include-private`, `--verbose`) and toggle pairs (`--plain-text-search` / `--no-plain-text-search`). The old `--flag true/false` syntax is removed.
+
+**Symbol filtering:**
+- `--symbol-allowlist` — always flag symbol when changed, even without a README match; for critical public API
+- `--symbol-denylist` — never flag symbol, even if changed and found in README; takes priority over allowlist
+- `--min-symbol-length` — plain-text matching only applies to symbols ≥ N characters (default: 4); shorter symbols still matched inside backticks
+- `--noise-blocklist` — replace the built-in suppression list entirely; disable via `noise-blocklist = []` in `pyproject.toml`; prerequisite for v2.1.0
+- `--noise-allowlist` — remove specific words from the built-in blocklist without replacing it; use when only one or two words need re-enabling
+
+**README targeting:**
+- `--readme-paths` — explicit README list, disables recursive discovery entirely
+- `--readme-exclude-dirs` — add extra dirs to skip during discovery without changing the built-in skip list
+
+**Output:**
+- `--verbose` — per-symbol trace: shows whether each changed symbol was flagged, suppressed, or skipped and why
+
+**Model:**
+- `SymbolChange.old_name` — dedicated field for the pre-rename name, separate from `old_signature`; `key_paths` stores full dot-notation paths (e.g. `["scripts.build"]`) so the README is searched for both leaf names and full paths
+
+**Code quality:**
+- `readme_drift/constants.py` — extracted `DEFAULT_NOISE_BLOCKLIST`, `README_NAMES`, `README_EXTENSIONS`, `README_SKIP_DIRS` out of private definitions scattered across modules
+
+**Documentation:**
+- MkDocs Material docs site at https://sachn1.github.io/readme-drift — auto-deployed on every master push via `docs.yml`
+
+---
+
+## v2.1.0 — Broader prose documentation targets
 
 README is the most visible documentation file, but several others frequently reference code symbols and are just as likely to go stale.
 
@@ -79,14 +118,32 @@ README is the most visible documentation file, but several others frequently ref
 
 ---
 
-## v1.2.0 — Fine-grained control
+## v2.2.0 — Build and infrastructure file coverage
 
-**Planned:**
-- Symbol allowlist — symbols to always flag regardless of README mention
-- Symbol denylist — symbols to never flag (e.g. internal ones that leak into public API by naming convention)
-- README path configuration — explicit include list (`readme_paths`) and additional exclude dirs, so pre-commit users can pin exactly which README files are scanned instead of relying on recursive discovery
-- `SymbolChange` model cleanup — `old_signature` currently stores the old *name* for renames and the old *signature string* for signature changes; introduce a dedicated `old_name` field for renames to make the model unambiguous
-- Full key-path matching in README (e.g. `scripts.build`) — extend scanner to recognise dot-notation config paths in addition to leaf names
+Every Python project has files beyond `.py` and generic config that define named things the README references directly — make targets, container services, CLI entry points, environment variables. These files live in the repo, so no external knowledge is needed; the names are extractable by the same `KeyExtractor` protocol already in place.
+
+**Prerequisite:** noise suppression (v2.0.0) must land first. These extractors produce short tokens (`web`, `db`, `lint`, `test`) that are unacceptably noisy without a blocklist and minimum-length threshold.
+
+**Infrastructure changes required:**
+- Filename-keyed extractor registry alongside the existing suffix-keyed `_EXTRACTORS` — needed for `Makefile` (no suffix) and compose files (`.yml` suffix already claimed by the generic `YamlExtractor`)
+- Pre-commit hook `types_or` / `files` pattern updated to trigger on the new filenames
+
+**Planned file types:**
+
+- **`Makefile` / `GNUmakefile` / `makefile`** (filename-triggered, no suffix) — extract target names from non-indented `target:` lines and `.PHONY` declarations; catches `make lint` becoming `make check` or a `make docs` target being removed from a README's development guide
+- **`docker-compose.yml` / `docker-compose.yaml` / `compose.yml` / `compose.yaml`** (filename-triggered) — extract top-level service names from `services:` only, not the full YAML tree; catches `docker compose up web` references when a service is renamed or removed. Filename-triggered to avoid applying the deep-flatten `YamlExtractor` to compose files.
+- **`pyproject.toml`** (specialized extraction, beyond current generic TOML flattening) — extract CLI entry point names from `[project.scripts]` and `[tool.poetry.scripts]` (these are the commands users actually type after install, e.g. `readme-drift`); extract optional dependency group names from `[project.optional-dependencies]` and `[tool.poetry.group.*]` (catches `pip install pkg[dev]` or `pip install pkg[all]` references going stale)
+- **`tox.ini`** — extract `[testenv:name]` section names (e.g. `lint`, `py311`, `coverage`) via stdlib `configparser`; catches `tox -e lint` references when an environment is renamed or removed
+- **`Dockerfile`** — extract multi-stage build target names from `FROM ... AS name` lines; catches `docker build --target builder` references when a stage is renamed or removed
+- **`.env.example` / `.env.template` / `.env.sample`** — extract variable names from `KEY=value` lines; catches renamed environment variables in setup and deployment guides. Gated behind noise suppression — variable names like `HOST`, `PORT`, `DEBUG` are high-collision.
+
+**Deferred from this version:**
+- `setup.cfg` — largely superseded by `pyproject.toml`; diminishing returns
+- `Taskfile.yml` / `Taskfile.yaml` (go-task) — same suffix collision as compose files; deferred until filename-keyed registry is proven stable
+- `Cargo.toml` feature / binary / workspace member names — Rust ecosystem, separate scope
+- `requirements.txt` package names — package names frequently overlap with common English words; noise suppression alone is insufficient
+- Kubernetes manifest `metadata.name` values — insufficient signal without knowing which resource kinds the README references; k8s YAML is structurally identical to other YAML
+- Shell script internals (function names, flag parsing) — requires Bash/POSIX parsing; a different class of problem
 
 ---
 

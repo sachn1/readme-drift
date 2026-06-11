@@ -32,8 +32,8 @@ flowchart TD
 
 ```mermaid
 graph TD
-    cli["cli.py\nargparse · sys.exit"]
-    checker["checker.py\norchestrator"]
+    cli["cli.py\nclick · sys.exit"]
+    checker["drift_checker.py\norchestrator"]
     git["git.py\ngit integration"]
     ast_diff["ast_diff.py\nAST diffing"]
     config_diff["config_diff.py\nkey-path diffing"]
@@ -41,13 +41,17 @@ graph TD
     report["report.py\nformatting"]
     models["models.py\nshared data classes"]
 
+    constants["constants.py\nREADME names · skip dirs\nnoise blocklist defaults"]
+
     cli --> checker
     checker --> git
     checker --> ast_diff
     checker --> config_diff
     checker --> scanner
     checker --> report
+    checker --> constants
     git --> config_diff
+    git --> constants
     ast_diff --> models
     config_diff --> models
     git --> models
@@ -63,7 +67,7 @@ graph TD
 ```mermaid
 sequenceDiagram
     participant CLI as cli.py
-    participant CK as checker.py
+    participant CK as drift_checker.py
     participant GIT as git.py
     participant AST as ast_diff.py
     participant CFG as config_diff.py
@@ -104,8 +108,8 @@ Config files are flattened to dot-notation paths (`scripts.build`, `jobs.ci.runs
 **Public symbols only.**
 Names starting with `_` are ignored. Internal implementation changes are not the README's concern.
 
-**Rename detection (Python only).**
-A function removed and a function added with identical parameter lists is treated as a rename, not a deletion + addition. This avoids a false positive when someone runs a rename refactor. Config-key rename detection is deferred — the same-value heuristic is too ambiguous when multiple keys share a value (e.g. several jobs all using `runs-on: ubuntu-latest`).
+**Rename detection (deferred).**
+Rename detection for both Python symbols and config keys is not yet implemented. A renamed function appears as a removal (flagged if the old name is in the README) plus an addition (never flagged). The "same parameters = rename" heuristic was found to produce too many false positives for zero-parameter functions or unrelated functions with identical signatures. A reliable signal (git-level rename tracking or AST body similarity) is needed before this can be reintroduced. See backlog in the roadmap.
 
 **Leaf-segment deduplication for config.**
 When the same key name appears across multiple paths (e.g. `name` in every GitHub Actions job), it is reported at most once. A README reference to `name` is either stale or it isn't — repeating the finding adds no information.

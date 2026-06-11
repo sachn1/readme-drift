@@ -1,4 +1,6 @@
-# readme-drift
+<p align="center">
+  <img src="https://raw.githubusercontent.com/sachn1/readme-drift/master/docs/assets/logo.svg" alt="readme-drift" width="480">
+</p>
 
 [![PyPI version](https://img.shields.io/pypi/v/readme-drift)](https://pypi.org/project/readme-drift/)
 [![Python versions](https://img.shields.io/pypi/pyversions/readme-drift)](https://pypi.org/project/readme-drift/)
@@ -77,42 +79,38 @@ readme-drift --base-ref origin/main --warn-only   # warn but don't fail
 ## Configuration
 
 All CLI flags can be set permanently in `pyproject.toml` under `[tool.readme-drift]`.
-CLI flags always take precedence over the file.
+CLI flags always take precedence over the file. See the [full configuration reference](https://sachn1.github.io/readme-drift/configuration/) for all options.
 
 ```toml
 [tool.readme-drift]
-# Git ref to diff against. Default: "HEAD"
 base-ref = "origin/main"
-
-# Print warnings but never fail the build. Default: false
 warn-only = false
-
-# Track private (underscore-prefixed) symbols. Default: false
 include-private = false
-
-# Skip files or directories matching these glob patterns.
-# Each entry is equivalent to one --exclude flag on the CLI.
-# Default: []
-exclude = [
-    "generated/",
-    "tests/",
-    "docs/",
-]
-
-# Match symbols as plain text (word-boundary) in addition to backtick spans.
-# Default: true. Set to false to restrict matching to backtick spans only.
 plain-text-search = true
+min-symbol-length = 4
+exclude = ["generated/", "tests/"]
+symbol-allowlist = ["MyPublicClass"]
+symbol-denylist = ["_internal"]
+noise-blocklist = ["run", "build"]   # replaces built-in default; [] disables
+noise-allowlist = ["run"]            # remove words from built-in (use instead of noise-blocklist)
+readme-paths = []                    # explicit list; empty = auto-discover
+readme-exclude-dirs = []
 ```
 
-### Supported keys
-
-| Key | Type | CLI equivalent | Default |
-|---|---|---|---|
-| `base-ref` | string | `--base-ref` | `"HEAD"` |
-| `warn-only` | bool | `--warn-only=true/false` | `false` |
-| `include-private` | bool | `--include-private=true/false` | `false` |
-| `exclude` | list of strings | `--exclude` (repeatable) | `[]` |
-| `plain-text-search` | bool | `--plain-text-search=true/false` | `true` |
+| Key | CLI flag | Default |
+|---|---|---|
+| `base-ref` | `--base-ref` | `"HEAD"` |
+| `warn-only` | `--warn-only` | `false` |
+| `include-private` | `--include-private` | `false` |
+| `plain-text-search` | `--plain-text-search` / `--no-plain-text-search` | `true` |
+| `min-symbol-length` | `--min-symbol-length` | `4` |
+| `exclude` | `--exclude` (repeatable) | `[]` |
+| `symbol-allowlist` | `--symbol-allowlist` (repeatable) | `[]` |
+| `symbol-denylist` | `--symbol-denylist` (repeatable) | `[]` |
+| `noise-blocklist` | `--noise-blocklist` (repeatable) | built-in default |
+| `noise-allowlist` | `--noise-allowlist` (repeatable) | `[]` |
+| `readme-paths` | `--readme-paths` (repeatable) | `[]` (auto-discover) |
+| `readme-exclude-dirs` | `--readme-exclude-dirs` (repeatable) | `[]` |
 
 `pyproject.toml` is discovered by walking up from the current directory (or `--repo-root` if set). If no `[tool.readme-drift]` section is present, all defaults apply.
 
@@ -152,7 +150,7 @@ readme-drift: ❌ README.md may be stale:
 | Function removed | ✅ |
 | Method signature changed | ✅ |
 | Class removed | ✅ |
-| Private symbol changed (`_name`) | ➖ ignored by design |
+| Private symbol changed (`_name`) | ➖ ignored by default (enable with `--include-private`) |
 | README updated alongside code | ✅ passes silently |
 | No Python files changed | ✅ skipped |
 

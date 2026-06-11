@@ -1,6 +1,6 @@
 - id: readme-drift
   name: Check README for stale references
   language: python
-  entry: readme-drift --staged true
+  entry: readme-drift --staged
   pass_filenames: false
   types_or: [python, yaml, json, toml]

@@ -1,0 +1,43 @@
+site_name: readme-drift
+site_description: Detect stale README references after code changes — for pre-commit and CI.
+site_url: https://sachn1.github.io/readme-drift
+repo_url: https://github.com/sachn1/readme-drift
+repo_name: sachn1/readme-drift
+
+theme:
+  name: material
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.sections
+    - content.code.copy
+    - navigation.top
+
+nav:
+  - Home: index.md
+  - Usage:
+    - Pre-commit hook: usage/pre-commit.md
+    - CI / GitHub Actions: usage/ci.md
+    - CLI reference: usage/cli-reference.md
+  - Configuration: configuration.md
+  - Architecture: architecture.md
+  - Roadmap: roadmap.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - tables
+  - attr_list

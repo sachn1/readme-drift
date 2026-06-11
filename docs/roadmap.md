@@ -54,18 +54,54 @@ Config file coverage, user configurability, performance, and PyPI distribution.
 
 ---
 
-## v1.0.0 — Stable release ← next
+## v1.0.0 — Shipped
 
-The first stable, production-ready release. Marks confidence in the public API surface, the pre-commit hook contract, and PyPI packaging.
-
-**Exit criteria:**
-- No open P0/P1 bugs after at least one full release cycle on PyPI
-- Pre-commit hook confirmed working across Python, Node, and Go project layouts
-- Public API (`SymbolChange`, `diff_apis`, `diff_config`, `run_check`) considered stable for downstream use
+The first stable, production-ready release. Public API (`SymbolChange`, `diff_apis`, `diff_config`, `run_check`) considered stable for downstream use.
 
 ---
 
-## v1.1.0 — Broader prose documentation targets
+## v1.0.1 — Shipped
+
+Click migration, `--staged` bug fix, and trunk-based branching.
+
+**CLI:**
+- Migrated from argparse to `click` — boolean flags are now bare flags (`--staged`, `--warn-only`, `--include-private`) and toggle pairs (`--plain-text-search` / `--no-plain-text-search`)
+- Fixed `--staged` pre-commit hook error (`expected one argument`) — `is_flag=True` means bare `--staged` = True; hook entry simplified to `readme-drift --staged`
+
+**Code quality:**
+- `readme_drift/constants.py` — extracted `DEFAULT_NOISE_BLOCKLIST`, `README_NAMES`, `README_EXTENSIONS`, `README_SKIP_DIRS` out of private definitions scattered across modules
+
+**Workflow:**
+- Simplified to trunk-based: `feature/*` or `bugfix/*` → PR → `master` directly; no `develop` branch, no RC cycle
+
+---
+
+## v1.1.0 — Fine-grained control ← next release
+
+Symbol filtering, noise suppression, README targeting, and verbose output. All items below are implemented on the current branch.
+
+**Symbol filtering:**
+- `--symbol-allowlist` — always flag symbol when changed, even without a README match; for critical public API
+- `--symbol-denylist` — never flag symbol, even if changed and found in README; takes priority over allowlist
+- `--min-symbol-length` — plain-text matching only applies to symbols ≥ N characters (default: 4); shorter symbols still matched inside backticks
+- `--noise-blocklist` — replace the built-in suppression list; disable entirely via `noise-blocklist = []` in `pyproject.toml`; prerequisite for v1.3.0
+
+**README targeting:**
+- `--readme-paths` — explicit README list, disables recursive discovery entirely
+- `--readme-exclude-dirs` — add extra dirs to skip during discovery without changing the built-in skip list
+
+**Output:**
+- `--verbose` — per-symbol trace: shows whether each changed symbol was flagged, suppressed, or skipped and why
+
+**Model:**
+- `SymbolChange.old_name` — dedicated field for the pre-rename name, separate from `old_signature`; `key_paths` stores full dot-notation paths (e.g. `["scripts.build"]`) so the README is searched for both leaf names and full paths
+
+**Documentation:**
+- MkDocs Material docs site at https://sachn1.github.io/readme-drift — auto-deployed on every master push via `docs.yml`
+
+---
+
+## v1.2.0 — Broader prose documentation targets
 
 README is the most visible documentation file, but several others frequently reference code symbols and are just as likely to go stale.
 
@@ -79,24 +115,11 @@ README is the most visible documentation file, but several others frequently ref
 
 ---
 
-## v1.2.0 — Fine-grained control
-
-**Planned:**
-- Symbol allowlist — symbols to always flag regardless of README mention
-- Symbol denylist — symbols to never flag (e.g. internal ones that leak into public API by naming convention)
-- README path configuration — explicit include list (`readme_paths`) and additional exclude dirs, so pre-commit users can pin exactly which README files are scanned instead of relying on recursive discovery
-- `SymbolChange` model cleanup — `old_signature` currently stores the old *name* for renames and the old *signature string* for signature changes; introduce a dedicated `old_name` field for renames to make the model unambiguous
-- Full key-path matching in README (e.g. `scripts.build`) — extend scanner to recognise dot-notation config paths in addition to leaf names
-- **Noise suppression** — built-in blocklist of short, high-frequency tokens that are valid symbol names but match too many unrelated README lines (e.g. `name`, `version`, `build`, `test`, `run`, `type`, `url`, `host`, `port`, `debug`, `true`, `false`); configurable `min-symbol-length` threshold (default: 4 characters) to skip single-character and very short tokens from plain-text matching; both the blocklist and threshold are overridable in `[tool.readme-drift]`. This is a hard prerequisite for v1.3.0 — the infra file extractors produce exactly these short tokens.
-- `--verbose` flag — print every detected symbol change and its README scan outcome (matched / not found); invaluable for diagnosing false positives and understanding why a check passed or failed
-
----
-
 ## v1.3.0 — Build and infrastructure file coverage
 
 Every Python project has files beyond `.py` and generic config that define named things the README references directly — make targets, container services, CLI entry points, environment variables. These files live in the repo, so no external knowledge is needed; the names are extractable by the same `KeyExtractor` protocol already in place.
 
-**Prerequisite:** noise suppression (v1.2.0) must land first. These extractors produce short tokens (`web`, `db`, `lint`, `test`) that are unacceptably noisy without a blocklist and minimum-length threshold.
+**Prerequisite:** noise suppression (v1.1.0) must land first. These extractors produce short tokens (`web`, `db`, `lint`, `test`) that are unacceptably noisy without a blocklist and minimum-length threshold.
 
 **Infrastructure changes required:**
 - Filename-keyed extractor registry alongside the existing suffix-keyed `_EXTRACTORS` — needed for `Makefile` (no suffix) and compose files (`.yml` suffix already claimed by the generic `YamlExtractor`)

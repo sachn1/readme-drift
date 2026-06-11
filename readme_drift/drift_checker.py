@@ -20,55 +20,8 @@ from .models import (
     StalenessFinding,
     SymbolChange,
 )
+from .constants import DEFAULT_NOISE_BLOCKLIST
 from .scanner import scan_readme_for_symbols
-
-# ---------------------------------------------------------------------------
-# Noise suppression — default blocklist
-# ---------------------------------------------------------------------------
-# Short or extremely common tokens that appear in many README lines with no
-# relation to the specific symbol that changed.  Symbols on this list are
-# suppressed from *plain-text* matching (word-boundary) but still matched
-# inside backtick spans, which are a precise signal.  Users can replace this
-# set entirely via the `noise-blocklist` config key (set to [] to disable).
-_DEFAULT_NOISE_BLOCKLIST: frozenset[str] = frozenset(
-    {
-        "name",
-        "version",
-        "type",
-        "url",
-        "host",
-        "port",
-        "debug",
-        "true",
-        "false",
-        "none",
-        "null",
-        "yes",
-        "no",
-        "on",
-        "off",
-        "run",
-        "build",
-        "test",
-        "lint",
-        "path",
-        "file",
-        "dir",
-        "key",
-        "value",
-        "data",
-        "list",
-        "mode",
-        "log",
-        "env",
-        "id",
-        "tag",
-        "ref",
-        "src",
-        "api",
-        "use",
-    }
-)
 
 
 def _is_excluded(file: Path, exclude: list[str]) -> bool:
@@ -89,7 +42,6 @@ def run_check(
     include_private: bool = False,
     plain_text: bool = True,
     exclude: list[str] | None = None,
-    # --- v1.2.0 additions ---
     symbol_allowlist: list[str] | None = None,
     symbol_denylist: list[str] | None = None,
     readme_paths: list[str] | None = None,
@@ -126,7 +78,7 @@ def run_check(
     _denylist: set[str] = set(symbol_denylist or [])
     # None → use built-in default; [] → disable blocklist
     _blocklist: frozenset[str] = (
-        _DEFAULT_NOISE_BLOCKLIST
+        DEFAULT_NOISE_BLOCKLIST
         if noise_blocklist is None
         else frozenset(noise_blocklist)
     )

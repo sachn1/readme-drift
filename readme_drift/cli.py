@@ -1,9 +1,11 @@
 """CLI entry point for readme-drift."""
 
-import argparse
 import sys
 import tomllib
 from pathlib import Path
+from typing import Any
+
+import click
 
 from .drift_checker import run_check
 from .report import format_report
@@ -11,9 +13,7 @@ from .report import format_report
 
 def _load_toml_config(repo_root: Path | None) -> dict:
     """Read [tool.readme-drift] from pyproject.toml nearest to cwd or repo_root."""
-    search_dirs = []
-    if repo_root is not None:
-        search_dirs.append(repo_root)
+    search_dirs = [repo_root] if repo_root else []
     search_dirs.append(Path.cwd())
     for directory in search_dirs:
         candidate = directory / "pyproject.toml"
@@ -27,182 +27,207 @@ def _load_toml_config(repo_root: Path | None) -> dict:
     return {}
 
 
-def _parse_bool(v: str) -> bool:
-    if v.lower() in ("true", "1", "yes"):
-        return True
-    if v.lower() in ("false", "0", "no"):
-        return False
-    raise argparse.ArgumentTypeError(f"Expected true/false, got {v!r}")
+class _ConfigCommand(click.Command):
+    """Pre-parse --repo-root to load pyproject.toml defaults before click processes args."""
+
+    def make_context(
+        self, info_name: str | None, args: list[str], **extra: Any
+    ) -> click.Context:
+        repo_root: Path | None = None
+        for i, arg in enumerate(args):
+            if arg == "--repo-root" and i + 1 < len(args):
+                repo_root = Path(args[i + 1])
+                break
+        cfg = _load_toml_config(repo_root)
+        if cfg:
+            # Click default_map keys use Python param names (underscores).
+            extra.setdefault("default_map", {}).update(
+                {k.replace("-", "_"): v for k, v in cfg.items()}
+            )
+        ctx = super().make_context(info_name, args, **extra)
+        ctx.meta["toml_cfg"] = cfg
+        return ctx
 
 
-def main() -> None:
-    """Parse arguments and run readme-drift."""
-    # Pre-parse --repo-root so we can locate pyproject.toml before setting defaults.
-    pre = argparse.ArgumentParser(add_help=False)
-    pre.add_argument("--repo-root", type=Path, default=None)
-    known, _ = pre.parse_known_args()
+@click.command(
+    cls=_ConfigCommand,
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
+# -- Git source --------------------------------------------------------------
+@click.option(
+    "--base-ref",
+    default="HEAD",
+    show_default=True,
+    help="Git ref to diff against.",
+)
+@click.option(
+    "--staged",
+    is_flag=True,
+    default=False,
+    help="Check staged changes only. Used by the pre-commit hook.",
+)
+@click.option(
+    "--repo-root",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Repository root (auto-detected if not set).",
+)
+# -- Source filtering --------------------------------------------------------
+@click.option(
+    "--exclude",
+    multiple=True,
+    metavar="PATTERN",
+    help="Glob pattern for source files/dirs to skip (repeatable).",
+)
+@click.option(
+    "--include-private",
+    is_flag=True,
+    default=False,
+    help="Track private (underscore-prefixed) Python symbols.",
+)
+# -- README targeting --------------------------------------------------------
+@click.option(
+    "--readme-paths",
+    multiple=True,
+    metavar="PATH",
+    help=(
+        "Explicit README file to scan (repeatable). "
+        "When set, disables recursive README discovery. "
+        "Incompatible with --readme-exclude-dirs."
+    ),
+)
+@click.option(
+    "--readme-exclude-dirs",
+    multiple=True,
+    metavar="DIR",
+    help=(
+        "Extra directory name to skip during README discovery (repeatable). "
+        "Ignored when --readme-paths is set."
+    ),
+)
+# -- Symbol filtering --------------------------------------------------------
+@click.option(
+    "--symbol-allowlist",
+    multiple=True,
+    metavar="SYMBOL",
+    help=(
+        "Always flag this symbol when changed, even if not in the README (repeatable). "
+        "Use for critical public API symbols."
+    ),
+)
+@click.option(
+    "--symbol-denylist",
+    multiple=True,
+    metavar="SYMBOL",
+    help=(
+        "Never flag this symbol, even if changed and found in the README (repeatable). "
+        "Takes priority over --symbol-allowlist."
+    ),
+)
+@click.option(
+    "--min-symbol-length",
+    default=4,
+    show_default=True,
+    metavar="N",
+    help=(
+        "Minimum symbol length for plain-text matching. "
+        "Shorter symbols are still matched inside backtick spans."
+    ),
+)
+@click.option(
+    "--noise-blocklist",
+    multiple=True,
+    default=(),
+    metavar="WORD",
+    help=(
+        "Replace the built-in noise blocklist with these words (repeatable). "
+        "To disable noise suppression entirely, set ``noise-blocklist = []`` "
+        "in pyproject.toml."
+    ),
+)
+# -- Output ------------------------------------------------------------------
+@click.option(
+    "--plain-text-search/--no-plain-text-search",
+    default=True,
+    help="Match symbols as plain text in addition to backtick spans. Default: enabled.",
+)
+@click.option(
+    "--warn-only",
+    is_flag=True,
+    default=False,
+    help="Print findings but always exit 0.",
+)
+@click.option(
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Print per-symbol scan outcomes after the main report.",
+)
+@click.pass_context
+def main(
+    ctx: click.Context,
+    base_ref: str,
+    staged: bool,
+    repo_root: Path | None,
+    exclude: tuple[str, ...],
+    include_private: bool,
+    readme_paths: tuple[str, ...],
+    readme_exclude_dirs: tuple[str, ...],
+    symbol_allowlist: tuple[str, ...],
+    symbol_denylist: tuple[str, ...],
+    min_symbol_length: int,
+    noise_blocklist: tuple[str, ...],
+    plain_text_search: bool,
+    warn_only: bool,
+    verbose: bool,
+) -> None:
+    """Check if README may be stale after code changes."""
+    cfg: dict = ctx.meta.get("toml_cfg", {})
 
-    cfg = _load_toml_config(known.repo_root)
+    # -- Validation: flag incompatible option combinations -------------------
+    if readme_paths and readme_exclude_dirs:
+        click.echo(
+            "warning: --readme-paths disables discovery; --readme-exclude-dirs is ignored.",
+            err=True,
+        )
+    if not plain_text_search and noise_blocklist:
+        click.echo(
+            "warning: --no-plain-text-search disables plain-text matching; "
+            "--noise-blocklist has no effect.",
+            err=True,
+        )
 
-    parser = argparse.ArgumentParser(
-        prog="readme-drift",
-        description="Check if README may be stale after code changes.",
-    )
-    parser.add_argument(
-        "--base-ref",
-        default=cfg.get("base-ref", "HEAD"),
-        help="Git ref to diff against (default: HEAD)",
-    )
-    parser.add_argument(
-        "--staged",
-        type=_parse_bool,
-        nargs="?",
-        const=True,
-        default=cfg.get("staged", False),
-        metavar="BOOL",
-        help="Check staged changes only (use in pre-commit hooks, default: false)",
-    )
-    parser.add_argument(
-        "--repo-root",
-        type=Path,
-        default=None,
-        help="Path to repo root (auto-detected if not set)",
-    )
-    parser.add_argument(
-        "--include-private",
-        type=_parse_bool,
-        default=cfg.get("include-private", False),
-        metavar="BOOL",
-        help="Track private (underscore-prefixed) symbols too (default: false)",
-    )
-    parser.add_argument(
-        "--exclude",
-        action="append",
-        metavar="PATTERN",
-        default=list(cfg.get("exclude", [])),
-        help="Glob pattern for files/directories to skip (repeatable)",
-    )
-    parser.add_argument(
-        "--plain-text-search",
-        type=_parse_bool,
-        default=cfg.get("plain-text-search", True),
-        metavar="BOOL",
-        help="Match symbols as plain text in addition to backtick spans (default: true)",
-    )
-    parser.add_argument(
-        "--warn-only",
-        type=_parse_bool,
-        default=cfg.get("warn-only", False),
-        metavar="BOOL",
-        help="Print warnings but always exit 0 (default: false)",
-    )
-    # --- v1.2.0 additions ---
-    parser.add_argument(
-        "--symbol-allowlist",
-        action="append",
-        metavar="SYMBOL",
-        default=list(cfg.get("symbol-allowlist", [])),
-        help=(
-            "Symbol name to always flag when changed, even if not mentioned in the README "
-            "(repeatable). Use for critical public API symbols."
-        ),
-    )
-    parser.add_argument(
-        "--symbol-denylist",
-        action="append",
-        metavar="SYMBOL",
-        default=list(cfg.get("symbol-denylist", [])),
-        help=(
-            "Symbol name to never flag, even if changed and found in the README "
-            "(repeatable). Overrides --symbol-allowlist."
-        ),
-    )
-    parser.add_argument(
-        "--readme-paths",
-        action="append",
-        metavar="PATH",
-        default=list(cfg.get("readme-paths", [])),
-        help=(
-            "Explicit README file path to scan (repeatable). "
-            "When provided, disables recursive README discovery."
-        ),
-    )
-    parser.add_argument(
-        "--readme-exclude-dirs",
-        action="append",
-        metavar="DIR",
-        default=list(cfg.get("readme-exclude-dirs", [])),
-        help="Directory name to skip during README discovery (repeatable).",
-    )
-    parser.add_argument(
-        "--min-symbol-length",
-        type=int,
-        default=cfg.get("min-symbol-length", 4),
-        metavar="N",
-        help=(
-            "Minimum symbol length for plain-text (word-boundary) matching. "
-            "Shorter symbols are still matched inside backtick spans (default: 4)."
-        ),
-    )
-    parser.add_argument(
-        "--noise-blocklist",
-        action="append",
-        metavar="WORD",
-        default=None,  # None → use built-in default; [] via config → disable
-        help=(
-            "Add a word to the noise blocklist, suppressing plain-text matches for it "
-            "(repeatable). When provided via CLI, replaces the built-in default list."
-        ),
-    )
-    parser.add_argument(
-        "--verbose",
-        type=_parse_bool,
-        nargs="?",
-        const=True,
-        default=cfg.get("verbose", False),
-        metavar="BOOL",
-        help=(
-            "Print per-symbol scan outcomes (flagged / skipped / suppressed) "
-            "after the main report (default: false)."
-        ),
-    )
-
-    args = parser.parse_args()
-
-    # Resolve noise_blocklist: CLI takes precedence; fall back to config file value;
-    # None means "use built-in default" inside run_check.
-    noise_blocklist: list[str] | None
-    if args.noise_blocklist is not None:
-        # CLI flag(s) provided — use them as the complete blocklist.
-        noise_blocklist = args.noise_blocklist
+    # -- Noise-blocklist resolution ------------------------------------------
+    # Priority: CLI flags > pyproject.toml key > built-in DEFAULT_NOISE_BLOCKLIST.
+    # None signals run_check to use the built-in default.
+    # An empty list explicitly disables noise suppression.
+    resolved_noise_blocklist: list[str] | None
+    if noise_blocklist:
+        resolved_noise_blocklist = list(noise_blocklist)
     elif "noise-blocklist" in cfg:
-        # Config file key present (may be an empty list to disable).
-        noise_blocklist = list(cfg["noise-blocklist"])
+        resolved_noise_blocklist = list(cfg["noise-blocklist"])
     else:
-        noise_blocklist = None  # trigger built-in default inside run_check
+        resolved_noise_blocklist = None
 
     result = run_check(
-        base_ref=args.base_ref,
-        repo_root=args.repo_root,
-        staged=args.staged,
-        include_private=args.include_private,
-        plain_text=args.plain_text_search,
-        exclude=args.exclude,
-        symbol_allowlist=args.symbol_allowlist or None,
-        symbol_denylist=args.symbol_denylist or None,
-        readme_paths=args.readme_paths or None,
-        readme_exclude_dirs=args.readme_exclude_dirs or None,
-        min_symbol_length=args.min_symbol_length,
-        noise_blocklist=noise_blocklist,
-        verbose=args.verbose,
+        base_ref=base_ref,
+        repo_root=repo_root,
+        staged=staged,
+        include_private=include_private,
+        plain_text=plain_text_search,
+        exclude=list(exclude),
+        symbol_allowlist=list(symbol_allowlist) or None,
+        symbol_denylist=list(symbol_denylist) or None,
+        readme_paths=list(readme_paths) or None,
+        readme_exclude_dirs=list(readme_exclude_dirs) or None,
+        min_symbol_length=min_symbol_length,
+        noise_blocklist=resolved_noise_blocklist,
+        verbose=verbose,
     )
 
-    print(format_report(result))
+    click.echo(format_report(result))
 
-    if result.failed and not args.warn_only:
-        sys.exit(1)
-    else:
-        sys.exit(0)
+    sys.exit(0 if (result.passed or warn_only) else 1)
 
 
 if __name__ == "__main__":

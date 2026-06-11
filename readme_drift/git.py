@@ -4,23 +4,8 @@ import subprocess
 from pathlib import Path
 
 from .config_diff import CONFIG_SUFFIXES
+from .constants import README_NAMES as _README_NAMES, README_SKIP_DIRS as _SKIP_DIRS
 from .models import GitDiffResult
-
-_readme_extension_candidates = [".md", ".markdown", ".rst", ".txt", ""]
-_README_NAMES = {f"readme{ext}" for ext in _readme_extension_candidates}
-
-_SKIP_DIRS = {
-    ".git",
-    "node_modules",
-    "venv",
-    ".venv",
-    ".tox",
-    "__pycache__",
-    ".pytest_cache",
-    "dist",
-    "build",
-    ".mypy_cache",
-}
 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> str:

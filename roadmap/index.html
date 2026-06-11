@@ -1,0 +1,954 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Detect stale README references after code changes — for pre-commit and CI.">
+      
+      
+      
+        <link rel="canonical" href="https://sachn1.github.io/readme-drift/roadmap/">
+      
+      
+        <link rel="prev" href="../architecture/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Roadmap - readme-drift</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#roadmap" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="readme-drift" class="md-header__button md-logo" aria-label="readme-drift" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            readme-drift
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Roadmap
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/sachn1/readme-drift" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    sachn1/readme-drift
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="readme-drift" class="md-nav__button md-logo" aria-label="readme-drift" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    readme-drift
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sachn1/readme-drift" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    sachn1/readme-drift
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Usage
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/pre-commit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pre-commit hook
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI / GitHub Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/cli-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#v010-shipped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.1.0 — Shipped
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v020-shipped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.0 — Shipped
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v100-shipped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.0.0 — Shipped
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v101-shipped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.0.1 — Shipped
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v200-fine-grained-control-next-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.0.0 — Fine-grained control ← next release
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v210-broader-prose-documentation-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.1.0 — Broader prose documentation targets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v220-build-and-infrastructure-file-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.2.0 — Build and infrastructure file coverage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backlog-unscheduled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backlog (unscheduled)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#v010-shipped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.1.0 — Shipped
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v020-shipped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.0 — Shipped
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v100-shipped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.0.0 — Shipped
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v101-shipped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.0.1 — Shipped
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v200-fine-grained-control-next-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.0.0 — Fine-grained control ← next release
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v210-broader-prose-documentation-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.1.0 — Broader prose documentation targets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v220-build-and-infrastructure-file-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2.2.0 — Build and infrastructure file coverage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backlog-unscheduled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backlog (unscheduled)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="roadmap">Roadmap</h1>
+<h2 id="v010-shipped">v0.1.0 — Shipped</h2>
+<ul>
+<li>Python file support (<code>.py</code>) via AST diffing</li>
+<li>Detects removed and signature-changed public functions, methods, and classes</li>
+<li>README scanning via backtick and word-boundary regex patterns</li>
+<li>Recursive README discovery — supports monorepos with per-package READMEs</li>
+<li>Pre-commit hook integration</li>
+<li>CI usage via <code>--base-ref origin/main</code></li>
+<li><code>--warn-only</code> mode for non-blocking runs</li>
+<li>GitHub Actions CI — lint (<code>ruff</code>) and <code>pytest</code> on every PR to <code>develop</code> and <code>master</code></li>
+<li>Semantic versioning with Commitizen — <code>develop</code> builds carry <code>-rc.N</code>, merging to <code>master</code> promotes to release</li>
+<li>Branch strategy: <code>feature/*</code> → <code>develop</code> → <code>master</code></li>
+</ul>
+<hr />
+<h2 id="v020-shipped">v0.2.0 — Shipped</h2>
+<p>Config file coverage, user configurability, performance, and PyPI distribution.</p>
+<p><strong>Config file support:</strong>
+- <code>.yml</code> / <code>.yaml</code> — GitHub Actions workflows, Docker Compose, Hydra, etc.
+- <code>.json</code> — <code>package.json</code> scripts and dependencies, schema files
+- <code>.toml</code> — <code>pyproject.toml</code>, <code>Cargo.toml</code>
+- Key-path diffing: flatten nested config to dot-notation paths, detect removed and added leaf key names; cross-referenced against the full opposite-side key set so structural parents (<code>tool</code>, <code>jobs</code>) are not spuriously reported
+- Leaf-segment deduplication: a key name that appears in multiple paths (e.g. <code>runs-on</code> in every GitHub Actions job) is reported at most once
+- <code>KeyExtractor</code> protocol: new file types added by implementing one method and registering a suffix — no other module changes required
+- Pre-commit hook updated to trigger on <code>.yml</code>, <code>.yaml</code>, <code>.json</code>, and <code>.toml</code> changes in addition to <code>.py</code></p>
+<p><strong>User configurability:</strong>
+- <code>--include-private</code> flag — opt in to tracking private (underscore-prefixed) functions and methods
+- <code>--exclude</code> option — skip specific Python files or directories from diffing
+- Plain-text occurrence matching — configurable flag (default on) to flag symbol names found outside backtick spans
+- <code>[tool.readme-drift]</code> in <code>pyproject.toml</code> — project-level defaults for all CLI flags; <code>--repo-root</code> pre-parsed so config is located before argument defaults are applied
+- All boolean flags use <code>--flag=true/false</code> syntax via a shared <code>_parse_bool</code> helper — consistent across all options</p>
+<p><strong>Performance:</strong>
+- Lazy content reads — file contents read only for files whose changed symbols actually appear in a README</p>
+<p><strong>Observability:</strong>
+- <code>Makefile</code> — <code>make check</code> mirrors CI exactly (ruff + pytest with coverage gate)</p>
+<p><strong>PyPI release:</strong>
+- <code>pyyaml</code> added as a runtime dependency (TOML and JSON use stdlib)
+- Automated publish to PyPI on version tag via trusted publishing (OIDC — no API token secret needed)
+- Package installable as <code>pip install readme-drift</code>
+- Registerable as a pre-commit hooks repository</p>
+<p><strong>Deferred to backlog:</strong>
+- Python function rename detection — the "same params = rename" heuristic was too unreliable; deferred pending a reliable signal
+- Config-key rename detection — the same-value heuristic is too ambiguous; deferred to backlog
+- Full key-path matching in README (e.g. <code>scripts.build</code>) — current version matches leaf names only</p>
+<hr />
+<h2 id="v100-shipped">v1.0.0 — Shipped</h2>
+<p>The first stable, production-ready release. Public API (<code>SymbolChange</code>, <code>diff_apis</code>, <code>diff_config</code>, <code>run_check</code>) considered stable for downstream use.</p>
+<hr />
+<h2 id="v101-shipped">v1.0.1 — Shipped</h2>
+<p><code>--staged</code> bug fix and trunk-based branching simplification.</p>
+<p><strong>CLI:</strong>
+- Fixed <code>--staged</code> pre-commit hook error (<code>expected one argument</code>) via argparse <code>nargs="?"</code> + <code>const=True</code>; hook entry updated to <code>readme-drift --staged true</code></p>
+<p><strong>Workflow:</strong>
+- Simplified to trunk-based: <code>feature/*</code> or <code>bugfix/*</code> → PR → <code>master</code> directly; no <code>develop</code> branch, no RC cycle</p>
+<hr />
+<h2 id="v200-fine-grained-control-next-release">v2.0.0 — Fine-grained control ← next release</h2>
+<p>Click migration (breaking CLI syntax change), symbol filtering, noise suppression, README targeting, and verbose output. All items below are implemented on the current branch.</p>
+<p><strong>Breaking change:</strong>
+- Migrated from argparse to <code>click</code> — boolean flags are now bare flags (<code>--staged</code>, <code>--warn-only</code>, <code>--include-private</code>, <code>--verbose</code>) and toggle pairs (<code>--plain-text-search</code> / <code>--no-plain-text-search</code>). The old <code>--flag true/false</code> syntax is removed.</p>
+<p><strong>Symbol filtering:</strong>
+- <code>--symbol-allowlist</code> — always flag symbol when changed, even without a README match; for critical public API
+- <code>--symbol-denylist</code> — never flag symbol, even if changed and found in README; takes priority over allowlist
+- <code>--min-symbol-length</code> — plain-text matching only applies to symbols ≥ N characters (default: 4); shorter symbols still matched inside backticks
+- <code>--noise-blocklist</code> — replace the built-in suppression list entirely; disable via <code>noise-blocklist = []</code> in <code>pyproject.toml</code>; prerequisite for v2.1.0
+- <code>--noise-allowlist</code> — remove specific words from the built-in blocklist without replacing it; use when only one or two words need re-enabling</p>
+<p><strong>README targeting:</strong>
+- <code>--readme-paths</code> — explicit README list, disables recursive discovery entirely
+- <code>--readme-exclude-dirs</code> — add extra dirs to skip during discovery without changing the built-in skip list</p>
+<p><strong>Output:</strong>
+- <code>--verbose</code> — per-symbol trace: shows whether each changed symbol was flagged, suppressed, or skipped and why</p>
+<p><strong>Model:</strong>
+- <code>SymbolChange.old_name</code> — dedicated field for the pre-rename name, separate from <code>old_signature</code>; <code>key_paths</code> stores full dot-notation paths (e.g. <code>["scripts.build"]</code>) so the README is searched for both leaf names and full paths</p>
+<p><strong>Code quality:</strong>
+- <code>readme_drift/constants.py</code> — extracted <code>DEFAULT_NOISE_BLOCKLIST</code>, <code>README_NAMES</code>, <code>README_EXTENSIONS</code>, <code>README_SKIP_DIRS</code> out of private definitions scattered across modules</p>
+<p><strong>Documentation:</strong>
+- MkDocs Material docs site at https://sachn1.github.io/readme-drift — auto-deployed on every master push via <code>docs.yml</code></p>
+<hr />
+<h2 id="v210-broader-prose-documentation-targets">v2.1.0 — Broader prose documentation targets</h2>
+<p>README is the most visible documentation file, but several others frequently reference code symbols and are just as likely to go stale.</p>
+<p><strong>Planned targets:</strong>
+- <code>CONTRIBUTING.md</code> — contribution guides reference commands, APIs, and module paths
+- <code>SECURITY.md</code> — security policies reference versions and contact procedures
+- <code>SUPPORT.md</code> — support docs reference installation steps and CLI flags
+- <code>MIGRATION.md</code> — migration guides are the most likely to reference renamed or removed APIs directly
+- <code>docs/</code> folder — any Markdown files under a <code>docs/</code> directory
+- Configurable target list via <code>[tool.readme-drift]</code> in <code>pyproject.toml</code></p>
+<hr />
+<h2 id="v220-build-and-infrastructure-file-coverage">v2.2.0 — Build and infrastructure file coverage</h2>
+<p>Every Python project has files beyond <code>.py</code> and generic config that define named things the README references directly — make targets, container services, CLI entry points, environment variables. These files live in the repo, so no external knowledge is needed; the names are extractable by the same <code>KeyExtractor</code> protocol already in place.</p>
+<p><strong>Prerequisite:</strong> noise suppression (v2.0.0) must land first. These extractors produce short tokens (<code>web</code>, <code>db</code>, <code>lint</code>, <code>test</code>) that are unacceptably noisy without a blocklist and minimum-length threshold.</p>
+<p><strong>Infrastructure changes required:</strong>
+- Filename-keyed extractor registry alongside the existing suffix-keyed <code>_EXTRACTORS</code> — needed for <code>Makefile</code> (no suffix) and compose files (<code>.yml</code> suffix already claimed by the generic <code>YamlExtractor</code>)
+- Pre-commit hook <code>types_or</code> / <code>files</code> pattern updated to trigger on the new filenames</p>
+<p><strong>Planned file types:</strong></p>
+<ul>
+<li><strong><code>Makefile</code> / <code>GNUmakefile</code> / <code>makefile</code></strong> (filename-triggered, no suffix) — extract target names from non-indented <code>target:</code> lines and <code>.PHONY</code> declarations; catches <code>make lint</code> becoming <code>make check</code> or a <code>make docs</code> target being removed from a README's development guide</li>
+<li><strong><code>docker-compose.yml</code> / <code>docker-compose.yaml</code> / <code>compose.yml</code> / <code>compose.yaml</code></strong> (filename-triggered) — extract top-level service names from <code>services:</code> only, not the full YAML tree; catches <code>docker compose up web</code> references when a service is renamed or removed. Filename-triggered to avoid applying the deep-flatten <code>YamlExtractor</code> to compose files.</li>
+<li><strong><code>pyproject.toml</code></strong> (specialized extraction, beyond current generic TOML flattening) — extract CLI entry point names from <code>[project.scripts]</code> and <code>[tool.poetry.scripts]</code> (these are the commands users actually type after install, e.g. <code>readme-drift</code>); extract optional dependency group names from <code>[project.optional-dependencies]</code> and <code>[tool.poetry.group.*]</code> (catches <code>pip install pkg[dev]</code> or <code>pip install pkg[all]</code> references going stale)</li>
+<li><strong><code>tox.ini</code></strong> — extract <code>[testenv:name]</code> section names (e.g. <code>lint</code>, <code>py311</code>, <code>coverage</code>) via stdlib <code>configparser</code>; catches <code>tox -e lint</code> references when an environment is renamed or removed</li>
+<li><strong><code>Dockerfile</code></strong> — extract multi-stage build target names from <code>FROM ... AS name</code> lines; catches <code>docker build --target builder</code> references when a stage is renamed or removed</li>
+<li><strong><code>.env.example</code> / <code>.env.template</code> / <code>.env.sample</code></strong> — extract variable names from <code>KEY=value</code> lines; catches renamed environment variables in setup and deployment guides. Gated behind noise suppression — variable names like <code>HOST</code>, <code>PORT</code>, <code>DEBUG</code> are high-collision.</li>
+</ul>
+<p><strong>Deferred from this version:</strong>
+- <code>setup.cfg</code> — largely superseded by <code>pyproject.toml</code>; diminishing returns
+- <code>Taskfile.yml</code> / <code>Taskfile.yaml</code> (go-task) — same suffix collision as compose files; deferred until filename-keyed registry is proven stable
+- <code>Cargo.toml</code> feature / binary / workspace member names — Rust ecosystem, separate scope
+- <code>requirements.txt</code> package names — package names frequently overlap with common English words; noise suppression alone is insufficient
+- Kubernetes manifest <code>metadata.name</code> values — insufficient signal without knowing which resource kinds the README references; k8s YAML is structurally identical to other YAML
+- Shell script internals (function names, flag parsing) — requires Bash/POSIX parsing; a different class of problem</p>
+<hr />
+<h2 id="backlog-unscheduled">Backlog (unscheduled)</h2>
+<ul>
+<li><strong>Python rename detection</strong> — removed in v0.2.x; the "same params = rename" heuristic produced false positives for zero-parameter functions and any unrelated functions that happened to share parameter names. Needs a reliable signal (e.g. git-level rename tracking, or AST body similarity) before it can be reintroduced. Config-key rename detection has the same problem with shared values (e.g. <code>runs-on: ubuntu-latest</code> across many jobs).</li>
+<li><code>--fix</code> flag to open the README at the stale line in <code>$EDITOR</code></li>
+<li>JSON output mode for integration with other tools</li>
+<li>VS Code extension</li>
+<li><strong>Bidirectional README consistency check</strong> — currently the tool is code-change-driven: it only runs when tracked files change. Two possible approaches for the inverse direction:</li>
+<li>Keep the existing behaviour and add nothing (README changes that introduce wrong names are out of scope)</li>
+<li>When the README changes, extract all backtick/word-boundary symbol-like tokens from it and verify each one exists as an exact match (not a substring) in the current public API — flagging references that don't correspond to any known symbol</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.sections", "content.code.copy", "navigation.top"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -72,9 +72,9 @@ The first stable, production-ready release. Public API (`SymbolChange`, `diff_ap
 
 ---
 
-## v2.0.0 — Fine-grained control ← next release
+## v3.0.0 — Shipped
 
-Click migration (breaking CLI syntax change), symbol filtering, noise suppression, README targeting, and verbose output. All items below are implemented on the current branch.
+Click migration (breaking CLI syntax change), symbol filtering, noise suppression, README targeting, and verbose output.
 
 **Breaking change:**
 - Migrated from argparse to `click` — boolean flags are now bare flags (`--staged`, `--warn-only`, `--include-private`, `--verbose`) and toggle pairs (`--plain-text-search` / `--no-plain-text-search`). The old `--flag true/false` syntax is removed.
@@ -83,7 +83,7 @@ Click migration (breaking CLI syntax change), symbol filtering, noise suppressio
 - `--symbol-allowlist` — always flag symbol when changed, even without a README match; for critical public API
 - `--symbol-denylist` — never flag symbol, even if changed and found in README; takes priority over allowlist
 - `--min-symbol-length` — plain-text matching only applies to symbols ≥ N characters (default: 4); shorter symbols still matched inside backticks
-- `--noise-blocklist` — replace the built-in suppression list entirely; disable via `noise-blocklist = []` in `pyproject.toml`; prerequisite for v2.1.0
+- `--noise-blocklist` — replace the built-in suppression list entirely; disable via `noise-blocklist = []` in `pyproject.toml`; prerequisite for v3.1.0
 - `--noise-allowlist` — remove specific words from the built-in blocklist without replacing it; use when only one or two words need re-enabling
 
 **README targeting:**
@@ -104,7 +104,7 @@ Click migration (breaking CLI syntax change), symbol filtering, noise suppressio
 
 ---
 
-## v2.1.0 — Broader prose documentation targets
+## v3.1.0 — Broader prose documentation targets
 
 README is the most visible documentation file, but several others frequently reference code symbols and are just as likely to go stale.
 
@@ -118,11 +118,11 @@ README is the most visible documentation file, but several others frequently ref
 
 ---
 
-## v2.2.0 — Build and infrastructure file coverage
+## v3.2.0 — Build and infrastructure file coverage
 
 Every Python project has files beyond `.py` and generic config that define named things the README references directly — make targets, container services, CLI entry points, environment variables. These files live in the repo, so no external knowledge is needed; the names are extractable by the same `KeyExtractor` protocol already in place.
 
-**Prerequisite:** noise suppression (v2.0.0) must land first. These extractors produce short tokens (`web`, `db`, `lint`, `test`) that are unacceptably noisy without a blocklist and minimum-length threshold.
+**Prerequisite:** noise suppression (v3.0.0) must land first. These extractors produce short tokens (`web`, `db`, `lint`, `test`) that are unacceptably noisy without a blocklist and minimum-length threshold.
 
 **Infrastructure changes required:**
 - Filename-keyed extractor registry alongside the existing suffix-keyed `_EXTRACTORS` — needed for `Makefile` (no suffix) and compose files (`.yml` suffix already claimed by the generic `YamlExtractor`)

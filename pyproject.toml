@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "readme-drift"
-version = "2.0.0"
+version = "3.0.0"
 description = "Detect stale README references after code changes — for pre-commit and CI."
 authors = ["Sachin Nandakumar"]
 readme = "README.md"

@@ -10,10 +10,12 @@ theme:
   favicon: assets/logo.svg
   palette:
     - scheme: default
+      primary: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
+      primary: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -22,6 +24,9 @@ theme:
     - navigation.sections
     - content.code.copy
     - navigation.top
+
+extra_css:
+  - stylesheets/extra.css
 
 nav:
   - Home: index.md

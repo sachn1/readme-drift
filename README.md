@@ -5,6 +5,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/readme-drift)](https://pypi.org/project/readme-drift/)
 [![Python versions](https://img.shields.io/pypi/pyversions/readme-drift)](https://pypi.org/project/readme-drift/)
 [![License](https://img.shields.io/pypi/l/readme-drift)](https://pypi.org/project/readme-drift/)
+[![Docs](https://img.shields.io/badge/docs-sachn1.github.io-blue)](https://sachn1.github.io/readme-drift/)
 
 > Detect stale README references after code changes — for pre-commit and CI.
 
@@ -44,7 +45,7 @@ Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/sachn1/readme-drift
-    rev: v1.0.1 # use the latest release
+    rev: v3.0.0 # use the latest release
     hooks:
       - id: readme-drift
 ```

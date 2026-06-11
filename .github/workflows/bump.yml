@@ -36,4 +36,6 @@ jobs:
           fi
 
       - name: Push
-        run: git push --follow-tags
+        run: |
+          git push origin
+          git push origin --tags

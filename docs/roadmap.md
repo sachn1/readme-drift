@@ -84,7 +84,8 @@ Symbol filtering, noise suppression, README targeting, and verbose output. All i
 - `--symbol-allowlist` — always flag symbol when changed, even without a README match; for critical public API
 - `--symbol-denylist` — never flag symbol, even if changed and found in README; takes priority over allowlist
 - `--min-symbol-length` — plain-text matching only applies to symbols ≥ N characters (default: 4); shorter symbols still matched inside backticks
-- `--noise-blocklist` — replace the built-in suppression list; disable entirely via `noise-blocklist = []` in `pyproject.toml`; prerequisite for v1.3.0
+- `--noise-blocklist` — replace the built-in suppression list entirely; disable via `noise-blocklist = []` in `pyproject.toml`; prerequisite for v1.3.0
+- `--noise-allowlist` — remove specific words from the built-in blocklist without replacing it; use when only one or two words need re-enabling
 
 **README targeting:**
 - `--readme-paths` — explicit README list, disables recursive discovery entirely

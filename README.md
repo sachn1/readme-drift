@@ -92,6 +92,7 @@ exclude = ["generated/", "tests/"]
 symbol-allowlist = ["MyPublicClass"]
 symbol-denylist = ["_internal"]
 noise-blocklist = ["run", "build"]   # replaces built-in default; [] disables
+noise-allowlist = ["run"]            # remove words from built-in (use instead of noise-blocklist)
 readme-paths = []                    # explicit list; empty = auto-discover
 readme-exclude-dirs = []
 ```
@@ -107,6 +108,7 @@ readme-exclude-dirs = []
 | `symbol-allowlist` | `--symbol-allowlist` (repeatable) | `[]` |
 | `symbol-denylist` | `--symbol-denylist` (repeatable) | `[]` |
 | `noise-blocklist` | `--noise-blocklist` (repeatable) | built-in default |
+| `noise-allowlist` | `--noise-allowlist` (repeatable) | `[]` |
 | `readme-paths` | `--readme-paths` (repeatable) | `[]` (auto-discover) |
 | `readme-exclude-dirs` | `--readme-exclude-dirs` (repeatable) | `[]` |
 

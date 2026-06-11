@@ -26,9 +26,14 @@ plain-text-search = true
 # Minimum symbol length for plain-text matching. Default: 4
 min-symbol-length = 4
 
-# Replace built-in noise blocklist. Default: built-in list (see constants.py)
+# Replace built-in noise blocklist entirely. Default: built-in list (see constants.py)
 # Set to [] to disable noise suppression entirely.
+# Use noise-allowlist instead if you only want to unlock a few words.
 noise-blocklist = ["run", "build"]
+
+# Remove specific words from the built-in blocklist (re-enable plain-text matching).
+# Ignored when noise-blocklist is set. Default: []
+noise-allowlist = ["run"]
 
 # Symbols to always flag when changed, even if not in README. Default: []
 symbol-allowlist = ["MyPublicClass", "critical_function"]
@@ -56,6 +61,7 @@ readme-exclude-dirs = ["vendor", "third_party"]
 | `min-symbol-length` | int | `--min-symbol-length` | `4` |
 | `exclude` | list of strings | `--exclude` (repeatable) | `[]` |
 | `noise-blocklist` | list of strings | `--noise-blocklist` (repeatable) | built-in default |
+| `noise-allowlist` | list of strings | `--noise-allowlist` (repeatable) | `[]` |
 | `symbol-allowlist` | list of strings | `--symbol-allowlist` (repeatable) | `[]` |
 | `symbol-denylist` | list of strings | `--symbol-denylist` (repeatable) | `[]` |
 | `readme-paths` | list of strings | `--readme-paths` (repeatable) | `[]` (auto-discover) |

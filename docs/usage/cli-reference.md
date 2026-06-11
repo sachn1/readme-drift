@@ -78,11 +78,30 @@ Shorter symbols are still matched when they appear inside backtick spans.
 Only relevant when `--plain-text-search` is enabled (the default).
 
 ### `--noise-blocklist WORD`
-Replace the built-in noise blocklist with this word. Repeatable. When provided via CLI, the entire built-in list is replaced.
+Replace the built-in noise blocklist with this word. Repeatable. When provided, the entire built-in list is replaced with only the words given.
 
 To disable noise suppression entirely, set `noise-blocklist = []` in `pyproject.toml` — there is no CLI equivalent for an empty list.
 
 The built-in blocklist suppresses plain-text matching for common tokens that produce false positives (e.g. `name`, `type`, `build`, `run`). See [`readme_drift/constants.py`](https://github.com/sachn1/readme-drift/blob/master/readme_drift/constants.py) for the full default list, split by category.
+
+!!! warning
+    `--noise-blocklist` replaces the entire built-in list. If you only want to re-enable one word, use `--noise-allowlist` instead.
+
+!!! note
+    Has no effect when `--no-plain-text-search` is set.
+
+### `--noise-allowlist WORD`
+Remove a specific word from the built-in noise blocklist. Repeatable. The rest of the built-in list stays active.
+
+```bash
+# re-enable plain-text matching for "run" while keeping all other suppressions
+readme-drift --noise-allowlist run
+```
+
+Use this instead of `--noise-blocklist` when you only want to unlock one or two words from the default suppression list without having to spell out all the others.
+
+!!! note
+    Ignored when `--noise-blocklist` is set (that flag replaces the built-in list entirely, making allowlist irrelevant).
 
 !!! note
     Has no effect when `--no-plain-text-search` is set.
@@ -112,6 +131,8 @@ Print per-symbol scan outcomes after the main report: flagged, skipped, suppress
 |---|---|
 | `--readme-paths` + `--readme-exclude-dirs` | `--readme-exclude-dirs` is ignored; warning printed |
 | `--no-plain-text-search` + `--noise-blocklist` | `--noise-blocklist` is ignored; warning printed |
+| `--no-plain-text-search` + `--noise-allowlist` | `--noise-allowlist` is ignored; warning printed |
 | `--no-plain-text-search` + `--min-symbol-length` | `--min-symbol-length` is ignored (no plain-text matching runs) |
+| `--noise-blocklist` + `--noise-allowlist` | `--noise-allowlist` is ignored; warning printed (`--noise-blocklist` already replaces the built-in list) |
 | `--symbol-allowlist X` + `--symbol-denylist X` | Denylist wins; symbol is never flagged |
 | `--symbol-allowlist X` (not in README) | Symbol is force-flagged even without a README match |

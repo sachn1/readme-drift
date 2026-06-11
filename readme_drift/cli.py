@@ -7,6 +7,7 @@ from typing import Any
 
 import click
 
+from .constants import DEFAULT_NOISE_BLOCKLIST
 from .drift_checker import run_check
 from .report import format_report
 
@@ -142,7 +143,18 @@ class _ConfigCommand(click.Command):
     help=(
         "Replace the built-in noise blocklist with these words (repeatable). "
         "To disable noise suppression entirely, set ``noise-blocklist = []`` "
-        "in pyproject.toml."
+        "in pyproject.toml. Ignored when --noise-allowlist is sufficient."
+    ),
+)
+@click.option(
+    "--noise-allowlist",
+    multiple=True,
+    default=(),
+    metavar="WORD",
+    help=(
+        "Remove specific words from the built-in noise blocklist (repeatable). "
+        "Use this to re-enable plain-text matching for a single word without "
+        "replacing the entire blocklist. Ignored when --noise-blocklist is set."
     ),
 )
 # -- Output ------------------------------------------------------------------
@@ -177,6 +189,7 @@ def main(
     symbol_denylist: tuple[str, ...],
     min_symbol_length: int,
     noise_blocklist: tuple[str, ...],
+    noise_allowlist: tuple[str, ...],
     plain_text_search: bool,
     warn_only: bool,
     verbose: bool,
@@ -190,24 +203,42 @@ def main(
             "warning: --readme-paths disables discovery; --readme-exclude-dirs is ignored.",
             err=True,
         )
-    if not plain_text_search and noise_blocklist:
+    if not plain_text_search and (noise_blocklist or noise_allowlist):
         click.echo(
             "warning: --no-plain-text-search disables plain-text matching; "
-            "--noise-blocklist has no effect.",
+            "--noise-blocklist/--noise-allowlist have no effect.",
+            err=True,
+        )
+    if noise_blocklist and noise_allowlist:
+        click.echo(
+            "warning: --noise-blocklist replaces the built-in list entirely; "
+            "--noise-allowlist is ignored.",
             err=True,
         )
 
     # -- Noise-blocklist resolution ------------------------------------------
-    # Priority: CLI flags > pyproject.toml key > built-in DEFAULT_NOISE_BLOCKLIST.
-    # None signals run_check to use the built-in default.
+    # Priority: CLI --noise-blocklist (full replace) > pyproject.toml noise-blocklist
+    #           > DEFAULT_NOISE_BLOCKLIST minus noise-allowlist words.
+    # None signals run_check to use the built-in default unchanged.
     # An empty list explicitly disables noise suppression.
     resolved_noise_blocklist: list[str] | None
     if noise_blocklist:
+        # Full replacement — ignore noise_allowlist (warned above).
         resolved_noise_blocklist = list(noise_blocklist)
     elif "noise-blocklist" in cfg:
+        # TOML replacement — noise_allowlist not applied to custom lists.
         resolved_noise_blocklist = list(cfg["noise-blocklist"])
     else:
-        resolved_noise_blocklist = None
+        # Use built-in default, subtract any allowlisted words.
+        _allowlist: set[str] = set(noise_allowlist)
+        if "noise-allowlist" in cfg:
+            _allowlist.update(cfg.get("noise-allowlist", []))
+        if _allowlist:
+            resolved_noise_blocklist = [
+                w for w in DEFAULT_NOISE_BLOCKLIST if w not in _allowlist
+            ]
+        else:
+            resolved_noise_blocklist = None
 
     result = run_check(
         base_ref=base_ref,

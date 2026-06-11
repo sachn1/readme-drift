@@ -46,4 +46,4 @@ jobs:
           poetry install
 
       - name: pytest
-        run: poetry run pytest --cov=readme_drift --cov-fail-under=75
+        run: poetry run pytest --cov=readme_drift --cov-fail-under=80

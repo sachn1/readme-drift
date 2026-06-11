@@ -1,0 +1,10 @@
+/* Off-white header — both light and dark schemes */
+:root,
+[data-md-color-scheme="default"],
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color:        #f7f4ff; /* header background — off-white with faint purple tint */
+  --md-primary-fg-color--light: #ede9ff;
+  --md-primary-fg-color--dark:  #e0d9ff;
+  --md-primary-bg-color:        #3b1f6e; /* text/icons on header — dark purple */
+  --md-primary-bg-color--light: rgba(59, 31, 110, 0.54);
+}

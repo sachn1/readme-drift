@@ -49,6 +49,8 @@
       
     
     
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -65,7 +67,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="indigo">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -122,7 +124,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
       <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -132,7 +134,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
     
       <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -515,10 +517,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#v200-fine-grained-control-next-release" class="md-nav__link">
+  <a href="#v300-shipped" class="md-nav__link">
     <span class="md-ellipsis">
       
-        v2.0.0 — Fine-grained control ← next release
+        v3.0.0 — Shipped
       
     </span>
   </a>
@@ -526,10 +528,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#v210-broader-prose-documentation-targets" class="md-nav__link">
+  <a href="#v310-broader-prose-documentation-targets" class="md-nav__link">
     <span class="md-ellipsis">
       
-        v2.1.0 — Broader prose documentation targets
+        v3.1.0 — Broader prose documentation targets
       
     </span>
   </a>
@@ -537,10 +539,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#v220-build-and-infrastructure-file-coverage" class="md-nav__link">
+  <a href="#v320-build-and-infrastructure-file-coverage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        v2.2.0 — Build and infrastructure file coverage
+        v3.2.0 — Build and infrastructure file coverage
       
     </span>
   </a>
@@ -633,15 +635,15 @@
 <p><strong>Workflow:</strong>
 - Simplified to trunk-based: <code>feature/*</code> or <code>bugfix/*</code> → PR → <code>master</code> directly; no <code>develop</code> branch, no RC cycle</p>
 <hr />
-<h2 id="v200-fine-grained-control-next-release">v2.0.0 — Fine-grained control ← next release</h2>
-<p>Click migration (breaking CLI syntax change), symbol filtering, noise suppression, README targeting, and verbose output. All items below are implemented on the current branch.</p>
+<h2 id="v300-shipped">v3.0.0 — Shipped</h2>
+<p>Click migration (breaking CLI syntax change), symbol filtering, noise suppression, README targeting, and verbose output.</p>
 <p><strong>Breaking change:</strong>
 - Migrated from argparse to <code>click</code> — boolean flags are now bare flags (<code>--staged</code>, <code>--warn-only</code>, <code>--include-private</code>, <code>--verbose</code>) and toggle pairs (<code>--plain-text-search</code> / <code>--no-plain-text-search</code>). The old <code>--flag true/false</code> syntax is removed.</p>
 <p><strong>Symbol filtering:</strong>
 - <code>--symbol-allowlist</code> — always flag symbol when changed, even without a README match; for critical public API
 - <code>--symbol-denylist</code> — never flag symbol, even if changed and found in README; takes priority over allowlist
 - <code>--min-symbol-length</code> — plain-text matching only applies to symbols ≥ N characters (default: 4); shorter symbols still matched inside backticks
-- <code>--noise-blocklist</code> — replace the built-in suppression list entirely; disable via <code>noise-blocklist = []</code> in <code>pyproject.toml</code>; prerequisite for v2.1.0
+- <code>--noise-blocklist</code> — replace the built-in suppression list entirely; disable via <code>noise-blocklist = []</code> in <code>pyproject.toml</code>; prerequisite for v3.1.0
 - <code>--noise-allowlist</code> — remove specific words from the built-in blocklist without replacing it; use when only one or two words need re-enabling</p>
 <p><strong>README targeting:</strong>
 - <code>--readme-paths</code> — explicit README list, disables recursive discovery entirely
@@ -655,7 +657,7 @@
 <p><strong>Documentation:</strong>
 - MkDocs Material docs site at https://sachn1.github.io/readme-drift — auto-deployed on every master push via <code>docs.yml</code></p>
 <hr />
-<h2 id="v210-broader-prose-documentation-targets">v2.1.0 — Broader prose documentation targets</h2>
+<h2 id="v310-broader-prose-documentation-targets">v3.1.0 — Broader prose documentation targets</h2>
 <p>README is the most visible documentation file, but several others frequently reference code symbols and are just as likely to go stale.</p>
 <p><strong>Planned targets:</strong>
 - <code>CONTRIBUTING.md</code> — contribution guides reference commands, APIs, and module paths
@@ -665,9 +667,9 @@
 - <code>docs/</code> folder — any Markdown files under a <code>docs/</code> directory
 - Configurable target list via <code>[tool.readme-drift]</code> in <code>pyproject.toml</code></p>
 <hr />
-<h2 id="v220-build-and-infrastructure-file-coverage">v2.2.0 — Build and infrastructure file coverage</h2>
+<h2 id="v320-build-and-infrastructure-file-coverage">v3.2.0 — Build and infrastructure file coverage</h2>
 <p>Every Python project has files beyond <code>.py</code> and generic config that define named things the README references directly — make targets, container services, CLI entry points, environment variables. These files live in the repo, so no external knowledge is needed; the names are extractable by the same <code>KeyExtractor</code> protocol already in place.</p>
-<p><strong>Prerequisite:</strong> noise suppression (v2.0.0) must land first. These extractors produce short tokens (<code>web</code>, <code>db</code>, <code>lint</code>, <code>test</code>) that are unacceptably noisy without a blocklist and minimum-length threshold.</p>
+<p><strong>Prerequisite:</strong> noise suppression (v3.0.0) must land first. These extractors produce short tokens (<code>web</code>, <code>db</code>, <code>lint</code>, <code>test</code>) that are unacceptably noisy without a blocklist and minimum-length threshold.</p>
 <p><strong>Infrastructure changes required:</strong>
 - Filename-keyed extractor registry alongside the existing suffix-keyed <code>_EXTRACTORS</code> — needed for <code>Makefile</code> (no suffix) and compose files (<code>.yml</code> suffix already claimed by the generic <code>YamlExtractor</code>)
 - Pre-commit hook <code>types_or</code> / <code>files</code> pattern updated to trigger on the new filenames</p>

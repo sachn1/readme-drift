@@ -62,29 +62,28 @@ The first stable, production-ready release. Public API (`SymbolChange`, `diff_ap
 
 ## v1.0.1 — Shipped
 
-Click migration, `--staged` bug fix, and trunk-based branching.
+`--staged` bug fix and trunk-based branching simplification.
 
 **CLI:**
-- Migrated from argparse to `click` — boolean flags are now bare flags (`--staged`, `--warn-only`, `--include-private`) and toggle pairs (`--plain-text-search` / `--no-plain-text-search`)
-- Fixed `--staged` pre-commit hook error (`expected one argument`) — `is_flag=True` means bare `--staged` = True; hook entry simplified to `readme-drift --staged`
-
-**Code quality:**
-- `readme_drift/constants.py` — extracted `DEFAULT_NOISE_BLOCKLIST`, `README_NAMES`, `README_EXTENSIONS`, `README_SKIP_DIRS` out of private definitions scattered across modules
+- Fixed `--staged` pre-commit hook error (`expected one argument`) via argparse `nargs="?"` + `const=True`; hook entry updated to `readme-drift --staged true`
 
 **Workflow:**
 - Simplified to trunk-based: `feature/*` or `bugfix/*` → PR → `master` directly; no `develop` branch, no RC cycle
 
 ---
 
-## v1.1.0 — Fine-grained control ← next release
+## v2.0.0 — Fine-grained control ← next release
 
-Symbol filtering, noise suppression, README targeting, and verbose output. All items below are implemented on the current branch.
+Click migration (breaking CLI syntax change), symbol filtering, noise suppression, README targeting, and verbose output. All items below are implemented on the current branch.
+
+**Breaking change:**
+- Migrated from argparse to `click` — boolean flags are now bare flags (`--staged`, `--warn-only`, `--include-private`, `--verbose`) and toggle pairs (`--plain-text-search` / `--no-plain-text-search`). The old `--flag true/false` syntax is removed.
 
 **Symbol filtering:**
 - `--symbol-allowlist` — always flag symbol when changed, even without a README match; for critical public API
 - `--symbol-denylist` — never flag symbol, even if changed and found in README; takes priority over allowlist
 - `--min-symbol-length` — plain-text matching only applies to symbols ≥ N characters (default: 4); shorter symbols still matched inside backticks
-- `--noise-blocklist` — replace the built-in suppression list entirely; disable via `noise-blocklist = []` in `pyproject.toml`; prerequisite for v1.3.0
+- `--noise-blocklist` — replace the built-in suppression list entirely; disable via `noise-blocklist = []` in `pyproject.toml`; prerequisite for v2.1.0
 - `--noise-allowlist` — remove specific words from the built-in blocklist without replacing it; use when only one or two words need re-enabling
 
 **README targeting:**
@@ -97,12 +96,15 @@ Symbol filtering, noise suppression, README targeting, and verbose output. All i
 **Model:**
 - `SymbolChange.old_name` — dedicated field for the pre-rename name, separate from `old_signature`; `key_paths` stores full dot-notation paths (e.g. `["scripts.build"]`) so the README is searched for both leaf names and full paths
 
+**Code quality:**
+- `readme_drift/constants.py` — extracted `DEFAULT_NOISE_BLOCKLIST`, `README_NAMES`, `README_EXTENSIONS`, `README_SKIP_DIRS` out of private definitions scattered across modules
+
 **Documentation:**
 - MkDocs Material docs site at https://sachn1.github.io/readme-drift — auto-deployed on every master push via `docs.yml`
 
 ---
 
-## v1.2.0 — Broader prose documentation targets
+## v2.1.0 — Broader prose documentation targets
 
 README is the most visible documentation file, but several others frequently reference code symbols and are just as likely to go stale.
 
@@ -116,11 +118,11 @@ README is the most visible documentation file, but several others frequently ref
 
 ---
 
-## v1.3.0 — Build and infrastructure file coverage
+## v2.2.0 — Build and infrastructure file coverage
 
 Every Python project has files beyond `.py` and generic config that define named things the README references directly — make targets, container services, CLI entry points, environment variables. These files live in the repo, so no external knowledge is needed; the names are extractable by the same `KeyExtractor` protocol already in place.
 
-**Prerequisite:** noise suppression (v1.1.0) must land first. These extractors produce short tokens (`web`, `db`, `lint`, `test`) that are unacceptably noisy without a blocklist and minimum-length threshold.
+**Prerequisite:** noise suppression (v2.0.0) must land first. These extractors produce short tokens (`web`, `db`, `lint`, `test`) that are unacceptably noisy without a blocklist and minimum-length threshold.
 
 **Infrastructure changes required:**
 - Filename-keyed extractor registry alongside the existing suffix-keyed `_EXTRACTORS` — needed for `Makefile` (no suffix) and compose files (`.yml` suffix already claimed by the generic `YamlExtractor`)

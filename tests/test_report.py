@@ -90,11 +90,6 @@ def test_report_multiple_findings():
     assert "src/utils.py" in report
 
 
-# ---------------------------------------------------------------------------
-# v1.2.0 — verbose log and allowlist force-flag rendering
-# ---------------------------------------------------------------------------
-
-
 def test_report_shows_verbose_log_on_pass():
     result = DriftCheckResult(
         findings=[],

@@ -1,28 +1,6 @@
-"""Tests for CLI helper functions: _parse_bool and _load_toml_config."""
+"""Tests for CLI helper functions: _load_toml_config."""
 
-import argparse
-
-import pytest
-
-from readme_drift.cli import _load_toml_config, _parse_bool
-
-
-# --- _parse_bool ---
-
-
-@pytest.mark.parametrize("value", ["true", "True", "TRUE", "1", "yes", "Yes"])
-def test_parse_bool_truthy(value):
-    assert _parse_bool(value) is True
-
-
-@pytest.mark.parametrize("value", ["false", "False", "FALSE", "0", "no", "No"])
-def test_parse_bool_falsy(value):
-    assert _parse_bool(value) is False
-
-
-def test_parse_bool_invalid_raises():
-    with pytest.raises(argparse.ArgumentTypeError, match="Expected true/false"):
-        _parse_bool("maybe")
+from readme_drift.cli import _load_toml_config
 
 
 # --- _load_toml_config ---

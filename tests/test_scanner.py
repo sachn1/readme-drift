@@ -103,11 +103,6 @@ def test_scan_readme_plain_text_false(tmp_path):
     assert "helper" not in results
 
 
-# ---------------------------------------------------------------------------
-# v1.2.0 — force_backtick_only per-symbol override
-# ---------------------------------------------------------------------------
-
-
 def test_force_backtick_only_suppresses_plain_text_for_named_symbol(tmp_path):
     readme = tmp_path / "README.md"
     readme.write_text("Run the build step before deploying.\n")

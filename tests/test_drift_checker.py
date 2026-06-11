@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
+from readme_drift.constants import DEFAULT_NOISE_BLOCKLIST as _DEFAULT_NOISE_BLOCKLIST
 from readme_drift.drift_checker import (
-    _DEFAULT_NOISE_BLOCKLIST,
     _is_excluded,
     _symbols_from_changes,
 )
@@ -70,11 +70,6 @@ def test_is_excluded_empty_patterns():
     assert not _is_excluded(Path("src/models.py"), [])
 
 
-# ---------------------------------------------------------------------------
-# v1.2.0 — noise suppression, allowlist, denylist, key-path, verbose
-# ---------------------------------------------------------------------------
-
-
 def _run_pipeline_direct(
     old_source,
     new_source,
@@ -92,8 +87,10 @@ def _run_pipeline_direct(
     """Integration helper that bypasses git, wiring the pipeline manually."""
     from readme_drift.ast_diff import diff_apis
     from readme_drift.config_diff import diff_config
+    from readme_drift.constants import (
+        DEFAULT_NOISE_BLOCKLIST as _DEFAULT_NOISE_BLOCKLIST,
+    )
     from readme_drift.drift_checker import (
-        _DEFAULT_NOISE_BLOCKLIST,
         _symbols_from_changes,
     )
     from readme_drift.models import DriftCheckResult, StalenessFinding
@@ -423,3 +420,141 @@ def test_symbols_from_changes_includes_key_paths():
 def test_default_noise_blocklist_contains_expected_words():
     for word in ("build", "test", "name", "version", "run"):
         assert word in _DEFAULT_NOISE_BLOCKLIST
+
+
+# --- run_check integration (mocked git layer) ---
+
+
+def _make_git_diff(py_files=None, cfg_files=None):
+    from readme_drift.models import GitDiffResult
+
+    return GitDiffResult(
+        changed_py_files=py_files or [],
+        changed_config_files=cfg_files or [],
+    )
+
+
+def test_run_check_skips_when_no_readme(tmp_path):
+    from unittest.mock import patch
+    from readme_drift.drift_checker import run_check
+
+    with (
+        patch("readme_drift.drift_checker.validate_repo_root", return_value=tmp_path),
+        patch("readme_drift.drift_checker.find_readmes", return_value=[]),
+    ):
+        result = run_check(repo_root=tmp_path)
+
+    assert result.skipped
+    assert "no README" in result.skip_reason
+
+
+def test_run_check_skips_when_no_relevant_files_changed(tmp_path):
+    from unittest.mock import patch
+    from readme_drift.drift_checker import run_check
+
+    readme = tmp_path / "README.md"
+    readme.write_text("# Hello")
+
+    with (
+        patch("readme_drift.drift_checker.validate_repo_root", return_value=tmp_path),
+        patch("readme_drift.drift_checker.find_readmes", return_value=[readme]),
+        patch("readme_drift.drift_checker.get_diff", return_value=_make_git_diff()),
+    ):
+        result = run_check(repo_root=tmp_path)
+
+    assert result.skipped
+    assert "no Python or config files changed" in result.skip_reason
+
+
+def test_run_check_returns_no_findings_when_no_symbol_changes(tmp_path):
+    from unittest.mock import patch
+    from readme_drift.drift_checker import run_check
+
+    readme = tmp_path / "README.md"
+    readme.write_text("# Hello world")
+    py_file = tmp_path / "src.py"
+
+    with (
+        patch("readme_drift.drift_checker.validate_repo_root", return_value=tmp_path),
+        patch("readme_drift.drift_checker.find_readmes", return_value=[readme]),
+        patch(
+            "readme_drift.drift_checker.get_diff",
+            return_value=_make_git_diff(py_files=[py_file]),
+        ),
+        patch(
+            "readme_drift.drift_checker.read_old_content",
+            return_value="def foo(): pass",
+        ),
+        patch(
+            "readme_drift.drift_checker.read_new_content",
+            return_value="def foo(): pass",
+        ),
+    ):
+        result = run_check(repo_root=tmp_path)
+
+    assert result.passed
+    assert result.findings == []
+
+
+def test_run_check_detects_removed_symbol_in_readme(tmp_path):
+    from unittest.mock import patch
+    from readme_drift.drift_checker import run_check
+
+    readme = tmp_path / "README.md"
+    readme.write_text("Call `connect` to connect.")
+    py_file = tmp_path / "client.py"
+
+    with (
+        patch("readme_drift.drift_checker.validate_repo_root", return_value=tmp_path),
+        patch("readme_drift.drift_checker.find_readmes", return_value=[readme]),
+        patch(
+            "readme_drift.drift_checker.get_diff",
+            return_value=_make_git_diff(py_files=[py_file]),
+        ),
+        patch(
+            "readme_drift.drift_checker.read_old_content",
+            return_value="def connect(): pass",
+        ),
+        patch("readme_drift.drift_checker.read_new_content", return_value=""),
+    ):
+        result = run_check(repo_root=tmp_path)
+
+    assert result.failed
+    assert any(f.symbol == "connect" for f in result.findings)
+
+
+def test_run_check_exclude_filters_source_file(tmp_path):
+    from unittest.mock import patch
+    from readme_drift.drift_checker import run_check
+
+    readme = tmp_path / "README.md"
+    readme.write_text("Call `connect` to connect.")
+    py_file = Path("generated/client.py")
+
+    with (
+        patch("readme_drift.drift_checker.validate_repo_root", return_value=tmp_path),
+        patch("readme_drift.drift_checker.find_readmes", return_value=[readme]),
+        patch(
+            "readme_drift.drift_checker.get_diff",
+            return_value=_make_git_diff(py_files=[py_file]),
+        ),
+    ):
+        result = run_check(repo_root=tmp_path, exclude=["generated/"])
+
+    assert result.passed
+
+
+def test_run_check_readme_paths_overrides_discovery(tmp_path):
+    from unittest.mock import patch
+    from readme_drift.drift_checker import run_check
+
+    custom_readme = tmp_path / "CUSTOM.md"
+    custom_readme.write_text("Call `connect`.")
+
+    with (
+        patch("readme_drift.drift_checker.validate_repo_root", return_value=tmp_path),
+        patch("readme_drift.drift_checker.get_diff", return_value=_make_git_diff()),
+    ):
+        result = run_check(repo_root=tmp_path, readme_paths=[str(custom_readme)])
+
+    assert result.skipped

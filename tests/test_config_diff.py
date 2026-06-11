@@ -158,11 +158,6 @@ def test_diff_unknown_extension_returns_empty():
     assert changes == []
 
 
-# ---------------------------------------------------------------------------
-# v1.2.0 — key_paths populated on SymbolChange
-# ---------------------------------------------------------------------------
-
-
 def test_key_paths_populated_for_removed_leaf():
     old = '{"scripts": {"build": "webpack", "test": "jest"}}'
     new = '{"scripts": {"test": "jest"}}'
@@ -210,9 +205,9 @@ def test_diff_leaf_deduplication():
     changes = diff_config(old, new, file="ci.yml")
     removed = [c for c in changes if c.change_type == ChangeType.REMOVED]
     removed_names = [c.name for c in removed]
-    assert (
-        removed_names.count("name") == 1
-    ), "duplicate leaf 'name' must be reported once"
+    assert removed_names.count("name") == 1, (
+        "duplicate leaf 'name' must be reported once"
+    )
 
 
 def test_diff_added_not_flagged_as_stale():

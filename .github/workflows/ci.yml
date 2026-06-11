@@ -21,11 +21,8 @@ jobs:
           pip install poetry
           poetry install
 
-      - name: Ruff check
-        run: poetry run ruff check .
-
-      - name: Ruff format
-        run: poetry run ruff format --check .
+      - name: Lint
+        run: make lint
 
   test:
     name: Test (Python ${{ matrix.python-version }})
@@ -45,5 +42,5 @@ jobs:
           pip install poetry
           poetry install
 
-      - name: pytest
-        run: poetry run pytest --cov=readme_drift --cov-fail-under=80
+      - name: Test
+        run: make test

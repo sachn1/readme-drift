@@ -30,14 +30,16 @@ nav:
     - CI / GitHub Actions: usage/ci.md
     - CLI reference: usage/cli-reference.md
   - Configuration: configuration.md
-  - Architecture: architecture.md
-  - Roadmap: roadmap.md
 
 markdown_extensions:
   - admonition
   - pymdownx.highlight:
       anchor_linenums: true
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.inlinehilite
   - tables
   - attr_list

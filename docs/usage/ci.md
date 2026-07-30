@@ -54,7 +54,7 @@ jobs:
         with:
           fetch-depth: 0  # required so origin/<base-branch> is fetchable
 
-      - uses: sachn1/readme-drift@v3.1.0
+      - uses: sachn1/readme-drift@v3.2.0
         with:
           warn-only: "true"  # drop once you trust the signal
 ```

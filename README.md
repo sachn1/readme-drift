@@ -47,7 +47,7 @@ on your repo before it earns the right to fail a build:
 ```yaml
 repos:
   - repo: https://github.com/sachn1/readme-drift
-    rev: v3.1.0 # use the latest release
+    rev: v3.2.0 # use the latest release
     hooks:
       - id: readme-drift
         args: [--warn-only]
@@ -63,7 +63,7 @@ Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/sachn1/readme-drift
-    rev: v3.1.0 # use the latest release
+    rev: v3.2.0 # use the latest release
     hooks:
       - id: readme-drift
 ```
@@ -94,7 +94,7 @@ Or using the bundled composite action, which installs and runs it for you:
   with:
     fetch-depth: 0 # required so origin/<base-branch> is fetchable
 
-- uses: sachn1/readme-drift@v3.1.0
+- uses: sachn1/readme-drift@v3.2.0
   with:
     warn-only: "true" # drop once you trust the signal
 ```

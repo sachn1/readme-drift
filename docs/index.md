@@ -32,7 +32,7 @@ Add to `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/sachn1/readme-drift
-    rev: v3.1.0 # use the latest release
+    rev: v3.2.0 # use the latest release
     hooks:
       - id: readme-drift
 ```

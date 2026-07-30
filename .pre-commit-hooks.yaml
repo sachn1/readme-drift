@@ -3,4 +3,4 @@
   language: python
   entry: readme-drift --staged
   pass_filenames: false
-  types_or: [python, yaml, json, toml]
+  types_or: [python, yaml, json, toml, makefile]

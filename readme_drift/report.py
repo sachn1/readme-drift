@@ -3,23 +3,44 @@
 from .models import DriftCheckResult
 
 
-def format_report(result: DriftCheckResult) -> str:
-    """Format a CheckResult into a human-readable string."""
-    lines: list[str] = []
+def _suppressed_hint(result: DriftCheckResult) -> str:
+    """Low-noise hint for symbols that matched the README as plain text but
+    were noise-suppressed to backtick-only matching, so no finding fired.
 
-    if result.skipped:
-        return f"readme-drift: skipped ({result.skip_reason})"
+    Only rendered when non-empty — most runs never hit this case.
+    """
+    if not result.suppressed_hint_count:
+        return ""
+    plural = result.suppressed_hint_count != 1
+    noun = "symbols" if plural else "symbol"
+    verb = "were" if plural else "was"
+    return (
+        f"readme-drift: ℹ {result.suppressed_hint_count} changed {noun} "
+        f"matched the README as plain text but {verb} noise-suppressed "
+        "(no backtick match) — run with --verbose for details."
+    )
 
-    if not result.findings:
-        report = "readme-drift: ✅ No README staleness detected."
-        if result.verbose_log:
-            report += "\n\nreadme-drift: verbose log:\n" + "\n".join(
-                f"  {entry}" for entry in result.verbose_log
-            )
-        return report
 
+def _verbose_block(result: DriftCheckResult) -> str:
+    if not result.verbose_log:
+        return ""
+    return "readme-drift: verbose log:\n" + "\n".join(
+        f"  {entry}" for entry in result.verbose_log
+    )
+
+
+def _passing_report(result: DriftCheckResult) -> str:
+    report = "readme-drift: ✅ No README staleness detected."
+    if hint := _suppressed_hint(result):
+        report += "\n" + hint
+    if verbose := _verbose_block(result):
+        report += "\n\n" + verbose
+    return report
+
+
+def _failing_report(result: DriftCheckResult) -> str:
     readme_label = ", ".join(sorted({p.name for p in result.readme_paths})) or "README"
-    lines.append(f"readme-drift: ❌ {readme_label} may be stale:\n")
+    lines: list[str] = [f"readme-drift: ❌ {readme_label} may be stale:\n"]
 
     for finding in result.findings:
         change = finding.change
@@ -38,9 +59,21 @@ def format_report(result: DriftCheckResult) -> str:
 
     lines.append("  → Please update the README or run with --no-verify to skip.")
 
-    if result.verbose_log:
-        lines.append("\nreadme-drift: verbose log:")
-        for entry in result.verbose_log:
-            lines.append(f"  {entry}")
+    if hint := _suppressed_hint(result):
+        lines.append(hint)
+
+    if verbose := _verbose_block(result):
+        lines.append("\n" + verbose)
 
     return "\n".join(lines)
+
+
+def format_report(result: DriftCheckResult) -> str:
+    """Format a CheckResult into a human-readable string."""
+    if result.skipped:
+        return f"readme-drift: skipped ({result.skip_reason})"
+
+    if not result.findings:
+        return _passing_report(result)
+
+    return _failing_report(result)

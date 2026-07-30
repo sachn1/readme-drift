@@ -42,35 +42,44 @@ runs:
 
     - name: Install readme-drift
       shell: bash
+      env:
+        RD_VERSION: ${{ inputs.version }}
       run: |
-        if [ -n "${{ inputs.version }}" ]; then
-          pip install "readme-drift==${{ inputs.version }}"
+        if [ -n "$RD_VERSION" ]; then
+          pip install "readme-drift==$RD_VERSION"
         else
           pip install readme-drift
         fi
 
     - name: Run readme-drift
       shell: bash
+      env:
+        RD_BASE_REF: ${{ inputs.base-ref }}
+        RD_WARN_ONLY: ${{ inputs.warn-only }}
+        RD_INCLUDE_PRIVATE: ${{ inputs.include-private }}
+        RD_EXCLUDE: ${{ inputs.exclude }}
+        RD_README_PATHS: ${{ inputs.readme-paths }}
+        RD_GITHUB_BASE_REF: ${{ github.base_ref }}
       run: |
-        base_ref="${{ inputs.base-ref }}"
-        if [ -z "$base_ref" ] && [ -n "${{ github.base_ref }}" ]; then
-          base_ref="origin/${{ github.base_ref }}"
+        base_ref="$RD_BASE_REF"
+        if [ -z "$base_ref" ] && [ -n "$RD_GITHUB_BASE_REF" ]; then
+          base_ref="origin/$RD_GITHUB_BASE_REF"
         fi
 
         args=()
         [ -n "$base_ref" ] && args+=(--base-ref "$base_ref")
 
-        if [ "${{ inputs.warn-only }}" = "true" ]; then
+        if [ "$RD_WARN_ONLY" = "true" ]; then
           args+=(--warn-only)
         fi
-        if [ "${{ inputs.include-private }}" = "true" ]; then
+        if [ "$RD_INCLUDE_PRIVATE" = "true" ]; then
           args+=(--include-private)
         fi
         while IFS= read -r pattern; do
           [ -n "$pattern" ] && args+=(--exclude "$pattern")
-        done <<< "${{ inputs.exclude }}"
+        done <<< "$RD_EXCLUDE"
         while IFS= read -r path; do
           [ -n "$path" ] && args+=(--readme-paths "$path")
-        done <<< "${{ inputs.readme-paths }}"
+        done <<< "$RD_README_PATHS"
 
         readme-drift "${args[@]}"

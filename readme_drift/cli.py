@@ -208,7 +208,9 @@ def main(
 ) -> None:
     """Check if README may be stale after code changes."""
     if init:
-        root = validate_repo_root(repo_root) if repo_root is not None else get_repo_root()
+        root = (
+            validate_repo_root(repo_root) if repo_root is not None else get_repo_root()
+        )
         target = root / "README.md"
         if target.exists() and target.read_text(encoding="utf-8").strip():
             click.echo(f"README already exists and is not empty: {target}", err=True)

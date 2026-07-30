@@ -32,7 +32,6 @@ pytest = ">=7.0"
 pytest-cov = ">=4.0"
 ruff = ">=0.4"
 commitizen = ">=4.1.1,<5"
-types-PyYAML = ">=6.0"
 mkdocs-material = ">=9.0"
 
 [tool.poetry.scripts]
@@ -54,6 +53,9 @@ tag_format = "v$version"
 update_changelog_on_bump = false
 version_files = [
     "README.md:v\\d+\\.\\d+\\.\\d+",
+    "docs/index.md:v\\d+\\.\\d+\\.\\d+",
+    "docs/usage/pre-commit.md:v\\d+\\.\\d+\\.\\d+",
+    "docs/usage/ci.md:v\\d+\\.\\d+\\.\\d+",
 ]
 
 [tool.ruff]

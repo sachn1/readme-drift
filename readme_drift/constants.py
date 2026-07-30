@@ -115,4 +115,3 @@ in backticks below so renames and removals get caught.
 
 ## License
 """
-

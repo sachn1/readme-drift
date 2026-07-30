@@ -32,7 +32,7 @@ Add to `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/sachn1/readme-drift
-    rev: v1.0.1
+    rev: v3.1.0 # use the latest release
     hooks:
       - id: readme-drift
 ```
@@ -61,6 +61,14 @@ See [Usage → Pre-commit hook](usage/pre-commit.md) for full setup, and [Usage 
 | Tool section removed | ✅ |
 | Key renamed at same level | ✅ reported as remove + add |
 | Value changed, key unchanged | ➖ not tracked |
+
+### `Makefile` / `makefile` / `GNUmakefile`
+
+| Change | Detected? |
+|---|---|
+| Target removed | ✅ |
+| Target renamed | ✅ reported as remove + add |
+| Recipe body changed, target name unchanged | ➖ not tracked |
 
 ## What it doesn't catch
 

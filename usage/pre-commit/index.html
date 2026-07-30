@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/logo.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -423,10 +423,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#warn-only-mode" class="md-nav__link">
+  <a href="#start-in-warn-only-mode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Warn-only mode
+        Start in warn-only mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#no-readme-yet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No README yet?
       
     </span>
   </a>
@@ -603,10 +614,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#warn-only-mode" class="md-nav__link">
+  <a href="#start-in-warn-only-mode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Warn-only mode
+        Start in warn-only mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#no-readme-yet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No README yet?
       
     </span>
   </a>
@@ -660,7 +682,7 @@
 <p>Add to <code>.pre-commit-config.yaml</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">repos</span><span class="p">:</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/sachn1/readme-drift</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">rev</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1.0.1</span><span class="w">  </span><span class="c1"># use the latest release tag</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">rev</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v3.1.0</span><span class="w">  </span><span class="c1"># use the latest release tag</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">hooks</span><span class="p">:</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readme-drift</span>
 </code></pre></div>
@@ -670,18 +692,23 @@
 <p>No extra <code>args</code> needed. The hook is pre-configured to check <strong>staged changes</strong> — everything you've <code>git add</code>-ed. Do not pass <code>--staged</code> yourself; it is already set in the hook entry.</p>
 <h2 id="how-it-triggers">How it triggers</h2>
 <p>The hook fires on <code>git commit</code> when any of these file types are staged:</p>
-<p><code>.py</code> · <code>.yml</code> · <code>.yaml</code> · <code>.json</code> · <code>.toml</code></p>
+<p><code>.py</code> · <code>.yml</code> · <code>.yaml</code> · <code>.json</code> · <code>.toml</code> · <code>Makefile</code> / <code>makefile</code> / <code>GNUmakefile</code></p>
 <p>If none of those file types changed, the hook skips silently.</p>
-<h2 id="warn-only-mode">Warn-only mode</h2>
-<p>To print findings without blocking commits:</p>
+<h2 id="start-in-warn-only-mode">Start in warn-only mode</h2>
+<p>New to the hook? Run it in warn-only mode for a week or two before letting it block commits, so it can prove its false-positive rate on your repo first:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">hooks</span><span class="p">:</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readme-drift</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;--warn-only&quot;</span><span class="p p-Indicator">]</span>
 </code></pre></div>
+<p>Drop <code>--warn-only</code> once you've seen it flag real drift and nothing but real drift.</p>
+<h2 id="no-readme-yet">No README yet?</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>readme-drift<span class="w"> </span>--init
+</code></pre></div>
+<p>Scaffolds a bare <code>README.md</code> with template subheadings and a reminder to reference public symbols in backticks. Refuses to overwrite an existing, non-empty README.</p>
 <h2 id="excluding-files">Excluding files</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">hooks</span><span class="p">:</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readme-drift</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;--exclude&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;generated/&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--exclude&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;vendor/&quot;</span><span class="p p-Indicator">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">hooks</span><span class="p">:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readme-drift</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;--exclude&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;generated/&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--exclude&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;vendor/&quot;</span><span class="p p-Indicator">]</span>
 </code></pre></div>
 <h2 id="common-issues">Common issues</h2>
 <p><strong><code>--staged</code> argument error</strong> — Do not add <code>--staged</code> or <code>--staged true</code> to <code>args</code>. The hook entry already sets it. Duplicating the flag causes an argument parse error.</p>
@@ -744,7 +771,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.sections", "content.code.copy", "navigation.top"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

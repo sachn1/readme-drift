@@ -1,0 +1,76 @@
+name: "readme-drift"
+description: "Detect stale README references after code changes."
+author: "Sachin Nandakumar"
+branding:
+  icon: "book-open"
+  color: "purple"
+
+inputs:
+  base-ref:
+    description: >
+      Git ref to diff against. Leave empty on pull_request events to
+      auto-resolve to origin/<base-branch>; set explicitly for push/other events.
+    required: false
+    default: ""
+  warn-only:
+    description: "Print findings but always exit 0."
+    required: false
+    default: "false"
+  include-private:
+    description: "Track private (underscore-prefixed) Python symbols."
+    required: false
+    default: "false"
+  exclude:
+    description: "Newline-separated glob patterns for source files/dirs to skip."
+    required: false
+    default: ""
+  readme-paths:
+    description: "Newline-separated explicit README files to scan (overrides discovery)."
+    required: false
+    default: ""
+  version:
+    description: "readme-drift version to install (PyPI version specifier)."
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install readme-drift
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.version }}" ]; then
+          pip install "readme-drift==${{ inputs.version }}"
+        else
+          pip install readme-drift
+        fi
+
+    - name: Run readme-drift
+      shell: bash
+      run: |
+        base_ref="${{ inputs.base-ref }}"
+        if [ -z "$base_ref" ] && [ -n "${{ github.base_ref }}" ]; then
+          base_ref="origin/${{ github.base_ref }}"
+        fi
+
+        args=()
+        [ -n "$base_ref" ] && args+=(--base-ref "$base_ref")
+
+        if [ "${{ inputs.warn-only }}" = "true" ]; then
+          args+=(--warn-only)
+        fi
+        if [ "${{ inputs.include-private }}" = "true" ]; then
+          args+=(--include-private)
+        fi
+        while IFS= read -r pattern; do
+          [ -n "$pattern" ] && args+=(--exclude "$pattern")
+        done <<< "${{ inputs.exclude }}"
+        while IFS= read -r path; do
+          [ -n "$path" ] && args+=(--readme-paths "$path")
+        done <<< "${{ inputs.readme-paths }}"
+
+        readme-drift "${args[@]}"

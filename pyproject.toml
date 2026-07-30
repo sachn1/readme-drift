@@ -52,6 +52,9 @@ version_provider = "poetry"
 version_scheme = "semver2"
 tag_format = "v$version"
 update_changelog_on_bump = false
+version_files = [
+    "README.md:v\\d+\\.\\d+\\.\\d+",
+]
 
 [tool.ruff]
 line-length = 88

@@ -92,3 +92,16 @@ def test_added_symbol_never_stale(tmp_path):
     result = _run_pipeline(old, new, readme, tmp_path)
 
     assert result.passed
+
+
+def test_makefile_removed_target_in_readme(tmp_path):
+    old = "build:\n\tgo build ./...\n\ndeploy:\n\t./deploy.sh\n"
+    new = "build:\n\tgo build ./...\n"
+    readme = "Run `make deploy` to ship to production."
+
+    result = _run_pipeline(
+        old, new, readme, tmp_path, is_config=True, filename="Makefile"
+    )
+
+    assert result.failed
+    assert any(f.symbol == "deploy" for f in result.findings)

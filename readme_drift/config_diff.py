@@ -5,8 +5,21 @@ import re
 import tomllib
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
+
 import yaml  # type: ignore[import-untyped]
+
 from .models import ChangeType, SymbolChange
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+# Matches a rule line's target(s), e.g. "build:" or "test lint: deps" —
+# stops before "=" so variable assignments (VAR := ...) are never matched.
+_MAKE_TARGET_RE = re.compile(r"^([A-Za-z0-9_.\-%]+)\s*:(?!=)")
+
+# Config-like files identified by exact filename rather than suffix.
+_MAKEFILE_NAMES: frozenset[str] = frozenset({"Makefile", "makefile", "GNUmakefile"})
 
 
 @runtime_checkable
@@ -79,6 +92,31 @@ class YamlExtractor:
         return _flatten(data) if data is not None else {}
 
 
+class MakefileExtractor:
+    def extract(self, content: str) -> dict[str, str]:
+        """Parse a Makefile and return target-name → target-name dict.
+
+        Only the first target on a rule line is captured; recipe lines
+        (tab-indented) and variable assignments are ignored. ``.PHONY`` is
+        excluded since it's bookkeeping, not a callable target.
+        """
+        targets: dict[str, str] = {}
+        for line in content.splitlines():
+            if not line or line.startswith("\t") or line.lstrip().startswith("#"):
+                continue
+            match = _MAKE_TARGET_RE.match(line)
+            if match:
+                name = match.group(1)
+                if name != ".PHONY":
+                    targets[name] = name
+        return targets
+
+
+# ---------------------------------------------------------------------------
+# Extractor registries — must follow the classes above since they hold
+# instances, not just names.
+# ---------------------------------------------------------------------------
+
 _EXTRACTORS: dict[str, KeyExtractor] = {
     ".json": JsonExtractor(),
     ".toml": TomlExtractor(),
@@ -87,6 +125,12 @@ _EXTRACTORS: dict[str, KeyExtractor] = {
 }
 
 CONFIG_SUFFIXES: frozenset[str] = frozenset(_EXTRACTORS)
+
+_FILENAME_EXTRACTORS: dict[str, KeyExtractor] = {
+    name: MakefileExtractor() for name in _MAKEFILE_NAMES
+}
+
+CONFIG_FILENAMES: frozenset[str] = frozenset(_FILENAME_EXTRACTORS)
 
 
 def diff_config(
@@ -111,7 +155,11 @@ def diff_config(
         Changes detected; leaf key names are used as symbol names so they
         match natural README references (e.g. ``build`` in ``npm run build``).
     """
-    extractor = _EXTRACTORS.get(Path(file).suffix.lower() if file else "")
+    path = Path(file) if file else None
+    if path is not None and path.name in _FILENAME_EXTRACTORS:
+        extractor: KeyExtractor | None = _FILENAME_EXTRACTORS[path.name]
+    else:
+        extractor = _EXTRACTORS.get(path.suffix.lower() if path else "")
     if extractor is None:
         return []
 

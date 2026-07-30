@@ -97,3 +97,25 @@ def test_get_diff_rejects_dash_base_ref():
 
     with pytest.raises(ValueError, match="cannot start with"):
         get_diff(base_ref="--evil")
+
+
+def test_get_diff_classifies_makefile_as_config(tmp_path):
+    import subprocess
+
+    from readme_drift.git import get_diff
+
+    def run(*args):
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    run("init")
+    run("config", "user.email", "test@example.com")
+    run("config", "user.name", "Test")
+    (tmp_path / "Makefile").write_text("build:\n\techo hi\n")
+    run("add", "Makefile")
+    run("commit", "-m", "init")
+
+    (tmp_path / "Makefile").write_text("build:\n\techo hi\n\ndeploy:\n\techo deploy\n")
+    run("add", "Makefile")
+
+    diff = get_diff(staged=True, repo_root=tmp_path)
+    assert Path("Makefile") in diff.changed_config_files

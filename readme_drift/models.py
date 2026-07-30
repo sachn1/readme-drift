@@ -97,6 +97,12 @@ class DriftCheckResult:
     # describing one symbol change and its fate (flagged / not in README /
     # suppressed / denied / force-flagged via allowlist).
     verbose_log: list[str] = field(default_factory=list)
+    # Count of distinct symbols that were noise-suppressed to backtick-only
+    # matching, had no backtick match, but DO appear in the README as plain
+    # text — i.e. a real reference that noise suppression silently let pass.
+    # Always populated (not just under --verbose) so the report can surface
+    # a low-noise hint even on an otherwise-passing run.
+    suppressed_hint_count: int = 0
 
     @property
     def passed(self) -> bool:

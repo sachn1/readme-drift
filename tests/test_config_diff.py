@@ -167,6 +167,50 @@ def test_key_paths_populated_for_removed_leaf():
     assert any("scripts.build" in kp for kp in removed[0].key_paths)
 
 
+# --- Makefile ---------------------------------------------------------------
+
+
+def test_makefile_extracts_targets():
+    from readme_drift.config_diff import MakefileExtractor
+
+    content = "build:\n\tgo build ./...\n\ntest: build\n\tgo test ./...\n"
+    result = MakefileExtractor().extract(content)
+    assert result == {"build": "build", "test": "test"}
+
+
+def test_makefile_ignores_recipe_lines_and_comments():
+    from readme_drift.config_diff import MakefileExtractor
+
+    content = "# top-level comment\nbuild:\n\t# a comment inside a recipe\n\techo hi\n"
+    result = MakefileExtractor().extract(content)
+    assert result == {"build": "build"}
+
+
+def test_makefile_ignores_variable_assignments():
+    from readme_drift.config_diff import MakefileExtractor
+
+    content = "CFLAGS := -O2\nbuild:\n\tcc $(CFLAGS) -o out main.c\n"
+    result = MakefileExtractor().extract(content)
+    assert result == {"build": "build"}
+
+
+def test_makefile_ignores_phony_target():
+    from readme_drift.config_diff import MakefileExtractor
+
+    content = ".PHONY: build test\nbuild:\n\techo build\n"
+    result = MakefileExtractor().extract(content)
+    assert result == {"build": "build"}
+
+
+def test_diff_config_detects_makefile_by_filename():
+    old = "build:\n\techo old\n\ntest:\n\techo test\n"
+    new = "test:\n\techo test\n"
+    changes = diff_config(old, new, file="Makefile")
+    names = {c.name for c in changes}
+    assert "build" in names
+    assert "test" not in names
+
+
 def test_key_paths_populated_for_added_leaf():
     old = '{"scripts": {"test": "jest"}}'
     new = '{"scripts": {"lint": "eslint", "test": "jest"}}'

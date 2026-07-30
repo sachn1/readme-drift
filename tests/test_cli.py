@@ -97,3 +97,41 @@ def test_noise_allowlist_ignored_when_noise_blocklist_set():
 def test_no_noise_flags_passes_none_to_run_check():
     kwargs = _invoke_main_with_mock([])
     assert kwargs["noise_blocklist"] is None
+
+
+# --- --init -------------------------------------------------------------
+
+
+def _init_repo(tmp_path):
+    import subprocess
+
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+
+
+def test_init_creates_readme_when_absent(tmp_path):
+    _init_repo(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(main, ["--init", "--repo-root", str(tmp_path)])
+    assert result.exit_code == 0
+    readme = tmp_path / "README.md"
+    assert readme.exists()
+    assert "backticks" in readme.read_text()
+
+
+def test_init_refuses_to_overwrite_nonempty_readme(tmp_path):
+    _init_repo(tmp_path)
+    (tmp_path / "README.md").write_text("# Existing content\n")
+    runner = CliRunner()
+    result = runner.invoke(main, ["--init", "--repo-root", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "already exists" in result.output
+    assert (tmp_path / "README.md").read_text() == "# Existing content\n"
+
+
+def test_init_overwrites_empty_readme(tmp_path):
+    _init_repo(tmp_path)
+    (tmp_path / "README.md").write_text("   \n")
+    runner = CliRunner()
+    result = runner.invoke(main, ["--init", "--repo-root", str(tmp_path)])
+    assert result.exit_code == 0
+    assert "backticks" in (tmp_path / "README.md").read_text()

@@ -177,10 +177,29 @@ def run_check(
         ).items():
             all_readme_matches.setdefault(symbol, []).extend(matches)
 
+    # Shadow scan: for symbols restricted to backtick-only matching, also
+    # check under full plain-text search. This never changes findings — it
+    # only detects the "silent miss" case: a noise-suppressed or too-short
+    # symbol with no backtick match, but a plain-text mention that would
+    # have been caught had noise suppression not applied. Surfaced via
+    # --verbose and the passing-run hint so un-backticked prose references
+    # don't go unnoticed.
+    plain_text_shadow_matches: dict[str, list[ReadmeMatch]] = {}
+    if force_backtick_only:
+        for readme_path in discovered:
+            for symbol, matches in scan_readme_for_symbols(
+                readme_path,
+                list(force_backtick_only),
+                plain_text=True,
+                force_backtick_only=None,
+            ).items():
+                plain_text_shadow_matches.setdefault(symbol, []).extend(matches)
+
     # -----------------------------------------------------------------------
     # Build findings.
     # -----------------------------------------------------------------------
     findings: list[StalenessFinding] = []
+    silently_missed_symbols: set[str] = set()
 
     for change in active_changes:
         if change.change_type == ChangeType.ADDED:
@@ -211,6 +230,9 @@ def run_check(
         in_readme = bool(readme_matches)
         on_allowlist = change.name in _allowlist
         suppressed = change.name in force_backtick_only and not in_readme
+        silently_missed = suppressed and change.name in plain_text_shadow_matches
+        if silently_missed:
+            silently_missed_symbols.add(change.name)
 
         if on_allowlist and not in_readme:
             # Force-flag: symbol is critical; flag even without a README match.
@@ -234,11 +256,16 @@ def run_check(
                 )
         else:
             if verbose:
-                reason = (
-                    "suppressed (noise filter, no backtick match)"
-                    if suppressed
-                    else "not found in any README"
-                )
+                if silently_missed:
+                    reason = (
+                        "suppressed (noise filter) — matches README as plain "
+                        "text; wrap in backticks or use --symbol-allowlist to "
+                        "catch this"
+                    )
+                elif suppressed:
+                    reason = "suppressed (noise filter, no backtick match)"
+                else:
+                    reason = "not found in any README"
                 vlog.append(
                     f"{change.name} [{change.change_type.value}] → {reason} → skipped"
                 )
@@ -253,6 +280,7 @@ def run_check(
         findings=findings,
         readme_paths=discovered,
         verbose_log=vlog,
+        suppressed_hint_count=len(silently_missed_symbols),
     )
 
 

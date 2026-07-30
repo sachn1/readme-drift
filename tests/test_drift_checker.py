@@ -523,6 +523,92 @@ def test_run_check_detects_removed_symbol_in_readme(tmp_path):
     assert any(f.symbol == "connect" for f in result.findings)
 
 
+def test_run_check_suppressed_hint_when_plain_text_match_noise_suppressed(tmp_path):
+    from unittest.mock import patch
+    from readme_drift.drift_checker import run_check
+
+    # "build" is on the default noise blocklist, so plain-text matching is
+    # suppressed for it. It's mentioned in the README only as prose (no
+    # backticks) — this is exactly the silent-miss case: no finding fires,
+    # but the reference is real and the report should say so.
+    readme = tmp_path / "README.md"
+    readme.write_text("Run build before deploying.")
+    py_file = tmp_path / "client.py"
+
+    with (
+        patch("readme_drift.drift_checker.validate_repo_root", return_value=tmp_path),
+        patch("readme_drift.drift_checker.find_readmes", return_value=[readme]),
+        patch(
+            "readme_drift.drift_checker.get_diff",
+            return_value=_make_git_diff(py_files=[py_file]),
+        ),
+        patch(
+            "readme_drift.drift_checker.read_old_content",
+            return_value="def build(): pass",
+        ),
+        patch("readme_drift.drift_checker.read_new_content", return_value=""),
+    ):
+        result = run_check(repo_root=tmp_path)
+
+    assert result.passed
+    assert result.suppressed_hint_count == 1
+
+
+def test_run_check_no_suppressed_hint_when_symbol_not_in_readme(tmp_path):
+    from unittest.mock import patch
+    from readme_drift.drift_checker import run_check
+
+    # "build" is noise-suppressed but not mentioned anywhere in the README —
+    # nothing was silently missed, so no hint should fire.
+    readme = tmp_path / "README.md"
+    readme.write_text("Nothing relevant here.")
+    py_file = tmp_path / "client.py"
+
+    with (
+        patch("readme_drift.drift_checker.validate_repo_root", return_value=tmp_path),
+        patch("readme_drift.drift_checker.find_readmes", return_value=[readme]),
+        patch(
+            "readme_drift.drift_checker.get_diff",
+            return_value=_make_git_diff(py_files=[py_file]),
+        ),
+        patch(
+            "readme_drift.drift_checker.read_old_content",
+            return_value="def build(): pass",
+        ),
+        patch("readme_drift.drift_checker.read_new_content", return_value=""),
+    ):
+        result = run_check(repo_root=tmp_path)
+
+    assert result.passed
+    assert result.suppressed_hint_count == 0
+
+
+def test_run_check_verbose_notes_silently_missed_symbol(tmp_path):
+    from unittest.mock import patch
+    from readme_drift.drift_checker import run_check
+
+    readme = tmp_path / "README.md"
+    readme.write_text("Run build before deploying.")
+    py_file = tmp_path / "client.py"
+
+    with (
+        patch("readme_drift.drift_checker.validate_repo_root", return_value=tmp_path),
+        patch("readme_drift.drift_checker.find_readmes", return_value=[readme]),
+        patch(
+            "readme_drift.drift_checker.get_diff",
+            return_value=_make_git_diff(py_files=[py_file]),
+        ),
+        patch(
+            "readme_drift.drift_checker.read_old_content",
+            return_value="def build(): pass",
+        ),
+        patch("readme_drift.drift_checker.read_new_content", return_value=""),
+    ):
+        result = run_check(repo_root=tmp_path, verbose=True)
+
+    assert any("matches README as plain text" in entry for entry in result.verbose_log)
+
+
 def test_run_check_exclude_filters_source_file(tmp_path):
     from unittest.mock import patch
     from readme_drift.drift_checker import run_check

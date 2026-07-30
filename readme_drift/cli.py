@@ -7,8 +7,9 @@ from typing import Any
 
 import click
 
-from .constants import DEFAULT_NOISE_BLOCKLIST
+from .constants import DEFAULT_NOISE_BLOCKLIST, README_TEMPLATE
 from .drift_checker import run_check
+from .git import get_repo_root, validate_repo_root
 from .report import format_report
 
 
@@ -53,6 +54,16 @@ class _ConfigCommand(click.Command):
 @click.command(
     cls=_ConfigCommand,
     context_settings={"help_option_names": ["-h", "--help"]},
+)
+# -- Scaffolding --------------------------------------------------------------
+@click.option(
+    "--init",
+    is_flag=True,
+    default=False,
+    help=(
+        "Create a README.md with bare template subheadings and exit. "
+        "Refuses to overwrite an existing, non-empty README."
+    ),
 )
 # -- Git source --------------------------------------------------------------
 @click.option(
@@ -178,6 +189,7 @@ class _ConfigCommand(click.Command):
 @click.pass_context
 def main(
     ctx: click.Context,
+    init: bool,
     base_ref: str,
     staged: bool,
     repo_root: Path | None,
@@ -195,6 +207,18 @@ def main(
     verbose: bool,
 ) -> None:
     """Check if README may be stale after code changes."""
+    if init:
+        root = (
+            validate_repo_root(repo_root) if repo_root is not None else get_repo_root()
+        )
+        target = root / "README.md"
+        if target.exists() and target.read_text(encoding="utf-8").strip():
+            click.echo(f"README already exists and is not empty: {target}", err=True)
+            sys.exit(1)
+        target.write_text(README_TEMPLATE, encoding="utf-8")
+        click.echo(f"Created {target}")
+        sys.exit(0)
+
     cfg: dict = ctx.meta.get("toml_cfg", {})
 
     # -- Validation: flag incompatible option combinations -------------------

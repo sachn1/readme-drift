@@ -35,6 +35,32 @@ jobs:
         run: readme-drift --base-ref origin/${{ github.base_ref }}
 ```
 
+## Using the bundled GitHub Action
+
+Instead of hand-rolling the install-and-run steps above, use the composite action bundled in this repo:
+
+```yaml
+name: CI
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  readme-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # required so origin/<base-branch> is fetchable
+
+      - uses: sachn1/readme-drift@v3.1.0
+        with:
+          warn-only: "true"  # drop once you trust the signal
+```
+
+On `pull_request` events, `base-ref` auto-resolves to `origin/<base-branch>` if left unset. On other event types (e.g. `push`), set it explicitly via the `base-ref` input. See [action.yml](https://github.com/sachn1/readme-drift/blob/master/action.yml) for the full list of inputs (`base-ref`, `warn-only`, `include-private`, `exclude`, `readme-paths`, `version`).
+
 ## Warn-only in CI
 
 To surface findings without failing the build:

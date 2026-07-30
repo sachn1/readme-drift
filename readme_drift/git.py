@@ -3,7 +3,7 @@
 import subprocess
 from pathlib import Path
 
-from .config_diff import CONFIG_SUFFIXES
+from .config_diff import CONFIG_FILENAMES, CONFIG_SUFFIXES
 from .constants import README_NAMES as _README_NAMES, README_SKIP_DIRS as _SKIP_DIRS
 from .models import GitDiffResult
 
@@ -107,7 +107,9 @@ def get_diff(
 
     changed_py_files = [f for f in changed_files if f.suffix == ".py"]
     changed_config_files = [
-        f for f in changed_files if f.suffix.lower() in CONFIG_SUFFIXES
+        f
+        for f in changed_files
+        if f.suffix.lower() in CONFIG_SUFFIXES or f.name in CONFIG_FILENAMES
     ]
 
     return GitDiffResult(

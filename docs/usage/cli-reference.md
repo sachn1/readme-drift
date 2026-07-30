@@ -8,6 +8,13 @@ All options can also be set in `pyproject.toml` under `[tool.readme-drift]`. CLI
 
 ---
 
+## Scaffolding
+
+### `--init`
+Create a `README.md` with bare template subheadings (Installation, Usage, API Reference, License) and a reminder to reference public symbols in backticks, then exit. Refuses to overwrite an existing, non-empty README. Does not scan code or generate documentation content.
+
+---
+
 ## Git source
 
 ### `--base-ref TEXT`

@@ -90,3 +90,28 @@ _NOISE_COMMANDS: frozenset[str] = frozenset(
 DEFAULT_NOISE_BLOCKLIST: frozenset[str] = (
     _NOISE_LITERALS | _NOISE_INFRA | _NOISE_COMMANDS
 )
+
+# ---------------------------------------------------------------------------
+# --init scaffold
+# ---------------------------------------------------------------------------
+# Bare subheadings only — no generated prose, no scanned symbols. Bootstraps
+# something for `readme-drift` to check on the next commit; the project
+# still has to write its own docs.
+README_TEMPLATE: str = """\
+# Project Name
+
+<!--
+readme-drift only reliably tracks symbols referenced in backticks, e.g.
+`MyClass.my_method`. Plain-text mentions are matched too, but common words
+are filtered as noise — wrap public function, class, and config-key names
+in backticks below so renames and removals get caught.
+-->
+
+## Installation
+
+## Usage
+
+## API Reference
+
+## License
+"""

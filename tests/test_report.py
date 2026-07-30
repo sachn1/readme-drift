@@ -114,6 +114,39 @@ def test_report_shows_verbose_log_on_fail():
     assert "FLAGGED" in report
 
 
+def test_report_suppressed_hint_shown_on_pass():
+    result = DriftCheckResult(findings=[], suppressed_hint_count=2)
+    report = format_report(result)
+    assert "✅" in report
+    assert "2 changed symbols" in report
+    assert "noise-suppressed" in report
+
+
+def test_report_suppressed_hint_singular():
+    result = DriftCheckResult(findings=[], suppressed_hint_count=1)
+    report = format_report(result)
+    assert "1 changed symbol " in report
+    assert "symbols" not in report
+
+
+def test_report_no_suppressed_hint_when_zero():
+    result = DriftCheckResult(findings=[])
+    report = format_report(result)
+    assert "noise-suppressed" not in report
+
+
+def test_report_suppressed_hint_shown_on_fail():
+    finding = _make_finding("func", ChangeType.REMOVED)
+    result = DriftCheckResult(
+        findings=[finding],
+        readme_paths=[Path("README.md")],
+        suppressed_hint_count=1,
+    )
+    report = format_report(result)
+    assert "❌" in report
+    assert "noise-suppressed" in report
+
+
 def test_report_force_flagged_finding_shows_allowlist_note():
     change = SymbolChange(name="critical_api", change_type=ChangeType.REMOVED)
     # No readme_matches — this is an allowlist force-flag

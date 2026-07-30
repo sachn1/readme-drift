@@ -7,7 +7,7 @@ Add to `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/sachn1/readme-drift
-    rev: v1.0.1  # use the latest release tag
+    rev: v3.1.0  # use the latest release tag
     hooks:
       - id: readme-drift
 ```
@@ -24,19 +24,29 @@ No extra `args` needed. The hook is pre-configured to check **staged changes** �
 
 The hook fires on `git commit` when any of these file types are staged:
 
-`.py` · `.yml` · `.yaml` · `.json` · `.toml`
+`.py` · `.yml` · `.yaml` · `.json` · `.toml` · `Makefile` / `makefile` / `GNUmakefile`
 
 If none of those file types changed, the hook skips silently.
 
-## Warn-only mode
+## Start in warn-only mode
 
-To print findings without blocking commits:
+New to the hook? Run it in warn-only mode for a week or two before letting it block commits, so it can prove its false-positive rate on your repo first:
 
 ```yaml
 hooks:
   - id: readme-drift
     args: ["--warn-only"]
 ```
+
+Drop `--warn-only` once you've seen it flag real drift and nothing but real drift.
+
+## No README yet?
+
+```bash
+readme-drift --init
+```
+
+Scaffolds a bare `README.md` with template subheadings and a reminder to reference public symbols in backticks. Refuses to overwrite an existing, non-empty README.
 
 ## Excluding files
 

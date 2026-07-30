@@ -38,6 +38,24 @@ pip install readme-drift
 
 ## Usage
 
+### Start in warn-only mode
+
+New to the tool? Don't let it block commits on day one. Run it in
+warn-only mode for a week or two so it can prove its false-positive rate
+on your repo before it earns the right to fail a build:
+
+```yaml
+repos:
+  - repo: https://github.com/sachn1/readme-drift
+    rev: v3.1.0 # use the latest release
+    hooks:
+      - id: readme-drift
+        args: [--warn-only]
+```
+
+Once you've seen it flag real drift (and nothing but real drift) for a
+while, drop `--warn-only` and let it block.
+
 ### As a pre-commit hook (recommended)
 
 Add to your `.pre-commit-config.yaml`:
@@ -45,7 +63,7 @@ Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/sachn1/readme-drift
-    rev: v3.0.0 # use the latest release
+    rev: v3.1.0 # use the latest release
     hooks:
       - id: readme-drift
 ```
@@ -60,6 +78,8 @@ No extra `args` needed — the hook automatically checks your **staged** changes
 
 ### In CI (GitHub Actions)
 
+As a step calling the CLI directly:
+
 ```yaml
 - name: Check README staleness
   run: readme-drift --base-ref origin/${{ github.base_ref }}
@@ -67,13 +87,38 @@ No extra `args` needed — the hook automatically checks your **staged** changes
 
 CI compares committed changes against a base branch. Do not pass `--staged` here.
 
+Or using the bundled composite action, which installs and runs it for you:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0 # required so origin/<base-branch> is fetchable
+
+- uses: sachn1/readme-drift@v3.1.0
+  with:
+    warn-only: "true" # drop once you trust the signal
+```
+
+See [action.yml](action.yml) for all inputs (`base-ref`, `include-private`, `exclude`, `readme-paths`, `version`).
+
 ### As a CLI tool
 
 ```bash
 readme-drift --staged                              # check staged changes
 readme-drift --base-ref origin/main               # check against a branch
 readme-drift --base-ref origin/main --warn-only   # warn but don't fail
+readme-drift --init                                # scaffold an empty README (see below)
 ```
+
+---
+
+## Writing a drift-friendly README
+
+`readme-drift` matches symbols two ways: inside backtick spans (`` `Client.connect` ``) and, for longer names, as plain text. **Backtick references are the reliable channel** — plain-text matching exists as a convenience but is deliberately dampened by a [noise blocklist](https://sachn1.github.io/readme-drift/configuration/#noise-blocklist-default) and a minimum length, so common words don't turn every commit into a false positive.
+
+Practical implication: if a public function, class, or config key is mentioned in prose without backticks (e.g. "call connect to open a session" instead of "call `` `connect` `` to open a session"), a rename of that symbol may pass the hook silently. This is a real detection gap, not a bug — treat backtick-wrapping your public API references as the thing that makes the hook actually work, not just a style preference.
+
+If you're starting from scratch, `readme-drift --init` creates a bare-bones `README.md` with template subheadings (Installation, Usage, API Reference, License) and a reminder comment about backticks. It does not scan your code or generate documentation — it only refuses to run if a non-empty README already exists, so it's safe to run once and won't clobber real content.
 
 ---
 
@@ -164,6 +209,16 @@ readme-drift: ❌ README.md may be stale:
 | Tool section removed (`[tool.black]` → gone) | ✅ |
 | Key renamed at same level | ✅ (reported as remove + add) |
 | Value changed, key unchanged | ➖ not tracked |
+
+### `Makefile` / `makefile` / `GNUmakefile`
+
+| Change | Detected? |
+|---|---|
+| Target removed (`deploy:` → gone) | ✅ |
+| Target renamed | ✅ (reported as remove + add) |
+| Recipe body changed, target name unchanged | ➖ not tracked |
+| Variable assignments (`VAR := ...`) | ➖ not tracked |
+| `.PHONY` declaration | ➖ ignored (bookkeeping, not a callable target) |
 
 ## What it doesn't catch
 

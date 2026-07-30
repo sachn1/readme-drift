@@ -36,12 +36,13 @@ poetry run ruff format --check .
 ## Branch strategy
 
 ```
-feature/*  →  develop  →  master
+feature/*  or  bugfix/*  →  PR  →  master
 ```
 
-- **All PRs target `develop`**, never `master` directly.
-- `master` is the release branch — only merged from `develop` when cutting a release.
+Trunk-based: there is no `develop` branch and no RC cycle. All PRs target `master` directly.
+
 - Name your branch `feature/<short-description>` for new work or `bugfix/<short-description>` for fixes.
+- `master` is the release branch — merging to it triggers an automatic version bump and, on the resulting tag, a PyPI publish.
 
 ---
 
@@ -78,9 +79,11 @@ BREAKING CHANGE: --warn-only is now --no-fail; update any CI scripts
 
 ## Extending the tool
 
-### Adding support for a new config file type
+### Adding support for a new config-like file type
 
-Implement the `KeyExtractor` protocol and register the suffix — no other module needs to change:
+Implement the `KeyExtractor` protocol — no other module needs to change. Two registration paths depending on how the file is identified:
+
+**By suffix** (e.g. a new structured format):
 
 ```python
 # readme_drift/config_diff.py
@@ -93,14 +96,33 @@ class XmlExtractor:
 _EXTRACTORS[".xml"] = XmlExtractor()
 ```
 
-The protocol is `@runtime_checkable`, so `isinstance(XmlExtractor(), KeyExtractor)` works in tests.
+**By exact filename** (for files with no distinguishing suffix, or where the suffix is already claimed by a generic extractor — e.g. `Makefile`, or `docker-compose.yml` needing different handling than plain YAML):
+
+```python
+_FILENAME_EXTRACTORS["Taskfile.yml"] = TaskfileExtractor()
+```
+
+`_FILENAME_EXTRACTORS` is checked before the suffix-keyed `_EXTRACTORS`, so a filename match always wins. `CONFIG_SUFFIXES` and `CONFIG_FILENAMES` (used by `git.py` to decide which changed files to diff) are both derived automatically from these two dicts — adding an entry is the only change required.
+
+The protocol is `@runtime_checkable`, so `isinstance(XmlExtractor(), KeyExtractor)` works in tests. See `MakefileExtractor` in `readme_drift/config_diff.py` for a real filename-keyed example.
+
+### Adding support for a new language's public-API diffing
+
+This is a different, larger change than adding a config extractor — `ast_diff.py` is hardwired to Python's stdlib `ast` module, not behind a pluggable protocol. It's wired into `drift_checker.run_check()`'s own loop and `git.py`'s `changed_py_files` bucket directly. Supporting another language means a new parser dependency (Python's `ast` can't parse other languages), a new diff module, and edits to `run_check()`, `git.py`, and `models.GitDiffResult` — open an issue to discuss scope before starting this kind of change.
+
+---
+
+## Before cutting a release
+
+`readme-drift` catches drift in README.md against code, but nothing catches drift between the *rest* of the repo's own docs, CI config, and pre-commit wiring — that class of bug (a stale version pin, a doc describing a removed flag, a pre-commit trigger list missing a file type the code now handles) has to be checked by hand. If you're working in Claude Code, run `/integration-review` before a release or after a batch of changes that touch CI/docs/config together — it's a manual, read-only pass, not something that runs automatically.
 
 ---
 
 ## Pull request checklist
 
-- [ ] Targets `develop`, not `master`
+- [ ] Targets `master` (trunk-based — no `develop` branch)
 - [ ] Follows conventional commit format
 - [ ] All tests pass (`poetry run pytest`)
 - [ ] Linter clean (`poetry run ruff check .`)
 - [ ] New behaviour has tests
+- [ ] Optional: if the change touches CI, docs, `pyproject.toml`, or the pre-commit/Action config, run `/integration-review` (Claude Code) before committing to catch cross-file drift a linter won't

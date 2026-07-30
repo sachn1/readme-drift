@@ -1,0 +1,85 @@
+name: "readme-drift"
+description: "Detect stale README references after code changes."
+author: "Sachin Nandakumar"
+branding:
+  icon: "book-open"
+  color: "purple"
+
+inputs:
+  base-ref:
+    description: >
+      Git ref to diff against. Leave empty on pull_request events to
+      auto-resolve to origin/<base-branch>; set explicitly for push/other events.
+    required: false
+    default: ""
+  warn-only:
+    description: "Print findings but always exit 0."
+    required: false
+    default: "false"
+  include-private:
+    description: "Track private (underscore-prefixed) Python symbols."
+    required: false
+    default: "false"
+  exclude:
+    description: "Newline-separated glob patterns for source files/dirs to skip."
+    required: false
+    default: ""
+  readme-paths:
+    description: "Newline-separated explicit README files to scan (overrides discovery)."
+    required: false
+    default: ""
+  version:
+    description: "readme-drift version to install (PyPI version specifier)."
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install readme-drift
+      shell: bash
+      env:
+        RD_VERSION: ${{ inputs.version }}
+      run: |
+        if [ -n "$RD_VERSION" ]; then
+          pip install "readme-drift==$RD_VERSION"
+        else
+          pip install readme-drift
+        fi
+
+    - name: Run readme-drift
+      shell: bash
+      env:
+        RD_BASE_REF: ${{ inputs.base-ref }}
+        RD_WARN_ONLY: ${{ inputs.warn-only }}
+        RD_INCLUDE_PRIVATE: ${{ inputs.include-private }}
+        RD_EXCLUDE: ${{ inputs.exclude }}
+        RD_README_PATHS: ${{ inputs.readme-paths }}
+        RD_GITHUB_BASE_REF: ${{ github.base_ref }}
+      run: |
+        base_ref="$RD_BASE_REF"
+        if [ -z "$base_ref" ] && [ -n "$RD_GITHUB_BASE_REF" ]; then
+          base_ref="origin/$RD_GITHUB_BASE_REF"
+        fi
+
+        args=()
+        [ -n "$base_ref" ] && args+=(--base-ref "$base_ref")
+
+        if [ "$RD_WARN_ONLY" = "true" ]; then
+          args+=(--warn-only)
+        fi
+        if [ "$RD_INCLUDE_PRIVATE" = "true" ]; then
+          args+=(--include-private)
+        fi
+        while IFS= read -r pattern; do
+          [ -n "$pattern" ] && args+=(--exclude "$pattern")
+        done <<< "$RD_EXCLUDE"
+        while IFS= read -r path; do
+          [ -n "$path" ] && args+=(--readme-paths "$path")
+        done <<< "$RD_README_PATHS"
+
+        readme-drift "${args[@]}"

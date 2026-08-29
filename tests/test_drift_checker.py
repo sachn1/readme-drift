@@ -523,6 +523,72 @@ def test_run_check_detects_removed_symbol_in_readme(tmp_path):
     assert any(f.symbol == "connect" for f in result.findings)
 
 
+def test_run_check_mermaid_class_diagram_bypasses_noise_blocklist(tmp_path):
+    from unittest.mock import patch
+    from readme_drift.drift_checker import run_check
+
+    # "run" is on the default noise blocklist, so ordinary plain-text
+    # matching would suppress it. It's only referenced inside a mermaid
+    # classDiagram block (no backticks) — this must still be flagged,
+    # end-to-end through the real force_backtick_only computation.
+    readme = tmp_path / "README.md"
+    readme.write_text(
+        "# Docs\n\n```mermaid\nclassDiagram\n    class Job {\n        +run()\n    }\n```\n"
+    )
+    py_file = tmp_path / "job.py"
+
+    with (
+        patch("readme_drift.drift_checker.validate_repo_root", return_value=tmp_path),
+        patch("readme_drift.drift_checker.find_readmes", return_value=[readme]),
+        patch(
+            "readme_drift.drift_checker.get_diff",
+            return_value=_make_git_diff(py_files=[py_file]),
+        ),
+        patch(
+            "readme_drift.drift_checker.read_old_content",
+            return_value="def run(): pass",
+        ),
+        patch("readme_drift.drift_checker.read_new_content", return_value=""),
+    ):
+        result = run_check(repo_root=tmp_path)
+
+    assert result.failed
+    assert any(f.symbol == "run" for f in result.findings)
+
+
+def test_run_check_mermaid_class_diagram_bypasses_min_symbol_length(tmp_path):
+    from unittest.mock import patch
+    from readme_drift.drift_checker import run_check
+
+    # "Job" is a 3-character class name, shorter than the default
+    # min_symbol_length (4), so ordinary plain-text matching would suppress
+    # it. It's only referenced inside a mermaid classDiagram block — this
+    # must still be flagged.
+    readme = tmp_path / "README.md"
+    readme.write_text(
+        "# Docs\n\n```mermaid\nclassDiagram\n    class Job {\n        +run()\n    }\n```\n"
+    )
+    py_file = tmp_path / "job.py"
+
+    with (
+        patch("readme_drift.drift_checker.validate_repo_root", return_value=tmp_path),
+        patch("readme_drift.drift_checker.find_readmes", return_value=[readme]),
+        patch(
+            "readme_drift.drift_checker.get_diff",
+            return_value=_make_git_diff(py_files=[py_file]),
+        ),
+        patch(
+            "readme_drift.drift_checker.read_old_content",
+            return_value="class Job:\n    def run(self): pass",
+        ),
+        patch("readme_drift.drift_checker.read_new_content", return_value=""),
+    ):
+        result = run_check(repo_root=tmp_path)
+
+    assert result.failed
+    assert any(f.symbol == "Job" for f in result.findings)
+
+
 def test_run_check_suppressed_hint_when_plain_text_match_noise_suppressed(tmp_path):
     from unittest.mock import patch
     from readme_drift.drift_checker import run_check

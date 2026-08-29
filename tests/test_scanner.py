@@ -166,3 +166,100 @@ def test_scan_key_path_dotnotation_plain_text(tmp_path):
     readme.write_text("The scripts.build target compiles the project.\n")
     results = scan_readme_for_symbols(readme, ["scripts.build"], plain_text=True)
     assert "scripts.build" in results
+
+
+# --- mermaid classDiagram matching ------------------------------------------
+
+MERMAID_CLASS_DIAGRAM = """# My Library
+
+```mermaid
+classDiagram
+    class Client {
+        +connect(host, port)
+        +disconnect()
+    }
+```
+"""
+
+
+def test_mermaid_class_diagram_matches_class_name(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text(MERMAID_CLASS_DIAGRAM)
+    matches = find_symbol_in_readme(readme, "Client")
+    assert matches
+
+
+def test_mermaid_class_diagram_matches_method_name(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text(MERMAID_CLASS_DIAGRAM)
+    matches = find_symbol_in_readme(readme, "disconnect")
+    assert matches
+
+
+def test_mermaid_class_diagram_bypasses_plain_text_false(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text(MERMAID_CLASS_DIAGRAM)
+    # plain_text=False would normally suppress non-backtick matches, but
+    # mermaid class-diagram content is a high-trust surface like backticks.
+    matches = find_symbol_in_readme(readme, "Client", plain_text=False)
+    assert matches
+
+
+def test_mermaid_class_diagram_bypasses_noise_blocklist(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text(MERMAID_CLASS_DIAGRAM)
+    # "connect" would be suppressed as plain text under noise/short-symbol
+    # rules via force_backtick_only, but should still match inside the block.
+    results = scan_readme_for_symbols(
+        readme,
+        ["connect"],
+        plain_text=True,
+        force_backtick_only={"connect"},
+    )
+    assert "connect" in results
+
+
+def test_non_class_diagram_mermaid_block_not_treated_as_high_trust(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text(
+        "```mermaid\nflowchart LR\n    A --> deploy\n```\n"
+    )
+    # "deploy" appears inside a mermaid block, but it's a flowchart, not a
+    # classDiagram — must not bypass noise suppression.
+    results = scan_readme_for_symbols(
+        readme,
+        ["deploy"],
+        plain_text=True,
+        force_backtick_only={"deploy"},
+    )
+    assert "deploy" not in results
+
+
+def test_mermaid_matching_does_not_leak_outside_fence(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text(
+        "Mentions build outside any fence.\n\n"
+        "```mermaid\nclassDiagram\n    class Foo\n```\n"
+    )
+    # "build" never appears inside the classDiagram fence, so noise
+    # suppression should still apply to its outside-fence mention.
+    results = scan_readme_for_symbols(
+        readme,
+        ["build"],
+        plain_text=True,
+        force_backtick_only={"build"},
+    )
+    assert "build" not in results
+
+
+def test_find_mermaid_class_diagram_lines_helper():
+    from readme_drift.scanner import _find_mermaid_class_diagram_lines
+
+    lines = MERMAID_CLASS_DIAGRAM.splitlines()
+    result = _find_mermaid_class_diagram_lines(lines)
+    # Lines inside the fence (classDiagram through the closing brace) are
+    # included; the fence markers themselves and content outside are not.
+    for i, line in enumerate(lines, start=1):
+        if line.strip() in ("classDiagram", "class Client {", "+connect(host, port)", "+disconnect()", "}"):
+            assert i in result, f"expected line {i} ({line!r}) in result"
+    assert 1 not in result  # title, outside any fence

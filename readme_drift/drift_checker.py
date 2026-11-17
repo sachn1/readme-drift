@@ -221,6 +221,13 @@ def run_check(
             force_backtick_only.add(change.name)
         elif plain_text and len(change.name) < min_symbol_length:
             force_backtick_only.add(change.name)
+        elif (
+            plain_text
+            and not _is_config_change(change)
+            and _COMMON_WORD_RE.fullmatch(change.name)
+        ):
+            # request, head, get, connect: ordinary English words in prose.
+            force_backtick_only.add(change.name)
 
     # Config keys and Makefile targets are generic words ("include", "extras",
     # "python"), so they match only in code, never in ordinary prose.
@@ -360,6 +367,9 @@ def _symbols_from_changes(changes: list[SymbolChange]) -> list[str]:
         names.add(change.name)
         names.update(change.key_paths)
     return list(names)
+
+
+_COMMON_WORD_RE = re.compile(r"[a-z]+")
 
 
 def _is_config_change(change: SymbolChange) -> bool:

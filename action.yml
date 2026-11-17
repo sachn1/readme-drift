@@ -28,6 +28,10 @@ inputs:
     description: "Newline-separated explicit README files to scan (overrides discovery)."
     required: false
     default: ""
+  verify:
+    description: "Also verify shell commands in README code blocks against the repo (requires a readme-drift release that supports --verify)."
+    required: false
+    default: "false"
   version:
     description: "readme-drift version to install (PyPI version specifier)."
     required: false
@@ -59,6 +63,7 @@ runs:
         RD_INCLUDE_PRIVATE: ${{ inputs.include-private }}
         RD_EXCLUDE: ${{ inputs.exclude }}
         RD_README_PATHS: ${{ inputs.readme-paths }}
+        RD_VERIFY: ${{ inputs.verify }}
         RD_GITHUB_BASE_REF: ${{ github.base_ref }}
       run: |
         base_ref="$RD_BASE_REF"
@@ -74,6 +79,9 @@ runs:
         fi
         if [ "$RD_INCLUDE_PRIVATE" = "true" ]; then
           args+=(--include-private)
+        fi
+        if [ "$RD_VERIFY" = "true" ]; then
+          args+=(--verify)
         fi
         while IFS= read -r pattern; do
           [ -n "$pattern" ] && args+=(--exclude "$pattern")

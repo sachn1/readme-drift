@@ -59,7 +59,7 @@ jobs:
           warn-only: "true"  # drop once you trust the signal
 ```
 
-On `pull_request` events, `base-ref` auto-resolves to `origin/<base-branch>` if left unset. On other event types (e.g. `push`), set it explicitly via the `base-ref` input. See [action.yml](https://github.com/sachn1/readme-drift/blob/master/action.yml) for the full list of inputs (`base-ref`, `warn-only`, `include-private`, `exclude`, `readme-paths`, `version`).
+On `pull_request` events, `base-ref` auto-resolves to `origin/<base-branch>` if left unset. On other event types (e.g. `push`), set it explicitly via the `base-ref` input. See [action.yml](https://github.com/sachn1/readme-drift/blob/master/action.yml) for the full list of inputs (`base-ref`, `warn-only`, `include-private`, `exclude`, `readme-paths`, `verify`, `version`).
 
 ## Verifying README commands
 
@@ -68,6 +68,14 @@ Add `--verify` to also check that the commands in your README (`make` targets, `
 ```yaml
 - name: Check README staleness and commands
   run: readme-drift --base-ref origin/${{ github.base_ref }} --verify
+```
+
+With the bundled action, set the `verify` input instead:
+
+```yaml
+- uses: sachn1/readme-drift@v3.2.0
+  with:
+    verify: "true"
 ```
 
 ## Writing a drift-friendly README

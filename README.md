@@ -103,7 +103,7 @@ Or using the bundled composite action, which installs and runs it for you:
     warn-only: "true" # drop once you trust the signal
 ```
 
-See [action.yml](action.yml) for all inputs (`base-ref`, `include-private`, `exclude`, `readme-paths`, `version`).
+See [action.yml](action.yml) for all inputs (`base-ref`, `warn-only`, `include-private`, `exclude`, `readme-paths`, `verify`, `version`).
 
 ### As a CLI tool
 

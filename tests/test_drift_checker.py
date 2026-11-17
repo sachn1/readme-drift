@@ -549,6 +549,79 @@ def test_run_check_detects_removed_symbol_in_readme(tmp_path):
     assert any(f.symbol == "connect" for f in result.findings)
 
 
+def _run_mermaid_check(tmp_path, old_source, new_source):
+    """Run the check on a README holding only a classDiagram for Job.run."""
+    from unittest.mock import patch
+    from readme_drift.drift_checker import run_check
+
+    readme = tmp_path / "README.md"
+    readme.write_text(
+        "# Docs\n\n```mermaid\nclassDiagram\n    class Job {\n        +run()\n    }\n```\n"
+    )
+    with (
+        patch("readme_drift.drift_checker.validate_repo_root", return_value=tmp_path),
+        patch("readme_drift.drift_checker.find_readmes", return_value=[readme]),
+        patch(
+            "readme_drift.drift_checker.get_diff",
+            return_value=_make_git_diff(py_files=[tmp_path / "job.py"]),
+        ),
+        patch("readme_drift.drift_checker.read_old_content", return_value=old_source),
+        patch("readme_drift.drift_checker.read_new_content", return_value=new_source),
+    ):
+        return run_check(repo_root=tmp_path)
+
+
+def test_run_check_mermaid_method_bypasses_noise_blocklist(tmp_path):
+    """A removed method named after a noise word is flagged via its class diagram."""
+    # "run" is on the noise blocklist, so prose matching would suppress it; the
+    # class diagram ties +run() to Job, so Job.run is still flagged end to end.
+    result = _run_mermaid_check(
+        tmp_path, "class Job:\n    def run(self): pass", "class Job:\n    pass"
+    )
+    assert result.failed
+    assert any(f.symbol == "Job.run" for f in result.findings)
+
+
+def test_run_check_mermaid_ignores_a_removed_top_level_function(tmp_path):
+    """A removed top-level function must not be flagged by a class's +run()."""
+    result = _run_mermaid_check(tmp_path, "def run(): pass", "")
+    assert result.passed
+
+
+def test_run_check_mermaid_class_diagram_bypasses_min_symbol_length(tmp_path):
+    """Run check mermaid class diagram bypasses min symbol length."""
+    from unittest.mock import patch
+    from readme_drift.drift_checker import run_check
+
+    # "Job" is a 3-character class name, shorter than the default
+    # min_symbol_length (4), so ordinary plain-text matching would suppress
+    # it. It's only referenced inside a mermaid classDiagram block — this
+    # must still be flagged.
+    readme = tmp_path / "README.md"
+    readme.write_text(
+        "# Docs\n\n```mermaid\nclassDiagram\n    class Job {\n        +run()\n    }\n```\n"
+    )
+    py_file = tmp_path / "job.py"
+
+    with (
+        patch("readme_drift.drift_checker.validate_repo_root", return_value=tmp_path),
+        patch("readme_drift.drift_checker.find_readmes", return_value=[readme]),
+        patch(
+            "readme_drift.drift_checker.get_diff",
+            return_value=_make_git_diff(py_files=[py_file]),
+        ),
+        patch(
+            "readme_drift.drift_checker.read_old_content",
+            return_value="class Job:\n    def run(self): pass",
+        ),
+        patch("readme_drift.drift_checker.read_new_content", return_value=""),
+    ):
+        result = run_check(repo_root=tmp_path)
+
+    assert result.failed
+    assert any(f.symbol == "Job" for f in result.findings)
+
+
 def test_run_check_suppressed_hint_when_plain_text_match_noise_suppressed(tmp_path):
     """Run check suppressed hint when plain text match noise suppressed."""
     from unittest.mock import patch

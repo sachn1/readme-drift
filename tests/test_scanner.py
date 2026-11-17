@@ -185,3 +185,156 @@ def test_scan_key_path_dotnotation_plain_text(tmp_path):
     readme.write_text("The scripts.build target compiles the project.\n")
     results = scan_readme_for_symbols(readme, ["scripts.build"], plain_text=True)
     assert "scripts.build" in results
+
+
+# --- mermaid classDiagram matching ------------------------------------------
+
+MERMAID_CLASS_DIAGRAM = """# My Library
+
+```mermaid
+classDiagram
+    class Client {
+        +connect(host, port)
+        +disconnect()
+    }
+    class Job {
+        +run()
+    }
+```
+"""
+
+
+def _readme(tmp_path, text):
+    """Write text to a README in tmp_path and return its path."""
+    path = tmp_path / "README.md"
+    path.write_text(text)
+    return path
+
+
+def _scan(path, symbol, **kwargs):
+    """Scan a README for one symbol and return its matches."""
+    return scan_readme_for_symbols(path, [symbol], **kwargs).get(symbol, [])
+
+
+def test_mermaid_class_name_matches_its_class(tmp_path):
+    """A bare class name matches the class in a classDiagram."""
+    readme = _readme(tmp_path, MERMAID_CLASS_DIAGRAM)
+    assert _scan(readme, "Client")
+
+
+def test_mermaid_method_matches_inside_its_own_class(tmp_path):
+    """Class.method matches the member line of that class."""
+    readme = _readme(tmp_path, MERMAID_CLASS_DIAGRAM)
+    matches = _scan(readme, "Client.disconnect")
+    assert [m.line_text for m in matches] == ["+disconnect()"]
+
+
+def test_mermaid_method_does_not_match_a_different_class(tmp_path):
+    """Job.connect must not match Client's +connect() line."""
+    readme = _readme(tmp_path, MERMAID_CLASS_DIAGRAM)
+    assert _scan(readme, "Job.connect") == []
+
+
+def test_mermaid_method_match_ignores_noise_and_plain_text_settings(tmp_path):
+    """A scoped method match bypasses noise suppression and plain_text=False."""
+    readme = _readme(tmp_path, MERMAID_CLASS_DIAGRAM)
+    matches = _scan(
+        readme, "Job.run", plain_text=False, force_backtick_only={"Job.run"}
+    )
+    assert [m.line_text for m in matches] == ["+run()"]
+
+
+def test_mermaid_class_name_ignores_noise_and_plain_text_settings(tmp_path):
+    """A class name match bypasses noise suppression and plain_text=False."""
+    readme = _readme(tmp_path, MERMAID_CLASS_DIAGRAM)
+    assert _scan(readme, "Job", plain_text=False, force_backtick_only={"Job"})
+
+
+def test_mermaid_bare_function_name_does_not_match_member_lines(tmp_path):
+    """A removed top-level function must not match a class's +run() member."""
+    readme = _readme(tmp_path, MERMAID_CLASS_DIAGRAM)
+    assert _scan(readme, "run", plain_text=False, force_backtick_only={"run"}) == []
+
+
+def test_mermaid_bare_name_does_not_match_a_relationship_label(tmp_path):
+    """A function named like a relationship label is not a class, so it is not matched."""
+    readme = _readme(
+        tmp_path,
+        "```mermaid\nclassDiagram\n    class Client\n    class Job\n"
+        "    Client --> Job : run\n```\n",
+    )
+    assert _scan(readme, "run", plain_text=False, force_backtick_only={"run"}) == []
+
+
+def test_mermaid_config_key_does_not_match_a_member_attribute(tmp_path):
+    """A config key called name must not match a +name attribute in a diagram."""
+    readme = _readme(
+        tmp_path,
+        "```mermaid\nclassDiagram\n    class User {\n        +name: str\n    }\n```\n",
+    )
+    assert _scan(readme, "name", force_backtick_only={"name"}) == []
+
+
+def test_mermaid_dotted_config_path_does_not_match(tmp_path):
+    """A dotted config path whose first part is not a class never matches."""
+    readme = _readme(tmp_path, MERMAID_CLASS_DIAGRAM)
+    assert _scan(readme, "scripts.run", force_backtick_only={"scripts.run"}) == []
+
+
+def test_mermaid_colon_member_syntax_is_scoped_to_its_class(tmp_path):
+    """The `Class : +member` form belongs to the named class only."""
+    readme = _readme(
+        tmp_path,
+        "```mermaid\nclassDiagram\n    Client : +connect()\n    Job : +stop()\n```\n",
+    )
+    assert _scan(readme, "Client.connect", plain_text=False)
+    assert _scan(readme, "Job.connect", plain_text=False) == []
+
+
+def test_mermaid_class_defined_only_by_a_relationship_is_matched(tmp_path):
+    """A class that only appears as a relationship endpoint still counts."""
+    readme = _readme(tmp_path, "```mermaid\nclassDiagram\n    Animal <|-- Duck\n```\n")
+    assert _scan(readme, "Duck", plain_text=False, force_backtick_only={"Duck"})
+
+
+def test_mermaid_multiple_diagrams_are_each_parsed(tmp_path):
+    """Names in a second classDiagram are matched independently of the first."""
+    readme = _readme(
+        tmp_path,
+        "```mermaid\nclassDiagram\n    class Alpha {\n        +go()\n    }\n```\n\n"
+        "```mermaid\nclassDiagram\n    class Beta {\n        +stop()\n    }\n```\n",
+    )
+    assert _scan(readme, "Beta.stop", plain_text=False)
+    assert _scan(readme, "Alpha.stop", plain_text=False) == []
+
+
+def test_non_class_diagram_mermaid_block_is_not_structural(tmp_path):
+    """A flowchart gets ordinary prose matching, so noise suppression applies."""
+    readme = _readme(tmp_path, "```mermaid\nflowchart LR\n    A --> deploy\n```\n")
+    assert _scan(readme, "deploy", force_backtick_only={"deploy"}) == []
+
+
+def test_mermaid_matching_does_not_leak_outside_fence(tmp_path):
+    """A name mentioned outside any fence keeps normal noise suppression."""
+    readme = _readme(
+        tmp_path,
+        "Mentions Job outside any fence.\n\n"
+        "```mermaid\nclassDiagram\n    class Foo\n```\n",
+    )
+    assert _scan(readme, "Job", force_backtick_only={"Job"}) == []
+
+
+def test_parse_class_diagrams_records_classes_owners_and_lines():
+    """The parser exposes declared classes, member owners and block line numbers."""
+    from readme_drift.scanner import _parse_class_diagrams
+
+    lines = MERMAID_CLASS_DIAGRAM.splitlines()
+    (diagram,) = _parse_class_diagrams(lines)
+    assert diagram.classes == {"Client", "Job"}
+    owner_by_text = {lines[n - 1].strip(): o for n, o in diagram.owners.items()}
+    assert owner_by_text == {
+        "+connect(host, port)": "Client",
+        "+disconnect()": "Client",
+        "+run()": "Job",
+    }
+    assert 1 not in diagram.lines  # title, outside the fence

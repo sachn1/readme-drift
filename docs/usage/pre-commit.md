@@ -40,6 +40,18 @@ hooks:
 
 Drop `--warn-only` once you've seen it flag real drift and nothing but real drift.
 
+## Verifying README commands
+
+Add `--verify` to also check the shell commands in your README against the repo (`make` targets, `npm run` scripts, compose services, paths, your own CLI's flags):
+
+```yaml
+hooks:
+  - id: readme-drift
+    args: ["--verify"]
+```
+
+The hook only runs when a Python, config or Makefile change is staged, so a commit that edits *only* the README does not trigger it. Run `readme-drift --verify` in CI (see [CI](ci.md)) to cover that case.
+
 ## No README yet?
 
 ```bash

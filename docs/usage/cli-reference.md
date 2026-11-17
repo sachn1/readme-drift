@@ -115,6 +115,15 @@ Use this instead of `--noise-blocklist` when you only want to unlock one or two 
 
 ---
 
+## Verification
+
+### `--verify`
+Also verify the shell commands in README code blocks and inline code spans against the repository. Scans every README in full (not just the diff) and checks names the repo owns: `make` targets, `package.json` scripts (`npm run`, `yarn run`, `pnpm run`), `docker compose` services and `-f` files, the project's own console-script options, and files or local modules named by `python`, `bash`, `./script`, `make -f`, `docker build -f`, `kubectl apply -f` and `helm -f`.
+
+Each command is **verified**, **broken** or **unverifiable**; only broken fails the run. Combine with `--verbose` to list every check and `--warn-only` to never fail. Inline spans count only when they clearly are commands (`make <target>`, `npm|pnpm|yarn run`, `docker compose`, a script with a file extension, or your own command followed by a flag). Put `<!-- readme-drift: ignore -->` above a fenced block, above one command inside it, or on the first line of a paragraph, to skip it.
+
+---
+
 ## Output
 
 ### `--plain-text-search` / `--no-plain-text-search`
@@ -141,5 +150,6 @@ Print per-symbol scan outcomes after the main report: flagged, skipped, suppress
 | `--no-plain-text-search` + `--noise-allowlist` | `--noise-allowlist` is ignored; warning printed |
 | `--no-plain-text-search` + `--min-symbol-length` | `--min-symbol-length` is ignored (no plain-text matching runs) |
 | `--noise-blocklist` + `--noise-allowlist` | `--noise-allowlist` is ignored; warning printed (`--noise-blocklist` already replaces the built-in list) |
+| `--verify` + `--warn-only` | Broken commands are reported but the exit code stays `0` |
 | `--symbol-allowlist X` + `--symbol-denylist X` | Denylist wins; symbol is never flagged |
 | `--symbol-allowlist X` (not in README) | Symbol is force-flagged even without a README match |

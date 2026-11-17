@@ -11,8 +11,9 @@ from readme_drift.cli import _load_toml_config, main, validate_options
 # --- _load_toml_config ---
 
 
-def test_load_toml_config_no_file(tmp_path):
+def test_load_toml_config_no_file(tmp_path, monkeypatch):
     """Load TOML config no file."""
+    monkeypatch.chdir(tmp_path)  # do not pick up this repo's own pyproject.toml
     assert _load_toml_config(tmp_path) == {}
 
 

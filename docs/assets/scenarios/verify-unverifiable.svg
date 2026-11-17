@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="739" height="608" viewBox="0 0 739 608" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" role="img" aria-label="--verify: when it is not sure, it does not fail: UNVERIFIABLE, NOT FAILED">
+<rect width="739" height="608" rx="12" fill="#0d1117"/>
+<text x="22" y="38" fill="#e6edf3" font-size="16" font-weight="bold">--verify: when it is not sure, it does not fail</text>
+<rect x="511" y="20" width="206" height="26" rx="13" fill="#6e7681"/>
+<text x="614.0" y="37" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">UNVERIFIABLE, NOT FAILED</text>
+<rect x="22" y="62" width="695" height="103" rx="8" fill="#161b22"/>
+<text x="36" y="84" fill="#8b949e" font-size="11" letter-spacing="0.5">The repo has</text>
+<text x="36" y="106" fill="#8b949e" xml:space="preserve">Makefile</text>
+<text x="36" y="125" fill="#e6edf3" xml:space="preserve">lint:</text>
+<text x="36" y="144" fill="#e6edf3" xml:space="preserve">    echo lint</text>
+<rect x="22" y="177" width="695" height="217" rx="8" fill="#161b22"/>
+<text x="36" y="199" fill="#8b949e" font-size="11" letter-spacing="0.5">README.md says</text>
+<text x="36" y="221" fill="#e6edf3" xml:space="preserve">```bash</text>
+<text x="36" y="240" fill="#e6edf3" xml:space="preserve">make &lt;target&gt;</text>
+<text x="36" y="259" fill="#e6edf3" xml:space="preserve">cd app &amp;&amp; make anything</text>
+<text x="36" y="278" fill="#e6edf3" xml:space="preserve">```</text>
+<text x="36" y="316" fill="#e6edf3" xml:space="preserve">&lt;!-- readme-drift: ignore --&gt;</text>
+<text x="36" y="335" fill="#e6edf3" xml:space="preserve">```bash</text>
+<text x="36" y="354" fill="#e6edf3" xml:space="preserve">make intentionally-missing</text>
+<text x="36" y="373" fill="#e6edf3" xml:space="preserve">```</text>
+<rect x="22" y="406" width="695" height="84" rx="8" fill="#161b22"/>
+<text x="36" y="428" fill="#8b949e" font-size="11" letter-spacing="0.5">readme-drift --verify says</text>
+<text x="36" y="450" fill="#e6edf3" xml:space="preserve">readme-drift: ✅ verify: 0 README command check(s) verified, none broken (3 unverifiable</text>
+<text x="36" y="469" fill="#e6edf3" xml:space="preserve">  — run with --verbose to list).</text>
+<rect x="22" y="502" width="695" height="84" rx="8" fill="#161b22"/>
+<text x="36" y="524" fill="#8b949e" font-size="11" letter-spacing="0.5">Why</text>
+<text x="36" y="546" fill="#e6edf3" xml:space="preserve">A placeholder and a command after cd cannot be checked, so they are reported as</text>
+<text x="36" y="565" fill="#e6edf3" xml:space="preserve">unverifiable. The block under the ignore marker is skipped.</text>
+</svg>

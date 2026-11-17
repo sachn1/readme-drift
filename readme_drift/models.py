@@ -114,3 +114,55 @@ class DriftCheckResult:
     def failed(self) -> bool:
         """True if there are unresolved staleness findings."""
         return not self.passed
+
+
+class ClaimStatus(Enum):
+    """Outcome of verifying a README claim against the repository."""
+
+    VERIFIED = "verified"
+    BROKEN = "broken"
+    UNVERIFIABLE = "unverifiable"
+
+
+@dataclass
+class Claim:
+    """A shell command found in a README code block, split into head and arguments."""
+
+    head: str
+    args: tuple[str, ...]
+    raw: str
+    readme_path: Path
+    line_number: int
+    cwd_changed: bool = False
+
+
+@dataclass
+class ClaimResult:
+    """The verification outcome of one claim, with the reason for it."""
+
+    claim: Claim
+    status: ClaimStatus
+    reason: str
+
+
+@dataclass
+class VerifyResult:
+    """The overall result of verifying every command claim in the READMEs."""
+
+    results: list[ClaimResult] = field(default_factory=list)
+    readme_paths: list[Path] = field(default_factory=list)
+
+    @property
+    def broken(self) -> list[ClaimResult]:
+        """Results whose claim contradicts the repository."""
+        return [r for r in self.results if r.status is ClaimStatus.BROKEN]
+
+    @property
+    def failed(self) -> bool:
+        """True if at least one claim is broken."""
+        return bool(self.broken)
+
+    @property
+    def passed(self) -> bool:
+        """True if no claim is broken."""
+        return not self.failed

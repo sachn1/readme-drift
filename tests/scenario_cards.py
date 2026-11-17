@@ -8,13 +8,20 @@ import textwrap
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-from scenarios import SCENARIOS, run_scenario
+from scenarios import (
+    SCENARIOS,
+    VERIFY_SCENARIOS,
+    run_scenario,
+    run_verify_scenario,
+)
 
-from readme_drift.report import format_report
+from readme_drift.report import format_report, format_verify_report
 
 OUT_DIR = Path(__file__).resolve().parent.parent / "docs" / "assets" / "scenarios"
 
 # id -> (title, badge label, badge colour, why-note shown under the panels).
+# Order is the gallery order. Diff-mode scenarios come from SCENARIOS, --verify
+# scenarios from VERIFY_SCENARIOS.
 CARDS: dict[str, tuple[str, str, str, str]] = {
     "py-rename": (
         "Rename a function",
@@ -23,12 +30,12 @@ CARDS: dict[str, tuple[str, str, str, str]] = {
         "connect no longer exists, but the README still tells readers to call it. "
         "The old name is found in the README, so the commit is flagged.",
     ),
-    "makefile-target-removed": (
-        "Remove a Makefile target",
+    "config-ci-job-renamed": (
+        "Rename a CI job",
         "CAUGHT",
         "#238636",
-        "The deploy target is gone, but the README still says make deploy. The "
-        "removed name is found in the README, so it is flagged.",
+        "Config files are compared too. The integration job is gone, but the README "
+        "still describes it, so it is flagged.",
     ),
     "mermaid-class-renamed": (
         "Rename a class shown in a mermaid diagram",
@@ -44,20 +51,33 @@ CARDS: dict[str, tuple[str, str, str, str]] = {
         "The signature is identical, so nothing looks changed. Only names and "
         "signatures are compared, not what the code does.",
     ),
-    "makefile-build-removed": (
-        "The build target is removed, README still says make build",
-        "MISSED (known gap)",
-        "#9e6a03",
-        "The README now points at a target that no longer exists, and nothing is "
-        "flagged. build is a very common word, so it only counts inside a "
-        "backtick span that starts with it, and this span starts with make.",
-    ),
     "false-positive-backtick-prefix": (
         "Remove connect, README mentions connection_pool",
         "FALSE ALARM (known gap)",
         "#b62324",
         "connection_pool has nothing to do with connect, but a backtick span that "
         "merely starts with the removed name is treated as a match.",
+    ),
+    "verify-make-build": (
+        "--verify: a command in a sentence and in a code block",
+        "CAUGHT WITH --verify",
+        "#238636",
+        "make build appears twice and both are checked against the Makefile. "
+        "Diff mode alone misses this, because build is a very common word.",
+    ),
+    "verify-code-block": (
+        "--verify: every command in a code block",
+        "CAUGHT WITH --verify",
+        "#238636",
+        "Each line, each chained command and each argument is checked, not just "
+        "the first word: two missing names are found among the working ones.",
+    ),
+    "verify-unverifiable": (
+        "--verify: when it is not sure, it does not fail",
+        "UNVERIFIABLE, NOT FAILED",
+        "#6e7681",
+        "A placeholder and a command after cd cannot be checked, so they are "
+        "reported as unverifiable. The block under the ignore marker is skipped.",
     ),
 }
 
@@ -107,6 +127,17 @@ def _diff_lines(old: dict[str, str], new: dict[str, str]) -> list[tuple[str, str
     return out
 
 
+def _file_lines(files: dict[str, str]) -> list[tuple[str, str]]:
+    """Return (kind, text) lines listing each repository file and its content."""
+    out: list[tuple[str, str]] = []
+    for name in files:
+        out.append(("head", name))
+        out.extend(
+            ("txt", line.replace("\t", "    ")) for line in files[name].splitlines()
+        )
+    return out
+
+
 def _panel(title: str, lines: list[tuple[str, str]], y: int) -> tuple[str, int]:
     """Return (svg, height) for one titled panel starting at y."""
     body: list[tuple[str, str]] = []
@@ -136,19 +167,28 @@ def _panel(title: str, lines: list[tuple[str, str]], y: int) -> tuple[str, int]:
 def render_card(name: str) -> str:
     """Run a scenario for real and return its SVG card as text."""
     title, badge, badge_colour, note = CARDS[name]
-    old, new, readme, _kw, _expected, _hint = SCENARIOS[name]
     with tempfile.TemporaryDirectory() as tmp:
-        result = run_scenario(name, Path(tmp))
-    output = [("txt", line) for line in format_report(result).splitlines()]
-    readme_lines = [("txt", line) for line in readme[-1].rstrip("\n").splitlines()]
+        if name in VERIFY_SCENARIOS:
+            files, readme_text, _expected = VERIFY_SCENARIOS[name]
+            output_text = format_verify_report(run_verify_scenario(name, Path(tmp)))
+            first = ("The repo has", _file_lines(files))
+            readme_lines = [("txt", ln) for ln in readme_text.rstrip("\n").splitlines()]
+            output_label = "readme-drift --verify says"
+        else:
+            old, new, readme, _kw, _expected, _hint = SCENARIOS[name]
+            output_text = format_report(run_scenario(name, Path(tmp)))
+            first = ("You change", _diff_lines(old, new))
+            readme_lines = [("txt", ln) for ln in readme[-1].rstrip("\n").splitlines()]
+            output_label = "readme-drift says"
+    output = [("txt", line) for line in output_text.splitlines()]
 
     width = _PAD * 2 + int(_WIDTH_CHARS * _CHAR_W)
     y = 62
     panels = []
     for label, lines in (
-        ("You change", _diff_lines(old, new)),
+        first,
         ("README.md says", readme_lines),
-        ("readme-drift says", output),
+        (output_label, output),
     ):
         svg, h = _panel(label, lines, y)
         panels.append(svg)

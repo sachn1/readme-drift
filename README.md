@@ -103,7 +103,7 @@ Or using the bundled composite action, which installs and runs it for you:
     warn-only: "true" # drop once you trust the signal
 ```
 
-See [action.yml](action.yml) for all inputs (`base-ref`, `include-private`, `exclude`, `readme-paths`, `version`).
+See [action.yml](action.yml) for all inputs (`base-ref`, `warn-only`, `include-private`, `exclude`, `readme-paths`, `verify`, `version`).
 
 ### As a CLI tool
 
@@ -112,6 +112,7 @@ readme-drift --staged                              # check staged changes
 readme-drift --base-ref origin/main               # check against a branch
 readme-drift --base-ref origin/main --warn-only   # warn but don't fail
 readme-drift --init                                # scaffold an empty README (see below)
+readme-drift --base-ref origin/main --verify      # also verify README commands against the repo
 ```
 
 ---
@@ -125,6 +126,31 @@ readme-drift --init                                # scaffold an empty README (s
 Practical implication: if a public function, class, or config key is mentioned in prose without backticks (e.g. "call connect to open a session" instead of "call `` `connect` `` to open a session"), a rename of that symbol may pass the hook silently. This is a real detection gap, not a bug — treat backtick-wrapping your public API references as the thing that makes the hook actually work, not just a style preference.
 
 If you're starting from scratch, `readme-drift --init` creates a bare-bones `README.md` with template subheadings (Installation, Usage, API Reference, License) and a reminder comment about backticks. It does not scan your code or generate documentation — it only refuses to run if a non-empty README already exists, so it's safe to run once and won't clobber real content.
+
+---
+
+## Verifying README commands (`--verify`)
+
+By default `readme-drift` reacts to code changes. With `--verify` it also reads the shell commands in your README's fenced code blocks (`bash`, `sh`, `shell`, `zsh`, `console`, or untagged) and commands in **inline code spans** (`` `make build` `` in a sentence, including a span that wraps onto the next line) when they clearly are commands: `make` with a target, `npm`/`pnpm`/`yarn run`, `docker compose`, a Python or shell script with a file extension, or your own command followed by a flag. It then checks that the names **your repository owns** still exist — across every README in full, not just the diff:
+
+<!-- readme-drift: ignore -->
+| README says | Checked against |
+|---|---|
+| `make lint` | targets in the `Makefile` |
+| `npm run build`, `yarn run x`, `pnpm run x` | `scripts` in `package.json` |
+| `docker compose up web`, `docker compose -f ci/compose.yml run app` | services and files in the compose file |
+| `readme-drift --base-ref …` (your own console script) | long options defined by the command, read statically from `[tool.poetry.scripts]` / `[project.scripts]` |
+| `python scripts/x.py`, `python -m pkg.mod`, `bash x.sh`, `./run.sh` | the file or local module exists |
+| `make -f x.mk`, `docker build -f F`, `kubectl apply -f x.yaml`, `helm … -f v.yaml` | the named file exists |
+
+Each command ends in one of three states: **verified**, **broken**, or **unverifiable**. Only *broken* fails the run. The tool never judges the syntax of third-party commands (`docker run -it`, `pip install`), and it reports anything uncertain — an `include` in a Makefile, a `cd` earlier in the block, a path in a build directory, placeholders like `<name>` or `$VAR` — as unverifiable rather than guessing.
+
+```bash
+readme-drift --base-ref origin/main --verify            # diff check + command verification
+readme-drift --verify --verbose --warn-only             # list every check, never fail
+```
+
+To exempt a command that is intentionally different, put `<!-- readme-drift: ignore -->` on the line above a fenced block (skips the block) or above a single command inside it (skips that command). For prose, put it on the first line of the paragraph (or table) to skip all of it. It does not read 4-space indented code blocks, and names like `` `build` `` or `` `python 3.11` `` in a sentence are ignored because they do not clearly read as commands.
 
 ---
 
@@ -147,6 +173,7 @@ noise-blocklist = ["run", "build"]   # replaces built-in default; [] disables
 noise-allowlist = ["run"]            # remove words from built-in (use instead of noise-blocklist)
 readme-paths = []                    # explicit list; empty = auto-discover
 readme-exclude-dirs = []
+verify = false                       # also verify README shell commands against the repo
 tips = true                          # one-time first-run backtick tip; false silences it
 ```
 
@@ -165,6 +192,7 @@ tips = true                          # one-time first-run backtick tip; false si
 | `noise-allowlist` | `--noise-allowlist` (repeatable) | `[]` |
 | `readme-paths` | `--readme-paths` (repeatable) | `[]` (auto-discover) |
 | `readme-exclude-dirs` | `--readme-exclude-dirs` (repeatable) | `[]` |
+| `verify` | `--verify` | `false` |
 | `verbose` | `--verbose` | `false` |
 | `tips` | — (or env `README_DRIFT_NO_TIPS=1`) | `true` |
 
@@ -174,7 +202,7 @@ tips = true                          # one-time first-run backtick tip; false si
 
 ## Developer reference
 
-A fully annotated [Jupyter notebook](notebooks/demo.ipynb) walks through each module in depth — AST parsing, signature extraction, config diffing, the README scanner, and the complete end-to-end pipeline without git. Useful for understanding the internals or experimenting with edge cases.
+A fully annotated [Jupyter notebook](notebooks/demo.ipynb) walks through each module in depth — AST parsing, signature extraction, config diffing, the README scanner, README command verification (`--verify`), and the complete end-to-end pipeline without git. Useful for understanding the internals or experimenting with edge cases.
 
 ---
 
@@ -238,6 +266,7 @@ More scenarios, including what it misses and where it can raise false alarms, ar
 
 ## What it doesn't catch
 
+- Command syntax of third-party tools (`docker run -it`, `pip install`); `--verify` only checks names your repo defines
 - Behavioral changes that don't affect the public API or config surface
 - Symbols not mentioned in the README
 

@@ -96,6 +96,8 @@ The same facts live in several files. Each fact has **one authoritative source**
 | Onboarding guidance (warn-only, backticks) | README | `docs/index.md`, `docs/usage/pre-commit.md`, `docs/usage/ci.md` |
 | Scenario images and examples | `tests/scenarios.py` (run by `tests/test_scenarios.py`) | `docs/assets/scenarios/*.svg` (regenerate with `make cards`), `docs/scenarios.md`, README hero |
 | Known gaps (cards badged MISSED or FALSE ALARM, `docs/roadmap.md` "Known gaps", fix lines on `docs/scenarios.md`) | the feature PRs that close them (e.g. `--verify` closes the `make build` miss) | when a feature closes a gap, update the card and its fix line, and remove the roadmap entry, in the same PR |
+| Verifiable command kinds (`--verify`) | `readme_drift/verifiers.py` registry | README "Verifying README commands" table, `docs/usage/cli-reference.md` `--verify` |
+| Library API and CLI usage examples | the code in `readme_drift/` | `notebooks/demo.ipynb` (executed by `tests/test_notebook.py`), including its CLI flag syntax |
 | Shipped vs planned releases | `git tag` and GitHub releases | `docs/roadmap.md` headings |
 
 **Automated first.** `tests/test_docs_sync.py` already covers CLI flags, config keys, version pins and Action inputs. A failure there is a High finding. When a new fact gets mirrored in more than one file, add it to the table above **and** extend that test.
@@ -108,13 +110,36 @@ The same facts live in several files. Each fact has **one authoritative source**
 - **Guidance gaps** — a recommendation present in README but absent from the docs page a user of that integration (hook, CI, CLI) would actually read.
 - **Dogfood** — run `poetry run readme-drift --base-ref origin/master` on the branch and confirm the tool does not flag its own README.
 
+### 10. Demo notebook
+
+`notebooks/demo.ipynb` is the one place that shows the library API and CLI usage interactively. It stores no outputs, so it can rot without anyone noticing: before it had a test, three cells failed on `master` and the CLI section still taught removed `argparse` / `--flag=true` syntax.
+
+**Automated.** `tests/test_notebook.py` executes every code cell top to bottom. A failure there is a **High** finding: a broken demo is a broken first impression.
+
+```bash
+poetry run pytest tests/test_notebook.py -q
+```
+
+**By hand, whenever the diff adds or changes something a user can see.** Compare the branch against `master` and ask, for each item, whether the notebook has a section or cell for it:
+
+```bash
+git diff origin/master --stat -- readme_drift
+git diff origin/master -- readme_drift/cli.py | grep '^[+-].*--'
+```
+
+- A new public function or module, a new or renamed CLI flag, a new config key, or a new user-visible behaviour (for example `--verify`, mermaid class-diagram matching) needs a notebook section or cell. Missing coverage is a **Medium** finding; say which section it belongs in.
+- A changed signature, renamed function, or removed flag means existing cells must change. Look for stale names and syntax, not just crashes: a cell can run fine and still teach the wrong thing.
+- The section list at the top of the notebook (table of contents) must include any new section.
+- Every cell must import what it uses. Readers run cells out of order, and a cell that relies on an import from a later cell is a bug.
+- Not needed for internal refactors, private helpers, or docs-only changes.
+
 ## Reporting
 
 Output a punch list ranked most-severe first:
 
 - **Critical** — security issues, or something that would break CI/publish/install for every user
-- **High** — a real functional gap a user would hit (e.g., a hook that silently never triggers)
-- **Medium** — stale or inconsistent documentation that could mislead but doesn't break anything (including docstrings that no longer match their signature)
+- **High** — a real functional gap a user would hit (e.g., a hook that silently never triggers, or a demo notebook cell that fails)
+- **Medium** — stale or inconsistent documentation that could mislead but doesn't break anything (including docstrings that no longer match their signature, and a new user-visible feature with no demo-notebook coverage)
 - **Low** — cosmetic or dependency-hygiene nits
 
 For each finding: file path, what's wrong, and a one-line suggested fix. If nothing is wrong in a category, say so briefly rather than omitting it — an empty section is a claim that you checked, not that you skipped it.

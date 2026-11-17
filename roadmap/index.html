@@ -539,10 +539,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#unreleased-first-use-guidance" class="md-nav__link">
+  <a href="#v330-shipped" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Unreleased — First-use guidance
+        v3.3.0 — Shipped
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v331-shipped" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v3.3.1 — Shipped
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unreleased-mermaid-class-diagrams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unreleased — Mermaid class diagrams
       
     </span>
   </a>
@@ -699,9 +721,19 @@
 <li>Hint when a changed symbol matched README prose but was noise-suppressed (<code>--verbose</code> for details)</li>
 </ul>
 <hr />
-<h2 id="unreleased-first-use-guidance">Unreleased — First-use guidance</h2>
+<h2 id="v330-shipped">v3.3.0 — Shipped</h2>
+<p>First-use guidance.</p>
 <ul>
 <li>One-time tip, shown the first time <code>readme-drift</code> runs in a repository, recommending that commands, names, flags and paths be wrapped in backticks (good documentation practice, and what makes matching precise). Shown once per repo per machine; suppressed in CI, with <code>README_DRIFT_NO_TIPS=1</code>, or <code>tips = false</code>. Inside pre-commit it appears on the first failing run, because pre-commit hides output from passing hooks.</li>
+</ul>
+<h2 id="v331-shipped">v3.3.1 — Shipped</h2>
+<ul>
+<li>Dev-dependency updates (<code>certifi</code>, <code>urllib3</code>, <code>pymdown-extensions</code>, <code>mkdocs-material</code>) patching all open Dependabot alerts. Runtime dependencies were unaffected.</li>
+</ul>
+<hr />
+<h2 id="unreleased-mermaid-class-diagrams">Unreleased — Mermaid class diagrams</h2>
+<ul>
+<li>Mermaid <code>classDiagram</code> blocks in a README are matched by structure: a class name matches that class, and <code>Class.method</code> matches only inside that class's block (even for short or everyday names). Functions and config keys never match through a diagram.</li>
 </ul>
 <hr />
 <h2 id="planned-broader-prose-documentation-targets">Planned — Broader prose documentation targets</h2>

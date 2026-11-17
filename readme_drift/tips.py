@@ -5,18 +5,11 @@ import os
 from collections.abc import Mapping
 from pathlib import Path
 
+from .messages import BACKTICK_TIP
+
 NO_TIPS_ENV = "README_DRIFT_NO_TIPS"
 
-BACKTICK_TIP = """\
-readme-drift: 💡 First run in this repository — one tip for accurate results.
-
-  Wrap commands, function/class names, config keys, flags and file paths in
-  backticks in your README, e.g. `make lint`, `Client.connect`, `--warn-only`.
-  This is good documentation practice, and it is what lets readme-drift match
-  a changed name precisely instead of guessing from plain prose.
-
-  This message is shown once per repository. Silence it with
-  `tips = false` under [tool.readme-drift] or README_DRIFT_NO_TIPS=1."""
+__all__ = ["BACKTICK_TIP", "NO_TIPS_ENV", "first_use_tip", "tips_disabled"]
 
 
 def _marker_path(repo_root: Path, env: Mapping[str, str]) -> Path:

@@ -7,6 +7,7 @@ from typing import Any
 
 import click
 
+from . import messages
 from .constants import DEFAULT_NOISE_BLOCKLIST, README_TEMPLATE
 from .drift_checker import run_check
 from .git import get_repo_root, validate_repo_root
@@ -28,6 +29,25 @@ def _load_toml_config(repo_root: Path | None) -> dict:
             except Exception:
                 return {}
     return {}
+
+
+def validate_options(
+    *,
+    readme_paths: tuple[str, ...],
+    readme_exclude_dirs: tuple[str, ...],
+    plain_text_search: bool,
+    noise_blocklist: tuple[str, ...],
+    noise_allowlist: tuple[str, ...],
+) -> list[str]:
+    """Return warnings for option combinations where one flag overrides another."""
+    warnings: list[str] = []
+    if readme_paths and readme_exclude_dirs:
+        warnings.append(messages.WARN_READMEPATHS_EXCLUDEDIRS)
+    if not plain_text_search and (noise_blocklist or noise_allowlist):
+        warnings.append(messages.WARN_NO_PLAIN_TEXT_NOISE)
+    if noise_blocklist and noise_allowlist:
+        warnings.append(messages.WARN_BLOCKLIST_OVERRIDES_ALLOWLIST)
+    return warnings
 
 
 class _ConfigCommand(click.Command):
@@ -214,32 +234,22 @@ def main(
         )
         target = root / "README.md"
         if target.exists() and target.read_text(encoding="utf-8").strip():
-            click.echo(f"README already exists and is not empty: {target}", err=True)
+            click.echo(messages.init_refused(target), err=True)
             sys.exit(1)
         target.write_text(README_TEMPLATE, encoding="utf-8")
-        click.echo(f"Created {target}")
+        click.echo(messages.init_created(target))
         sys.exit(0)
 
     cfg: dict = ctx.meta.get("toml_cfg", {})
 
-    # -- Validation: flag incompatible option combinations -------------------
-    if readme_paths and readme_exclude_dirs:
-        click.echo(
-            "warning: --readme-paths disables discovery; --readme-exclude-dirs is ignored.",
-            err=True,
-        )
-    if not plain_text_search and (noise_blocklist or noise_allowlist):
-        click.echo(
-            "warning: --no-plain-text-search disables plain-text matching; "
-            "--noise-blocklist/--noise-allowlist have no effect.",
-            err=True,
-        )
-    if noise_blocklist and noise_allowlist:
-        click.echo(
-            "warning: --noise-blocklist replaces the built-in list entirely; "
-            "--noise-allowlist is ignored.",
-            err=True,
-        )
+    for warning in validate_options(
+        readme_paths=readme_paths,
+        readme_exclude_dirs=readme_exclude_dirs,
+        plain_text_search=plain_text_search,
+        noise_blocklist=noise_blocklist,
+        noise_allowlist=noise_allowlist,
+    ):
+        click.echo(warning, err=True)
 
     # -- Noise-blocklist resolution ------------------------------------------
     # Priority: CLI --noise-blocklist (full replace) > pyproject.toml noise-blocklist

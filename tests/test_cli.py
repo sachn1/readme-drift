@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
 
-from readme_drift.cli import _load_toml_config, main
+from readme_drift import messages
+from readme_drift.cli import _load_toml_config, main, validate_options
 
 
 # --- _load_toml_config ---
@@ -135,3 +136,36 @@ def test_init_overwrites_empty_readme(tmp_path):
     result = runner.invoke(main, ["--init", "--repo-root", str(tmp_path)])
     assert result.exit_code == 0
     assert "backticks" in (tmp_path / "README.md").read_text()
+
+
+# --- validate_options ---------------------------------------------------
+
+
+def _opts(**over):
+    base = dict(
+        readme_paths=(),
+        readme_exclude_dirs=(),
+        plain_text_search=True,
+        noise_blocklist=(),
+        noise_allowlist=(),
+    )
+    return {**base, **over}
+
+
+def test_validate_options_clean_has_no_warnings():
+    assert validate_options(**_opts()) == []
+
+
+def test_validate_options_readme_paths_vs_exclude_dirs():
+    out = validate_options(**_opts(readme_paths=("a",), readme_exclude_dirs=("b",)))
+    assert out == [messages.WARN_READMEPATHS_EXCLUDEDIRS]
+
+
+def test_validate_options_no_plain_text_with_noise_flags():
+    out = validate_options(**_opts(plain_text_search=False, noise_allowlist=("run",)))
+    assert out == [messages.WARN_NO_PLAIN_TEXT_NOISE]
+
+
+def test_validate_options_blocklist_overrides_allowlist():
+    out = validate_options(**_opts(noise_blocklist=("x",), noise_allowlist=("y",)))
+    assert out == [messages.WARN_BLOCKLIST_OVERRIDES_ALLOWLIST]

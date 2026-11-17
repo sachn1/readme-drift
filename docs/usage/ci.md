@@ -61,6 +61,10 @@ jobs:
 
 On `pull_request` events, `base-ref` auto-resolves to `origin/<base-branch>` if left unset. On other event types (e.g. `push`), set it explicitly via the `base-ref` input. See [action.yml](https://github.com/sachn1/readme-drift/blob/master/action.yml) for the full list of inputs (`base-ref`, `warn-only`, `include-private`, `exclude`, `readme-paths`, `version`).
 
+## Writing a drift-friendly README
+
+First-run tips are switched off in CI, so one recommendation is worth repeating here: wrap commands, function and class names, config keys, flags and file paths in backticks (`` `make lint` ``, `` `Client.connect` ``). It is good documentation practice, and it is what lets `readme-drift` match a changed name precisely instead of guessing from plain prose.
+
 ## Warn-only in CI
 
 To surface findings without failing the build:

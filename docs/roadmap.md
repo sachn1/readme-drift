@@ -104,7 +104,24 @@ Click migration (breaking CLI syntax change), symbol filtering, noise suppressio
 
 ---
 
-## v3.1.0 — Broader prose documentation targets
+## v3.2.0 — Shipped
+
+Makefile coverage and adoption tooling. (v3.1.0 was a docs-only release: sitemap ownership verification.)
+
+- `Makefile` / `makefile` / `GNUmakefile` target extraction via a filename-keyed extractor registry
+- Composite GitHub Action (`action.yml`)
+- `--init` scaffolds a README with template subheadings and a backtick reminder
+- Hint when a changed symbol matched README prose but was noise-suppressed (`--verbose` for details)
+
+---
+
+## Unreleased — First-use guidance
+
+- One-time tip, shown the first time `readme-drift` runs in a repository, recommending that commands, names, flags and paths be wrapped in backticks (good documentation practice, and what makes matching precise). Shown once per repo per machine; suppressed in CI, with `README_DRIFT_NO_TIPS=1`, or `tips = false`. Inside pre-commit it appears on the first failing run, because pre-commit hides output from passing hooks.
+
+---
+
+## Planned — Broader prose documentation targets
 
 README is the most visible documentation file, but several others frequently reference code symbols and are just as likely to go stale.
 
@@ -118,7 +135,9 @@ README is the most visible documentation file, but several others frequently ref
 
 ---
 
-## v3.2.0 — Build and infrastructure file coverage
+## Planned — Build and infrastructure file coverage
+
+> Only the `Makefile` extractor from this list has shipped (v3.2.0). The rest remain planned.
 
 Every Python project has files beyond `.py` and generic config that define named things the README references directly — make targets, container services, CLI entry points, environment variables. These files live in the repo, so no external knowledge is needed; the names are extractable by the same `KeyExtractor` protocol already in place.
 
@@ -144,6 +163,12 @@ Every Python project has files beyond `.py` and generic config that define named
 - `requirements.txt` package names — package names frequently overlap with common English words; noise suppression alone is insufficient
 - Kubernetes manifest `metadata.name` values — insufficient signal without knowing which resource kinds the README references; k8s YAML is structurally identical to other YAML
 - Shell script internals (function names, flag parsing) — requires Bash/POSIX parsing; a different class of problem
+
+---
+
+## Direction toward a v4.0 freeze
+
+See the [project review](project-review.md) for the full keep / change / add / out-of-scope assessment and exit criteria. Headline: move from "is a changed name mentioned?" to verifying *claims* (commands, paths, flags, imports) against repo-owned facts, then freeze.
 
 ---
 

@@ -17,6 +17,7 @@ def _run_pipeline(
     is_config=False,
     filename="client.py",
 ):
+    """Run the diff, scan and report pipeline against in-memory sources."""
     readme = tmp_path / "README.md"
     readme.write_text(readme_text)
 
@@ -37,6 +38,7 @@ def _run_pipeline(
 
 
 def test_signature_change_flagged(tmp_path):
+    """Signature change flagged."""
     old = "class Client:\n    def connect(self, host, port): ...\n"
     new = "class Client:\n    def connect(self, url): ...\n"
     readme = "Call `Client.connect(host, port)` to open a connection."
@@ -49,6 +51,7 @@ def test_signature_change_flagged(tmp_path):
 
 
 def test_removed_symbol_in_readme(tmp_path):
+    """Removed symbol in README."""
     old = "class Client:\n    def connect(self, host, port): ...\n"
     new = ""
     readme = (
@@ -62,6 +65,7 @@ def test_removed_symbol_in_readme(tmp_path):
 
 
 def test_removed_symbol_not_in_readme(tmp_path):
+    """Removed symbol not in README."""
     old = "def _obscure_internal(): ...\n"
     new = ""
     readme = "# Hello world\nNo code references here.\n"
@@ -72,6 +76,7 @@ def test_removed_symbol_not_in_readme(tmp_path):
 
 
 def test_config_removed_key_in_readme(tmp_path):
+    """Config removed key in README."""
     old = '{"scripts": {"build": "tsc", "test": "jest"}}'
     new = '{"scripts": {"test": "jest"}}'
     readme = "Run `npm run build` to compile the project."
@@ -85,6 +90,7 @@ def test_config_removed_key_in_readme(tmp_path):
 
 
 def test_added_symbol_never_stale(tmp_path):
+    """Added symbol never stale."""
     old = ""
     new = "class Client:\n    def connect(self, host, port): ...\n"
     readme = "Use the `Client` class.\nCall `Client.connect(host, port)` to open a connection."
@@ -95,6 +101,7 @@ def test_added_symbol_never_stale(tmp_path):
 
 
 def test_makefile_removed_target_in_readme(tmp_path):
+    """Makefile removed target in README."""
     old = "build:\n\tgo build ./...\n\ndeploy:\n\t./deploy.sh\n"
     new = "build:\n\tgo build ./...\n"
     readme = "Run `make deploy` to ship to production."

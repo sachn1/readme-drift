@@ -21,33 +21,39 @@ Plain text mentions of disconnect are also caught.
 
 @pytest.fixture
 def readme_file(tmp_path) -> Path:
+    """Provide a temporary README.md containing the sample content."""
     path = tmp_path / "README.md"
     path.write_text(README_CONTENT)
     return path
 
 
 def test_finds_backtick_method(readme_file):
+    """Finds backtick method."""
     matches = find_symbol_in_readme(readme_file, "Client.connect")
     assert len(matches) >= 1
     assert any("connect" in m.matched_text for m in matches)
 
 
 def test_finds_plain_function(readme_file):
+    """Finds plain function."""
     matches = find_symbol_in_readme(readme_file, "helper")
     assert len(matches) >= 1
 
 
 def test_finds_plain_text_mention(readme_file):
+    """Finds plain text mention."""
     matches = find_symbol_in_readme(readme_file, "disconnect")
     assert len(matches) >= 1
 
 
 def test_no_match_for_unknown_symbol(readme_file):
+    """No match for unknown symbol."""
     matches = find_symbol_in_readme(readme_file, "nonexistent_function")
     assert matches == []
 
 
 def test_scan_multiple_symbols(readme_file):
+    """Scan multiple symbols."""
     results = scan_readme_for_symbols(
         readme_file,
         ["Client.connect", "helper", "nonexistent"],
@@ -58,16 +64,19 @@ def test_scan_multiple_symbols(readme_file):
 
 
 def test_missing_readme(tmp_path):
+    """Missing README."""
     matches = find_symbol_in_readme(tmp_path / "README.md", "anything")
     assert matches == []
 
 
 def test_match_includes_line_number(readme_file):
+    """Match includes line number."""
     matches = find_symbol_in_readme(readme_file, "Client.connect")
     assert all(m.line_number > 0 for m in matches)
 
 
 def test_match_includes_line_text(readme_file):
+    """Match includes line text."""
     matches = find_symbol_in_readme(readme_file, "helper")
     assert all(len(m.line_text) > 0 for m in matches)
 
@@ -76,12 +85,14 @@ def test_at_most_one_match_per_line(readme_file):
     # The README has "Plain text mentions of disconnect are also caught."
     # which would match BOTH the backtick pattern AND the word-boundary pattern.
     # find_symbol_in_readme must return at most one ReadmeMatch per line.
+    """At most one match per line."""
     matches = find_symbol_in_readme(readme_file, "disconnect")
     line_numbers = [m.line_number for m in matches]
     assert len(line_numbers) == len(set(line_numbers)), "duplicate matches on same line"
 
 
 def test_plain_text_false_skips_word_boundary(tmp_path):
+    """Plain text false skips word boundary."""
     readme = tmp_path / "README.md"
     readme.write_text("Use disconnect to close the connection.\n")
     # The word appears as plain text, not in backticks — plain_text=False should miss it
@@ -90,6 +101,7 @@ def test_plain_text_false_skips_word_boundary(tmp_path):
 
 
 def test_plain_text_false_still_matches_backtick(tmp_path):
+    """Plain text false still matches backtick."""
     readme = tmp_path / "README.md"
     readme.write_text("Call `disconnect` to close.\n")
     matches = find_symbol_in_readme(readme, "disconnect", plain_text=False)
@@ -97,6 +109,7 @@ def test_plain_text_false_still_matches_backtick(tmp_path):
 
 
 def test_scan_readme_plain_text_false(tmp_path):
+    """Scan README plain text false."""
     readme = tmp_path / "README.md"
     readme.write_text("Use helper to process data.\n")
     results = scan_readme_for_symbols(readme, ["helper"], plain_text=False)
@@ -104,6 +117,7 @@ def test_scan_readme_plain_text_false(tmp_path):
 
 
 def test_force_backtick_only_suppresses_plain_text_for_named_symbol(tmp_path):
+    """Force backtick only suppresses plain text for named symbol."""
     readme = tmp_path / "README.md"
     readme.write_text("Run the build step before deploying.\n")
     # "build" appears as plain text only.  With force_backtick_only it should not match.
@@ -117,6 +131,7 @@ def test_force_backtick_only_suppresses_plain_text_for_named_symbol(tmp_path):
 
 
 def test_force_backtick_only_still_matches_backtick(tmp_path):
+    """Force backtick only still matches backtick."""
     readme = tmp_path / "README.md"
     readme.write_text("Run `build` to compile.\n")
     results = scan_readme_for_symbols(
@@ -129,6 +144,7 @@ def test_force_backtick_only_still_matches_backtick(tmp_path):
 
 
 def test_force_backtick_only_does_not_affect_other_symbols(tmp_path):
+    """Force backtick only does not affect other symbols."""
     readme = tmp_path / "README.md"
     readme.write_text("Run the build step. Call connect to link.\n")
     # "build" is in force_backtick_only, "connect" is not.
@@ -143,6 +159,7 @@ def test_force_backtick_only_does_not_affect_other_symbols(tmp_path):
 
 
 def test_force_backtick_only_none_behaves_normally(tmp_path):
+    """Force backtick only none behaves normally."""
     readme = tmp_path / "README.md"
     readme.write_text("Run the build step.\n")
     results = scan_readme_for_symbols(
@@ -155,6 +172,7 @@ def test_force_backtick_only_none_behaves_normally(tmp_path):
 
 
 def test_scan_key_path_dotnotation_in_backtick(tmp_path):
+    """Scan key path dotnotation in backtick."""
     readme = tmp_path / "README.md"
     readme.write_text("Defined in `scripts.build` of package.json.\n")
     results = scan_readme_for_symbols(readme, ["scripts.build"])
@@ -162,6 +180,7 @@ def test_scan_key_path_dotnotation_in_backtick(tmp_path):
 
 
 def test_scan_key_path_dotnotation_plain_text(tmp_path):
+    """Scan key path dotnotation plain text."""
     readme = tmp_path / "README.md"
     readme.write_text("The scripts.build target compiles the project.\n")
     results = scan_readme_for_symbols(readme, ["scripts.build"], plain_text=True)

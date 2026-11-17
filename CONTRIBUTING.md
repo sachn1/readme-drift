@@ -74,6 +74,24 @@ BREAKING CHANGE: --warn-only is now --no-fail; update any CI scripts
 - All existing tests must pass: `poetry run pytest`
 - New behaviour must be covered by tests — bug fixes included (add a regression test that would have caught the bug).
 - Tests live in `tests/` and mirror the module they cover (e.g. `tests/test_config_diff.py` for `readme_drift/config_diff.py`).
+- `tests/test_docs_sync.py` fails if README, the docs site, the CLI and `action.yml` disagree (flags, config keys, version pins, Action inputs). If you add or rename a flag or key, update every place it is documented.
+
+---
+
+## Docstrings
+
+Docstrings use the [numpy format](https://numpydoc.readthedocs.io/en/latest/format.html):
+
+| Item | Docstring |
+|---|---|
+| Module | One line |
+| Class (public or private) | One line |
+| Private function or method (`_name`) | One line |
+| Test function, fixture or helper | One line |
+| Public function or method | Full numpy docstring: summary, `Parameters`, `Returns`, and `Raises` where applicable |
+| Property | One line |
+
+`ruff` enforces the numpy section formatting (`pydocstyle`, `convention = "numpy"`), and `tests/test_docstrings.py` enforces the structure above, so both run in `make check`.
 
 ---
 
@@ -124,5 +142,6 @@ This is a different, larger change than adding a config extractor — `ast_diff.
 - [ ] Follows conventional commit format
 - [ ] All tests pass (`poetry run pytest`)
 - [ ] Linter clean (`poetry run ruff check .`)
+- [ ] Docstrings follow the convention above (checked by `ruff` and `tests/test_docstrings.py`)
 - [ ] New behaviour has tests
 - [ ] Optional: if the change touches CI, docs, `pyproject.toml`, or the pre-commit/Action config, run `/integration-review` (Claude Code) before committing to catch cross-file drift a linter won't

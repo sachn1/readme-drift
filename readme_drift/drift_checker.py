@@ -50,28 +50,44 @@ def run_check(
     noise_blocklist: list[str] | None = None,
     verbose: bool = False,
 ) -> DriftCheckResult:
-    """
-    Run the full README staleness check.
+    """Run the full README staleness check.
 
-    Args:
-        base_ref: Git ref to diff against.
-        repo_root: Root of the repository. Auto-detected if not provided.
-        staged: Check staged changes only (for pre-commit use).
-        include_private: Include private (underscore-prefixed) symbols.
-        plain_text: Match symbol names as plain text in addition to backtick spans.
-        exclude: Glob patterns for files/directories to skip.
-        symbol_allowlist: Symbols to always flag when changed, even if not in README.
-        symbol_denylist: Symbols to never flag, even if changed and in README.
-        readme_paths: Explicit list of README file paths to scan (overrides discovery).
-        readme_exclude_dirs: Extra directory names to skip during README discovery.
-        min_symbol_length: Minimum symbol length for plain-text matching (default 4).
-            Shorter symbols are still matched inside backtick spans.
-        noise_blocklist: Replaces the built-in noise blocklist.  Pass an empty list
-            to disable noise suppression entirely.  None → use built-in default.
-        verbose: If True, populate DriftCheckResult.verbose_log with per-symbol outcomes.
+    Parameters
+    ----------
+    base_ref : str, optional
+        Git ref to diff against, by default "HEAD".
+    repo_root : Path or None, optional
+        Root of the repository; auto-detected if None.
+    staged : bool, optional
+        Check staged changes only (for pre-commit use), by default False.
+    include_private : bool, optional
+        Include private (underscore-prefixed) symbols, by default False.
+    plain_text : bool, optional
+        Match names as plain text in addition to backtick spans, by default True.
+    exclude : list[str] or None, optional
+        Glob patterns for files or directories to skip.
+    symbol_allowlist : list[str] or None, optional
+        Symbols to always flag when changed, even if not in the README.
+    symbol_denylist : list[str] or None, optional
+        Symbols to never flag; takes priority over the allowlist.
+    readme_paths : list[str] or None, optional
+        Explicit README paths to scan; overrides discovery.
+    readme_exclude_dirs : list[str] or None, optional
+        Extra directory names to skip during README discovery.
+    min_symbol_length : int, optional
+        Minimum symbol length for plain-text matching, by default 4. Shorter
+        symbols are still matched inside backtick spans.
+    noise_blocklist : list[str] or None, optional
+        Replaces the built-in noise blocklist. An empty list disables noise
+        suppression; None uses the built-in default.
+    verbose : bool, optional
+        Populate ``DriftCheckResult.verbose_log`` with per-symbol outcomes,
+        by default False.
 
-    Returns:
-        A DriftCheckResult describing findings.
+    Returns
+    -------
+    DriftCheckResult
+        Findings, discovered READMEs and, when requested, the verbose log.
     """
     _exclude = exclude or []
     _allowlist: set[str] = set(symbol_allowlist or [])

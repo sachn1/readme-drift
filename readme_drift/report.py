@@ -1,36 +1,28 @@
 """Format check results into human-readable reports."""
 
+from . import messages
 from .models import DriftCheckResult
 
 
 def _suppressed_hint(result: DriftCheckResult) -> str:
-    """Low-noise hint for symbols that matched the README as plain text but
-    were noise-suppressed to backtick-only matching, so no finding fired.
-
-    Only rendered when non-empty — most runs never hit this case.
-    """
+    """Return the noise-suppression hint, or an empty string when not applicable."""
     if not result.suppressed_hint_count:
         return ""
-    plural = result.suppressed_hint_count != 1
-    noun = "symbols" if plural else "symbol"
-    verb = "were" if plural else "was"
-    return (
-        f"readme-drift: ℹ {result.suppressed_hint_count} changed {noun} "
-        f"matched the README as plain text but {verb} noise-suppressed "
-        "(no backtick match) — run with --verbose for details."
-    )
+    return messages.suppressed_hint(result.suppressed_hint_count)
 
 
 def _verbose_block(result: DriftCheckResult) -> str:
+    """Return the verbose log block, or an empty string when empty."""
     if not result.verbose_log:
         return ""
-    return "readme-drift: verbose log:\n" + "\n".join(
+    return messages.report_verbose_header() + "\n".join(
         f"  {entry}" for entry in result.verbose_log
     )
 
 
 def _passing_report(result: DriftCheckResult) -> str:
-    report = "readme-drift: ✅ No README staleness detected."
+    """Format the report for a run with no findings."""
+    report = messages.REPORT_PASSED
     if hint := _suppressed_hint(result):
         report += "\n" + hint
     if verbose := _verbose_block(result):
@@ -39,8 +31,9 @@ def _passing_report(result: DriftCheckResult) -> str:
 
 
 def _failing_report(result: DriftCheckResult) -> str:
+    """Format the report for a run with findings."""
     readme_label = ", ".join(sorted({p.name for p in result.readme_paths})) or "README"
-    lines: list[str] = [f"readme-drift: ❌ {readme_label} may be stale:\n"]
+    lines: list[str] = [messages.report_failed_header(readme_label)]
 
     for finding in result.findings:
         change = finding.change
@@ -54,10 +47,10 @@ def _failing_report(result: DriftCheckResult) -> str:
                     f"…{match.line_text}…"
                 )
         else:
-            lines.append("    (force-flagged via allowlist — not found in README)")
+            lines.append(messages.REPORT_FORCE_FLAGGED)
         lines.append("")
 
-    lines.append("  → Please update the README or run with --no-verify to skip.")
+    lines.append(messages.REPORT_FIX_ADVICE)
 
     if hint := _suppressed_hint(result):
         lines.append(hint)
@@ -69,9 +62,20 @@ def _failing_report(result: DriftCheckResult) -> str:
 
 
 def format_report(result: DriftCheckResult) -> str:
-    """Format a CheckResult into a human-readable string."""
+    """Format a check result into a human-readable report.
+
+    Parameters
+    ----------
+    result : DriftCheckResult
+        Result of a drift check.
+
+    Returns
+    -------
+    str
+        Report text for the skipped, passing or failing outcome.
+    """
     if result.skipped:
-        return f"readme-drift: skipped ({result.skip_reason})"
+        return messages.report_skipped(result.skip_reason)
 
     if not result.findings:
         return _passing_report(result)

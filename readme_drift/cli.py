@@ -7,10 +7,12 @@ from typing import Any
 
 import click
 
+from . import messages
 from .constants import DEFAULT_NOISE_BLOCKLIST, README_TEMPLATE
 from .drift_checker import run_check
 from .git import get_repo_root, validate_repo_root
 from .report import format_report
+from .tips import first_use_tip, tips_disabled
 
 
 def _load_toml_config(repo_root: Path | None) -> dict:
@@ -29,12 +31,66 @@ def _load_toml_config(repo_root: Path | None) -> dict:
     return {}
 
 
+def validate_options(
+    *,
+    readme_paths: tuple[str, ...],
+    readme_exclude_dirs: tuple[str, ...],
+    plain_text_search: bool,
+    noise_blocklist: tuple[str, ...],
+    noise_allowlist: tuple[str, ...],
+) -> list[str]:
+    """Return warnings for option combinations where one flag overrides another.
+
+    Parameters
+    ----------
+    readme_paths : tuple[str, ...]
+        Explicit README paths.
+    readme_exclude_dirs : tuple[str, ...]
+        Extra directory names to skip during README discovery.
+    plain_text_search : bool
+        Whether plain-text matching is enabled.
+    noise_blocklist : tuple[str, ...]
+        Replacement noise blocklist words.
+    noise_allowlist : tuple[str, ...]
+        Words to remove from the built-in noise blocklist.
+
+    Returns
+    -------
+    list[str]
+        One warning message per conflicting combination; empty if none.
+    """
+    warnings: list[str] = []
+    if readme_paths and readme_exclude_dirs:
+        warnings.append(messages.WARN_READMEPATHS_EXCLUDEDIRS)
+    if not plain_text_search and (noise_blocklist or noise_allowlist):
+        warnings.append(messages.WARN_NO_PLAIN_TEXT_NOISE)
+    if noise_blocklist and noise_allowlist:
+        warnings.append(messages.WARN_BLOCKLIST_OVERRIDES_ALLOWLIST)
+    return warnings
+
+
 class _ConfigCommand(click.Command):
-    """Pre-parse --repo-root to load pyproject.toml defaults before click processes args."""
+    """Click command that loads pyproject defaults before parsing arguments."""
 
     def make_context(
         self, info_name: str | None, args: list[str], **extra: Any
     ) -> click.Context:
+        """Create the click context with ``[tool.readme-drift]`` values as defaults.
+
+        Parameters
+        ----------
+        info_name : str or None
+            Name of the command as invoked.
+        args : list[str]
+            Raw command-line arguments; ``--repo-root`` is pre-scanned here.
+        **extra : Any
+            Extra keyword arguments forwarded to ``click.Command.make_context``.
+
+        Returns
+        -------
+        click.Context
+            Context whose ``meta["toml_cfg"]`` holds the loaded config section.
+        """
         repo_root: Path | None = None
         for i, arg in enumerate(args):
             if arg == "--repo-root" and i + 1 < len(args):
@@ -206,39 +262,69 @@ def main(
     warn_only: bool,
     verbose: bool,
 ) -> None:
-    """Check if README may be stale after code changes."""
+    """Check if README may be stale after code changes.
+
+    \f
+
+    Parameters
+    ----------
+    ctx : click.Context
+        Click context carrying the loaded ``pyproject.toml`` config.
+    init : bool
+        Create a README template and exit.
+    base_ref : str
+        Git ref to diff against.
+    staged : bool
+        Check staged changes only.
+    repo_root : Path or None
+        Repository root; auto-detected if None.
+    exclude : tuple[str, ...]
+        Glob patterns for source files or directories to skip.
+    include_private : bool
+        Track private (underscore-prefixed) Python symbols.
+    readme_paths : tuple[str, ...]
+        Explicit README files; disables discovery.
+    readme_exclude_dirs : tuple[str, ...]
+        Extra directory names to skip during README discovery.
+    symbol_allowlist : tuple[str, ...]
+        Symbols always flagged when changed.
+    symbol_denylist : tuple[str, ...]
+        Symbols never flagged; takes priority over the allowlist.
+    min_symbol_length : int
+        Minimum symbol length for plain-text matching.
+    noise_blocklist : tuple[str, ...]
+        Words replacing the built-in noise blocklist.
+    noise_allowlist : tuple[str, ...]
+        Words removed from the built-in noise blocklist.
+    plain_text_search : bool
+        Match symbols as plain text as well as in backtick spans.
+    warn_only : bool
+        Print findings but always exit 0.
+    verbose : bool
+        Print per-symbol scan outcomes.
+    """  # noqa: D301 -- the literal \f truncates click's --help text
     if init:
         root = (
             validate_repo_root(repo_root) if repo_root is not None else get_repo_root()
         )
         target = root / "README.md"
         if target.exists() and target.read_text(encoding="utf-8").strip():
-            click.echo(f"README already exists and is not empty: {target}", err=True)
+            click.echo(messages.init_refused(target), err=True)
             sys.exit(1)
         target.write_text(README_TEMPLATE, encoding="utf-8")
-        click.echo(f"Created {target}")
+        click.echo(messages.init_created(target))
         sys.exit(0)
 
     cfg: dict = ctx.meta.get("toml_cfg", {})
 
-    # -- Validation: flag incompatible option combinations -------------------
-    if readme_paths and readme_exclude_dirs:
-        click.echo(
-            "warning: --readme-paths disables discovery; --readme-exclude-dirs is ignored.",
-            err=True,
-        )
-    if not plain_text_search and (noise_blocklist or noise_allowlist):
-        click.echo(
-            "warning: --no-plain-text-search disables plain-text matching; "
-            "--noise-blocklist/--noise-allowlist have no effect.",
-            err=True,
-        )
-    if noise_blocklist and noise_allowlist:
-        click.echo(
-            "warning: --noise-blocklist replaces the built-in list entirely; "
-            "--noise-allowlist is ignored.",
-            err=True,
-        )
+    for warning in validate_options(
+        readme_paths=readme_paths,
+        readme_exclude_dirs=readme_exclude_dirs,
+        plain_text_search=plain_text_search,
+        noise_blocklist=noise_blocklist,
+        noise_allowlist=noise_allowlist,
+    ):
+        click.echo(warning, err=True)
 
     # -- Noise-blocklist resolution ------------------------------------------
     # Priority: CLI --noise-blocklist (full replace) > pyproject.toml noise-blocklist
@@ -281,6 +367,14 @@ def main(
     )
 
     click.echo(format_report(result))
+
+    if not tips_disabled(cfg):
+        root = (
+            validate_repo_root(repo_root) if repo_root is not None else get_repo_root()
+        )
+        tip = first_use_tip(root, passed=result.passed, cfg=cfg)
+        if tip:
+            click.echo(tip, err=True)
 
     sys.exit(0 if (result.passed or warn_only) else 1)
 

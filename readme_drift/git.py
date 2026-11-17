@@ -23,13 +23,40 @@ def _run(cmd: list[str], cwd: Path | None = None) -> str:
 
 
 def get_repo_root() -> Path:
-    """Get the root directory of the git repository."""
+    """Return the root directory of the current git repository.
+
+    Returns
+    -------
+    Path
+        Top-level directory reported by ``git rev-parse --show-toplevel``.
+
+    Raises
+    ------
+    RuntimeError
+        If the current directory is not inside a git repository.
+    """
     root = _run(["git", "rev-parse", "--show-toplevel"])
     return Path(root)
 
 
 def validate_repo_root(path: Path) -> Path:
-    """Validate that path is a git repository; raise ValueError if not."""
+    """Validate that a path is inside a git repository.
+
+    Parameters
+    ----------
+    path : Path
+        Candidate repository directory.
+
+    Returns
+    -------
+    Path
+        Top-level directory of the repository containing ``path``.
+
+    Raises
+    ------
+    ValueError
+        If ``path`` is not a directory or not inside a git repository.
+    """
     if not path.is_dir():
         raise ValueError(f"repo_root is not a directory: {path}")
     try:
@@ -42,7 +69,24 @@ def validate_repo_root(path: Path) -> Path:
 def read_new_content(
     py_file: Path, root: Path, resolved_root: Path, staged: bool
 ) -> str:
-    """Return file content from disk (working tree) or the staging area."""
+    """Return a file's current content from the working tree or the index.
+
+    Parameters
+    ----------
+    py_file : Path
+        File path relative to the repository root.
+    root : Path
+        Repository root.
+    resolved_root : Path
+        Fully resolved repository root, used to reject paths that escape it.
+    staged : bool
+        Read the staged version instead of the working-tree version.
+
+    Returns
+    -------
+    str
+        File content, or an empty string if the file is absent.
+    """
     if staged:
         try:
             # 0 means "staged version" in git show syntax
@@ -55,7 +99,22 @@ def read_new_content(
 
 
 def read_old_content(py_file: Path, root: Path, old_ref: str) -> str:
-    """Return file content at old_ref from git history; empty string if absent."""
+    """Return a file's content at a git ref.
+
+    Parameters
+    ----------
+    py_file : Path
+        File path relative to the repository root.
+    root : Path
+        Repository root.
+    old_ref : str
+        Git ref to read from.
+
+    Returns
+    -------
+    str
+        File content at ``old_ref``, or an empty string if absent.
+    """
     try:
         return _run(["git", "show", f"{old_ref}:{py_file}"], cwd=root)
     except RuntimeError:
@@ -67,21 +126,26 @@ def get_diff(
     repo_root: Path | None = None,
     staged: bool = False,
 ) -> GitDiffResult:
-    """Get changed files between current state and base_ref.
+    """Get the files changed between the current state and a base ref.
 
     Parameters
     ----------
     base_ref : str, optional
-        Git ref to diff against (default: HEAD, i.e. last commit), by default "HEAD"
-    repo_root : Path | None, optional
-        Root of the git repository, by default None
+        Git ref to diff against, by default "HEAD".
+    repo_root : Path or None, optional
+        Root of the git repository; auto-detected if None.
     staged : bool, optional
-        If True, diff staged changes only (for pre-commit use), by default False
+        Diff staged changes only (for pre-commit use), by default False.
 
     Returns
     -------
     GitDiffResult
-        Result of the git diff operation.
+        Changed Python files and changed config files.
+
+    Raises
+    ------
+    ValueError
+        If ``base_ref`` starts with ``-`` (would be parsed as a git flag).
     """
     assert base_ref, "base_ref must not be empty"
 
@@ -125,10 +189,16 @@ def find_readmes(
 
     Parameters
     ----------
-    extra_skip_dirs:
-        Additional directory *names* (not paths) to skip during traversal,
-        merged with the built-in ``_SKIP_DIRS`` set.  Mirrors the
-        ``readme-exclude-dirs`` config key.
+    repo_root : Path
+        Directory to search recursively.
+    extra_skip_dirs : set[str] or None, optional
+        Additional directory names (not paths) to skip, merged with the built-in
+        skip set. Mirrors the ``readme-exclude-dirs`` config key.
+
+    Returns
+    -------
+    list[Path]
+        Paths of all discovered README files.
     """
     skip = _SKIP_DIRS | (extra_skip_dirs or set())
     found = []

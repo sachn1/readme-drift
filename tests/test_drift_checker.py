@@ -13,6 +13,7 @@ from readme_drift.models import ChangeType, ReadmeMatch, StalenessFinding, Symbo
 
 
 def _readme_match(symbol: str) -> ReadmeMatch:
+    """Build a ReadmeMatch for a symbol on line 5 of README.md."""
     return ReadmeMatch(
         symbol=symbol,
         line_number=5,
@@ -25,6 +26,7 @@ def _readme_match(symbol: str) -> ReadmeMatch:
 def test_added_symbol_does_not_produce_finding():
     # ADDED symbols found in the README must never be flagged as stale —
     # a README that already documents a new symbol is correct, not stale.
+    """Added symbol does not produce finding."""
     change = SymbolChange(name="new_func", change_type=ChangeType.ADDED)
     readme_matches = {"new_func": [_readme_match("new_func")]}
 
@@ -41,6 +43,7 @@ def test_added_symbol_does_not_produce_finding():
 
 
 def test_symbols_from_changes_deduplicates():
+    """Symbols from changes deduplicates."""
     changes = [
         SymbolChange(name="foo", change_type=ChangeType.REMOVED),
         SymbolChange(name="foo", change_type=ChangeType.SIGNATURE_CHANGED),
@@ -63,10 +66,12 @@ def test_symbols_from_changes_deduplicates():
     ],
 )
 def test_is_excluded(file_str, patterns, expected):
+    """Is excluded."""
     assert _is_excluded(Path(file_str), patterns) == expected
 
 
 def test_is_excluded_empty_patterns():
+    """Is excluded empty patterns."""
     assert not _is_excluded(Path("src/models.py"), [])
 
 
@@ -162,6 +167,7 @@ def _run_pipeline_direct(
 
 
 def test_denylist_suppresses_finding(tmp_path):
+    """Denylist suppresses finding."""
     old = "def helper(x): pass\n"
     new = "def helper(x, y): pass\n"
     readme = "Use `helper` to process data.\n"
@@ -174,6 +180,7 @@ def test_denylist_suppresses_finding(tmp_path):
 
 
 def test_denylist_does_not_affect_other_symbols(tmp_path):
+    """Denylist does not affect other symbols."""
     old = "def helper(x): pass\ndef important(a): pass\n"
     new = "def helper(x, y): pass\n"
     readme = "Use `helper` and `important`.\n"
@@ -189,6 +196,7 @@ def test_denylist_does_not_affect_other_symbols(tmp_path):
 
 
 def test_allowlist_force_flags_even_without_readme_mention(tmp_path):
+    """Allowlist force flags even without README mention."""
     old = "def critical_api(x): pass\n"
     new = "def critical_api(x, y): pass\n"
     readme = "# My Project\nNo mention of the API here.\n"
@@ -206,6 +214,7 @@ def test_allowlist_force_flags_even_without_readme_mention(tmp_path):
 def test_allowlist_bypasses_noise_blocklist(tmp_path):
     # "build" is on the default noise blocklist, but if it's on the allowlist
     # it should be force-flagged even without a backtick match.
+    """Allowlist bypasses noise blocklist."""
     old = '{"scripts": {"build": "webpack"}}\n'
     new = '{"scripts": {"bundle": "webpack"}}\n'
     readme = "Run npm build to compile.\n"  # plain-text, no backtick
@@ -230,6 +239,7 @@ def test_allowlist_bypasses_noise_blocklist(tmp_path):
 def test_blocklisted_symbol_suppressed_in_plain_text(tmp_path):
     # "build" is in the default blocklist.
     # Plain-text mention of "build" in README should NOT produce a finding.
+    """Blocklisted symbol suppressed in plain text."""
     old = '{"scripts": {"build": "webpack"}}\n'
     new = '{"scripts": {"bundle": "webpack"}}\n'
     readme = "Run the build to compile.\n"  # plain text, no backtick
@@ -249,6 +259,7 @@ def test_blocklisted_symbol_still_matched_in_backtick(tmp_path):
     # "build" is in the default blocklist but a backtick reference should still
     # be matched.  The backtick pattern requires the symbol name immediately after
     # the opening backtick, so use "`build`" not "`npm run build`".
+    """Blocklisted symbol still matched in backtick."""
     old = '{"scripts": {"build": "webpack"}}\n'
     new = '{"scripts": {"bundle": "webpack"}}\n'
     readme = "Run `build` to compile.\n"  # symbol immediately after backtick → matches
@@ -267,6 +278,7 @@ def test_blocklisted_symbol_still_matched_in_backtick(tmp_path):
 
 def test_min_symbol_length_suppresses_short_token_plain_text(tmp_path):
     # Symbol shorter than min_symbol_length suppressed in plain-text mode.
+    """Min symbol length suppresses short token plain text."""
     old = "def run(x): pass\n"
     new = "def run(x, y): pass\n"
     readme = "Please run the tool.\n"  # "run" as plain text (no backtick)
@@ -284,6 +296,7 @@ def test_min_symbol_length_suppresses_short_token_plain_text(tmp_path):
 
 def test_min_symbol_length_allows_backtick_match_for_short_token(tmp_path):
     # Same short symbol inside backticks should still fire.
+    """Min symbol length allows backtick match for short token."""
     old = "def run(x): pass\n"
     new = "def run(x, y): pass\n"
     readme = "Call `run` to start.\n"
@@ -302,6 +315,7 @@ def test_min_symbol_length_allows_backtick_match_for_short_token(tmp_path):
 def test_custom_noise_blocklist_replaces_default(tmp_path):
     # Provide a custom blocklist that does NOT contain "build".
     # Plain-text "build" should then fire normally.
+    """Custom noise blocklist replaces default."""
     old = '{"scripts": {"build": "webpack"}}\n'
     new = '{"scripts": {"bundle": "webpack"}}\n'
     readme = "The build step is important.\n"
@@ -319,6 +333,7 @@ def test_custom_noise_blocklist_replaces_default(tmp_path):
 
 
 def test_empty_noise_blocklist_disables_suppression(tmp_path):
+    """Empty noise blocklist disables suppression."""
     old = '{"scripts": {"build": "webpack"}}\n'
     new = '{"scripts": {"bundle": "webpack"}}\n'
     readme = "The build step runs webpack.\n"
@@ -340,6 +355,7 @@ def test_empty_noise_blocklist_disables_suppression(tmp_path):
 
 def test_key_path_match_in_readme(tmp_path):
     # README mentions the full path "scripts.build" rather than bare "build".
+    """Key path match in README."""
     old = '{"scripts": {"build": "webpack"}}\n'
     new = '{"scripts": {"bundle": "webpack"}}\n'
     readme = "Defined in `scripts.build` inside package.json.\n"
@@ -357,6 +373,7 @@ def test_key_path_match_in_readme(tmp_path):
 
 
 def test_key_paths_populated_on_symbol_change(tmp_path):
+    """Key paths populated on symbol change."""
     from readme_drift.config_diff import diff_config
 
     old = '{"scripts": {"build": "webpack"}}'
@@ -371,6 +388,7 @@ def test_key_paths_populated_on_symbol_change(tmp_path):
 
 
 def test_verbose_log_populated(tmp_path):
+    """Verbose log populated."""
     old = "def helper(x): pass\n"
     new = "def helper(x, y): pass\n"
     readme = "Use `helper` to process.\n"
@@ -382,6 +400,7 @@ def test_verbose_log_populated(tmp_path):
 
 
 def test_verbose_log_shows_denied_symbol(tmp_path):
+    """Verbose log shows denied symbol."""
     old = "def helper(x): pass\n"
     new = "def helper(x, y): pass\n"
     readme = "Use `helper`.\n"
@@ -403,6 +422,7 @@ def test_verbose_log_shows_denied_symbol(tmp_path):
 
 
 def test_symbols_from_changes_includes_key_paths():
+    """Symbols from changes includes key paths."""
     change = SymbolChange(
         name="build",
         change_type=ChangeType.REMOVED,
@@ -418,6 +438,7 @@ def test_symbols_from_changes_includes_key_paths():
 
 
 def test_default_noise_blocklist_contains_expected_words():
+    """Default noise blocklist contains expected words."""
     for word in ("build", "test", "name", "version", "run"):
         assert word in _DEFAULT_NOISE_BLOCKLIST
 
@@ -426,6 +447,7 @@ def test_default_noise_blocklist_contains_expected_words():
 
 
 def _make_git_diff(py_files=None, cfg_files=None):
+    """Build a GitDiffResult from optional Python and config file lists."""
     from readme_drift.models import GitDiffResult
 
     return GitDiffResult(
@@ -435,6 +457,7 @@ def _make_git_diff(py_files=None, cfg_files=None):
 
 
 def test_run_check_skips_when_no_readme(tmp_path):
+    """Run check skips when no README."""
     from unittest.mock import patch
     from readme_drift.drift_checker import run_check
 
@@ -449,6 +472,7 @@ def test_run_check_skips_when_no_readme(tmp_path):
 
 
 def test_run_check_skips_when_no_relevant_files_changed(tmp_path):
+    """Run check skips when no relevant files changed."""
     from unittest.mock import patch
     from readme_drift.drift_checker import run_check
 
@@ -467,6 +491,7 @@ def test_run_check_skips_when_no_relevant_files_changed(tmp_path):
 
 
 def test_run_check_returns_no_findings_when_no_symbol_changes(tmp_path):
+    """Run check returns no findings when no symbol changes."""
     from unittest.mock import patch
     from readme_drift.drift_checker import run_check
 
@@ -497,6 +522,7 @@ def test_run_check_returns_no_findings_when_no_symbol_changes(tmp_path):
 
 
 def test_run_check_detects_removed_symbol_in_readme(tmp_path):
+    """Run check detects removed symbol in README."""
     from unittest.mock import patch
     from readme_drift.drift_checker import run_check
 
@@ -524,6 +550,7 @@ def test_run_check_detects_removed_symbol_in_readme(tmp_path):
 
 
 def test_run_check_suppressed_hint_when_plain_text_match_noise_suppressed(tmp_path):
+    """Run check suppressed hint when plain text match noise suppressed."""
     from unittest.mock import patch
     from readme_drift.drift_checker import run_check
 
@@ -555,6 +582,7 @@ def test_run_check_suppressed_hint_when_plain_text_match_noise_suppressed(tmp_pa
 
 
 def test_run_check_no_suppressed_hint_when_symbol_not_in_readme(tmp_path):
+    """Run check no suppressed hint when symbol not in README."""
     from unittest.mock import patch
     from readme_drift.drift_checker import run_check
 
@@ -584,6 +612,7 @@ def test_run_check_no_suppressed_hint_when_symbol_not_in_readme(tmp_path):
 
 
 def test_run_check_verbose_notes_silently_missed_symbol(tmp_path):
+    """Run check verbose notes silently missed symbol."""
     from unittest.mock import patch
     from readme_drift.drift_checker import run_check
 
@@ -610,6 +639,7 @@ def test_run_check_verbose_notes_silently_missed_symbol(tmp_path):
 
 
 def test_run_check_exclude_filters_source_file(tmp_path):
+    """Run check exclude filters source file."""
     from unittest.mock import patch
     from readme_drift.drift_checker import run_check
 
@@ -631,6 +661,7 @@ def test_run_check_exclude_filters_source_file(tmp_path):
 
 
 def test_run_check_readme_paths_overrides_discovery(tmp_path):
+    """Run check README paths overrides discovery."""
     from unittest.mock import patch
     from readme_drift.drift_checker import run_check
 

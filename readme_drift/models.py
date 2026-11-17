@@ -49,6 +49,7 @@ class SymbolChange:
     key_paths: list[str] = field(default_factory=list)
 
     def __str__(self) -> str:
+        """Return a human-readable description of the change."""
         match self.change_type:
             case ChangeType.ADDED:
                 return f"`{self.name}` was added"

@@ -56,7 +56,7 @@ Each claim ends in one of three states: **verified**, **broken**, or **unverifia
 | Item | Why | Direction |
 |---|---|---|
 | `docs/roadmap.md` still lists v3.1/v3.2 as planned | Docs drift in the drift tool | Mark shipped; automate version references in the release workflow |
-| README/docs pin `rev: v3.0.0` (v3.2.0 exists) | Same | Template the version or add a check (a `version` claim) |
+| README/docs pin `rev:` and `@v` versions by hand | `version_files` in `pyproject.toml` covers only four files, so a new doc with a pin would silently go stale | Keep `version_files` complete or add a `version` claim check |
 | Scanner is line-based, one match per line, name-only | Cannot see command/flag/path claims | Introduce claims model (section 1) |
 | `run_check()` has ~15 parameters | Hard to extend | Replace with a config dataclass shared by CLI, hook and Action |
 | Only removed/signature-changed names are flagged; additions ignored | Fine for diff mode, wrong for verify mode | Keep diff mode; add separate `verify` mode |

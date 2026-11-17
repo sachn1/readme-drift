@@ -76,6 +76,10 @@ See [Usage → Pre-commit hook](usage/pre-commit.md) for full setup, and [Usage 
 | Target renamed | ✅ reported as remove + add |
 | Recipe body changed, target name unchanged | ➖ not tracked |
 
+## Where it looks in the README
+
+Names are matched in backtick spans, as plain text, and inside ` ```mermaid ` blocks that start with `classDiagram`. In a class diagram, matching follows the diagram's structure: a class name matches that class, and `Class.method` matches only inside that class's block, so short or everyday names like `run` still work. Functions and config keys never match through a diagram. Other mermaid diagram types (flowcharts and so on) are ordinary prose.
+
 ## What it doesn't catch
 
 - Behavioral changes that don't affect the public API or config surface

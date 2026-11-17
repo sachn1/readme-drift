@@ -115,9 +115,21 @@ Makefile coverage and adoption tooling. (v3.1.0 was a docs-only release: sitemap
 
 ---
 
-## Unreleased — First-use guidance
+## v3.3.0 — Shipped
+
+First-use guidance.
 
 - One-time tip, shown the first time `readme-drift` runs in a repository, recommending that commands, names, flags and paths be wrapped in backticks (good documentation practice, and what makes matching precise). Shown once per repo per machine; suppressed in CI, with `README_DRIFT_NO_TIPS=1`, or `tips = false`. Inside pre-commit it appears on the first failing run, because pre-commit hides output from passing hooks.
+
+## v3.3.1 — Shipped
+
+- Dev-dependency updates (`certifi`, `urllib3`, `pymdown-extensions`, `mkdocs-material`) patching all open Dependabot alerts. Runtime dependencies were unaffected.
+
+---
+
+## Unreleased — Mermaid class diagrams
+
+- Mermaid `classDiagram` blocks in a README are matched by structure: a class name matches that class, and `Class.method` matches only inside that class's block (even for short or everyday names). Functions and config keys never match through a diagram.
 
 ---
 

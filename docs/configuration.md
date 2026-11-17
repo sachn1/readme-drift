@@ -48,6 +48,10 @@ readme-paths = ["README.md", "docs/API.md"]
 # Ignored when readme-paths is set.
 readme-exclude-dirs = ["vendor", "third_party"]
 
+# Also verify README shell commands (make targets, npm scripts, compose
+# services, paths, own CLI flags) against the repo. Default: false
+verify = false
+
 # Show the one-time first-run tip recommending backticks for commands, names
 # and paths. Also silenced by README_DRIFT_NO_TIPS=1 and when CI is set. Default: true
 tips = true
@@ -70,6 +74,7 @@ tips = true
 | `symbol-denylist` | list of strings | `--symbol-denylist` (repeatable) | `[]` |
 | `readme-paths` | list of strings | `--readme-paths` (repeatable) | `[]` (auto-discover) |
 | `readme-exclude-dirs` | list of strings | `--readme-exclude-dirs` (repeatable) | `[]` |
+| `verify` | bool | `--verify` | `false` |
 | `verbose` | bool | `--verbose` | `false` |
 | `tips` | bool | — (env: `README_DRIFT_NO_TIPS=1`) | `true` |
 

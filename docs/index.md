@@ -82,6 +82,10 @@ See [How it works in practice](scenarios.md) for concrete examples, including wh
 
 Names are matched in backtick spans, as plain text, and inside ` ```mermaid ` blocks that start with `classDiagram`. In a class diagram, matching follows the diagram's structure: a class name matches that class, and `Class.method` matches only inside that class's block, so short or everyday names like `run` still work. Functions and config keys never match through a diagram. Other mermaid diagram types (flowcharts and so on) are ordinary prose.
 
+### README commands (opt-in)
+
+With `--verify`, shell commands in README code blocks are checked against names the repo owns — `make` targets, `package.json` scripts, compose services, paths, local modules and the project's own CLI flags. See [Usage → CLI reference](usage/cli-reference.md#-verify).
+
 ## What it doesn't catch
 
 - Behavioral changes that don't affect the public API or config surface

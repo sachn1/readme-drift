@@ -70,6 +70,7 @@ extend-select = ["D"]
 convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
-# Test docstrings are descriptive one-liners derived from the test name,
-# not imperative-mood summaries.
-"tests/*" = ["D401"]
+# Test docstrings are descriptive one-liners derived from the test name, not
+# imperative-mood summaries, and may start with a lowercase command name
+# (make, npm, docker ...).
+"tests/*" = ["D401", "D403"]

@@ -11,8 +11,9 @@ from . import messages
 from .constants import DEFAULT_NOISE_BLOCKLIST, README_TEMPLATE
 from .drift_checker import run_check
 from .git import get_repo_root, validate_repo_root
-from .report import format_report
+from .report import format_report, format_verify_report
 from .tips import first_use_tip, tips_disabled
+from .verify import run_verify
 
 
 def _load_toml_config(repo_root: Path | None) -> dict:
@@ -224,6 +225,17 @@ class _ConfigCommand(click.Command):
         "replacing the entire blocklist. Ignored when --noise-blocklist is set."
     ),
 )
+# -- Verification ------------------------------------------------------------
+@click.option(
+    "--verify",
+    is_flag=True,
+    default=False,
+    help=(
+        "Also verify shell commands in README code blocks against the repo "
+        "(Makefile targets, package.json scripts, compose services, paths, "
+        "own CLI flags). Scans every README in full, not just the diff."
+    ),
+)
 # -- Output ------------------------------------------------------------------
 @click.option(
     "--plain-text-search/--no-plain-text-search",
@@ -258,6 +270,7 @@ def main(
     min_symbol_length: int,
     noise_blocklist: tuple[str, ...],
     noise_allowlist: tuple[str, ...],
+    verify: bool,
     plain_text_search: bool,
     warn_only: bool,
     verbose: bool,
@@ -296,6 +309,8 @@ def main(
         Words replacing the built-in noise blocklist.
     noise_allowlist : tuple[str, ...]
         Words removed from the built-in noise blocklist.
+    verify : bool
+        Also verify README shell commands against the repository.
     plain_text_search : bool
         Match symbols as plain text as well as in backtick spans.
     warn_only : bool
@@ -368,6 +383,16 @@ def main(
 
     click.echo(format_report(result))
 
+    verify_failed = False
+    if verify:
+        verify_result = run_verify(
+            repo_root=repo_root,
+            readme_paths=list(readme_paths) or None,
+            readme_exclude_dirs=list(readme_exclude_dirs) or None,
+        )
+        click.echo(format_verify_report(verify_result, verbose=verbose))
+        verify_failed = verify_result.failed
+
     if not tips_disabled(cfg):
         root = (
             validate_repo_root(repo_root) if repo_root is not None else get_repo_root()
@@ -376,7 +401,7 @@ def main(
         if tip:
             click.echo(tip, err=True)
 
-    sys.exit(0 if (result.passed or warn_only) else 1)
+    sys.exit(0 if ((result.passed and not verify_failed) or warn_only) else 1)
 
 
 if __name__ == "__main__":

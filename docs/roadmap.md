@@ -127,9 +127,16 @@ First-use guidance.
 
 ---
 
-## Unreleased — Mermaid class diagrams
+## v3.4.0 — Shipped
 
 - Mermaid `classDiagram` blocks in a README are matched by structure: a class name matches that class, and `Class.method` matches only inside that class's block (even for short or everyday names). Functions and config keys never match through a diagram.
+- Scenario gallery: generated, test-checked images showing what is caught, what is missed, and known false alarms.
+
+---
+
+## Unreleased — Claim verification
+
+- `--verify` (opt-in): claim verification for shell commands in README code blocks. Verifies repo-owned names only — `Makefile` targets, `package.json` scripts, compose services, paths and local modules, and the project's own console-script options (read statically). Three outcomes (verified / broken / unverifiable); only broken fails. `verify` config key; `<!-- readme-drift: ignore -->` opt-out.
 
 ---
 

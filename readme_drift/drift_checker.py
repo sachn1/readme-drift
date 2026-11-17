@@ -35,6 +35,35 @@ def _is_excluded(file: Path, exclude: list[str]) -> bool:
     return False
 
 
+def resolve_readmes(
+    root: Path,
+    readme_paths: list[str] | None = None,
+    readme_exclude_dirs: list[str] | None = None,
+) -> list[Path]:
+    """Return the README files to scan: an explicit list, else discovery.
+
+    Parameters
+    ----------
+    root : Path
+        Repository root; relative ``readme_paths`` are resolved against it.
+    readme_paths : list[str] or None, optional
+        Explicit README paths. When given, discovery is skipped and missing
+        files are dropped.
+    readme_exclude_dirs : list[str] or None, optional
+        Extra directory names to skip during discovery.
+
+    Returns
+    -------
+    list[Path]
+        README files that exist.
+    """
+    if readme_paths:
+        paths = [Path(p) if Path(p).is_absolute() else root / p for p in readme_paths]
+        return [p for p in paths if p.exists()]
+    extra_skip = set(readme_exclude_dirs) if readme_exclude_dirs else None
+    return find_readmes(root, extra_skip_dirs=extra_skip)
+
+
 def run_check(
     base_ref: str = "HEAD",
     repo_root: Path | None = None,
@@ -102,16 +131,7 @@ def run_check(
     root = validate_repo_root(repo_root) if repo_root is not None else get_repo_root()
     resolved_root = root.resolve(strict=True)
 
-    # README discovery — explicit list overrides recursive search.
-    if readme_paths:
-        discovered = [
-            Path(p) if not Path(p).is_absolute() else Path(p) for p in readme_paths
-        ]
-        discovered = [p if p.is_absolute() else root / p for p in discovered]
-        discovered = [p for p in discovered if p.exists()]
-    else:
-        extra_skip = set(readme_exclude_dirs) if readme_exclude_dirs else None
-        discovered = find_readmes(root, extra_skip_dirs=extra_skip)
+    discovered = resolve_readmes(root, readme_paths, readme_exclude_dirs)
 
     if not discovered:
         return DriftCheckResult(skipped=True, skip_reason="no README file found")

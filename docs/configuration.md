@@ -47,6 +47,10 @@ readme-paths = ["README.md", "docs/API.md"]
 # Extra dirs to skip during README discovery. Default: []
 # Ignored when readme-paths is set.
 readme-exclude-dirs = ["vendor", "third_party"]
+
+# Show the one-time first-run tip recommending backticks for commands, names
+# and paths. Also silenced by README_DRIFT_NO_TIPS=1 and when CI is set. Default: true
+tips = true
 ```
 
 ## Key reference
@@ -66,6 +70,7 @@ readme-exclude-dirs = ["vendor", "third_party"]
 | `symbol-denylist` | list of strings | `--symbol-denylist` (repeatable) | `[]` |
 | `readme-paths` | list of strings | `--readme-paths` (repeatable) | `[]` (auto-discover) |
 | `readme-exclude-dirs` | list of strings | `--readme-exclude-dirs` (repeatable) | `[]` |
+| `tips` | bool | — (env: `README_DRIFT_NO_TIPS=1`) | `true` |
 
 ## Noise blocklist default
 

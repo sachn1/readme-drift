@@ -11,6 +11,7 @@ from .constants import DEFAULT_NOISE_BLOCKLIST, README_TEMPLATE
 from .drift_checker import run_check
 from .git import get_repo_root, validate_repo_root
 from .report import format_report
+from .tips import first_use_tip, tips_disabled
 
 
 def _load_toml_config(repo_root: Path | None) -> dict:
@@ -281,6 +282,14 @@ def main(
     )
 
     click.echo(format_report(result))
+
+    if not tips_disabled(cfg):
+        root = (
+            validate_repo_root(repo_root) if repo_root is not None else get_repo_root()
+        )
+        tip = first_use_tip(root, passed=result.passed, cfg=cfg)
+        if tip:
+            click.echo(tip, err=True)
 
     sys.exit(0 if (result.passed or warn_only) else 1)
 

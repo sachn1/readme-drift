@@ -39,6 +39,9 @@ repos:
 
 See [Usage → Pre-commit hook](usage/pre-commit.md) for full setup, and [Usage → CI](usage/ci.md) for GitHub Actions integration.
 
+!!! tip "Use backticks for commands, names and paths"
+    Wrap function and class names, config keys, CLI flags, file paths and shell commands in backticks (`` `make lint` ``, `` `Client.connect` ``). It is good documentation practice, and it is what keeps `readme-drift` accurate. The first run in a repository prints this tip once; silence it with `tips = false` or `README_DRIFT_NO_TIPS=1`.
+
 ## What it catches
 
 ### Python files

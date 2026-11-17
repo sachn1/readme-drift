@@ -114,6 +114,8 @@ readme-drift --init                                # scaffold an empty README (s
 
 ## Writing a drift-friendly README
 
+> **Tip — use backticks for commands, names and anything code-like.** Wrap function and class names, config keys, CLI flags, file paths and shell commands in backticks (`` `make lint` ``, `` `Client.connect` ``, `` `--warn-only` ``). This is ordinary good documentation practice — it makes commands copyable and unambiguous for readers — and it is also what lets `readme-drift` match a changed name precisely, so it stays accurate and quiet. The first time you run the tool in a repository it prints this recommendation once (see [Configuration](#configuration) to silence it).
+
 `readme-drift` matches symbols two ways: inside backtick spans (`` `Client.connect` ``) and, for longer names, as plain text. **Backtick references are the reliable channel** — plain-text matching exists as a convenience but is deliberately dampened by a [noise blocklist](https://sachn1.github.io/readme-drift/configuration/#noise-blocklist-default) and a minimum length, so common words don't turn every commit into a false positive.
 
 Practical implication: if a public function, class, or config key is mentioned in prose without backticks (e.g. "call connect to open a session" instead of "call `` `connect` `` to open a session"), a rename of that symbol may pass the hook silently. This is a real detection gap, not a bug — treat backtick-wrapping your public API references as the thing that makes the hook actually work, not just a style preference.
@@ -141,6 +143,7 @@ noise-blocklist = ["run", "build"]   # replaces built-in default; [] disables
 noise-allowlist = ["run"]            # remove words from built-in (use instead of noise-blocklist)
 readme-paths = []                    # explicit list; empty = auto-discover
 readme-exclude-dirs = []
+tips = true                          # one-time first-run backtick tip; false silences it
 ```
 
 | Key | CLI flag | Default |
@@ -157,6 +160,7 @@ readme-exclude-dirs = []
 | `noise-allowlist` | `--noise-allowlist` (repeatable) | `[]` |
 | `readme-paths` | `--readme-paths` (repeatable) | `[]` (auto-discover) |
 | `readme-exclude-dirs` | `--readme-exclude-dirs` (repeatable) | `[]` |
+| `tips` | — (or env `README_DRIFT_NO_TIPS=1`) | `true` |
 
 `pyproject.toml` is discovered by walking up from the current directory (or `--repo-root` if set). If no `[tool.readme-drift]` section is present, all defaults apply.
 

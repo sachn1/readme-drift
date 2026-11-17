@@ -302,3 +302,19 @@ BACKTICK_TIP = f"""\
 
   This message is shown once per repository. Silence it with
   `tips = false` under [tool.readme-drift] or README_DRIFT_NO_TIPS=1."""
+
+
+def survived_log(name: str) -> str:
+    """Return the verbose line for a removed config key whose name lives on.
+
+    Parameters
+    ----------
+    name : str
+        The removed key.
+
+    Returns
+    -------
+    str
+        Log line text.
+    """
+    return f"{name} [removed] -> name still appears in the new file -> skipped"

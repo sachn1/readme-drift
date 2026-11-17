@@ -1,10 +1,11 @@
 """Main checker: orchestrates git diff → AST diff → README scan → report."""
 
 import fnmatch
+import re
 from pathlib import Path
 
 from .ast_diff import diff_apis
-from .config_diff import diff_config
+from .config_diff import CONFIG_FILENAMES, CONFIG_SUFFIXES, diff_config
 from .git import (
     find_readmes,
     get_diff,
@@ -20,6 +21,7 @@ from .models import (
     StalenessFinding,
     SymbolChange,
 )
+from . import messages
 from .constants import DEFAULT_NOISE_BLOCKLIST
 from .scanner import scan_readme_for_symbols
 
@@ -152,6 +154,7 @@ def run_check(
 
     # Collect all symbol changes.
     all_changes: list[SymbolChange] = []
+    survived: list[SymbolChange] = []
     for py_file in py_files:
         old_source = read_old_content(py_file, root, old_ref)
         new_source = read_new_content(py_file, root, resolved_root, staged)
@@ -167,17 +170,38 @@ def run_check(
     for cfg_file in cfg_files:
         old_source = read_old_content(cfg_file, root, old_ref)
         new_source = read_new_content(cfg_file, root, resolved_root, staged)
-        all_changes.extend(diff_config(old_source, new_source, file=str(cfg_file)))
+        found = diff_config(old_source, new_source, file=str(cfg_file))
+        if cfg_file.suffix.lower() == ".toml":
+            # A pyproject migration (e.g. [tool.poetry.dependencies] to a
+            # [project.dependencies] list) removes a key while the name lives on.
+            kept = [
+                c
+                for c in found
+                if not (
+                    c.change_type == ChangeType.REMOVED
+                    and _survives(c.name, new_source)
+                )
+            ]
+            survived.extend(c for c in found if c not in kept)
+            found = kept
+        all_changes.extend(found)
 
     if not all_changes:
-        return DriftCheckResult(readme_paths=discovered)
+        return DriftCheckResult(
+            readme_paths=discovered,
+            verbose_log=[messages.survived_log(c.name) for c in survived]
+            if verbose
+            else [],
+        )
 
     # -----------------------------------------------------------------------
     # Filtering: denylist, then noise suppression.
     # The allowlist overrides noise suppression but NOT the denylist.
     # Priority order (highest first): denylist > allowlist > noise suppression.
     # -----------------------------------------------------------------------
-    vlog: list[str] = []
+    vlog: list[str] = (
+        [messages.survived_log(c.name) for c in survived] if verbose else []
+    )
 
     denied_changes: list[SymbolChange] = []
     active_changes: list[SymbolChange] = []
@@ -198,6 +222,14 @@ def run_check(
         elif plain_text and len(change.name) < min_symbol_length:
             force_backtick_only.add(change.name)
 
+    # Config keys and Makefile targets are generic words ("include", "extras",
+    # "python"), so they match only in code, never in ordinary prose.
+    code_only_symbols = {
+        c.name
+        for c in active_changes
+        if _is_config_change(c) and c.name not in _allowlist
+    }
+
     # Build the full set of symbols to search: leaf names + full key-paths from
     # config changes (e.g. "build" and "scripts.build").
     symbols_to_search = _symbols_from_changes(active_changes)
@@ -210,6 +242,7 @@ def run_check(
             symbols_to_search,
             plain_text=plain_text,
             force_backtick_only=force_backtick_only,
+            code_only_symbols=code_only_symbols,
         ).items():
             all_readme_matches.setdefault(symbol, []).extend(matches)
 
@@ -327,3 +360,14 @@ def _symbols_from_changes(changes: list[SymbolChange]) -> list[str]:
         names.add(change.name)
         names.update(change.key_paths)
     return list(names)
+
+
+def _is_config_change(change: SymbolChange) -> bool:
+    """Return True if a symbol change came from a config or build file."""
+    path = Path(change.file)
+    return path.suffix.lower() in CONFIG_SUFFIXES or path.name in CONFIG_FILENAMES
+
+
+def _survives(name: str, text: str) -> bool:
+    """Return True if a name still appears as a whole word in a file's text."""
+    return bool(re.search(rf"(?<![\w-]){re.escape(name)}(?![\w-])", text))

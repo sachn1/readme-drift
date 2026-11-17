@@ -338,3 +338,70 @@ def test_parse_class_diagrams_records_classes_owners_and_lines():
         "+run()": "Job",
     }
     assert 1 not in diagram.lines  # title, outside the fence
+
+
+# --- code-only symbols (config keys, Makefile targets) ----------------------
+
+
+def _scan_code_only(tmp_path, text, symbol):
+    """Scan a README for a symbol that may match only in code."""
+    readme = _readme(tmp_path, text)
+    return scan_readme_for_symbols(readme, [symbol], code_only_symbols={symbol}).get(
+        symbol, []
+    )
+
+
+def test_code_only_symbol_matches_anywhere_inside_an_inline_span(tmp_path):
+    """A name inside `make deploy` matches although the span starts with make."""
+    assert _scan_code_only(tmp_path, "Run `make deploy` to ship.\n", "deploy")
+
+
+def test_code_only_symbol_ignores_plain_prose(tmp_path):
+    """The same word in ordinary prose does not match."""
+    assert (
+        _scan_code_only(tmp_path, "We include percentage complete.\n", "include") == []
+    )
+
+
+def test_code_only_symbol_ignores_text_between_two_spans(tmp_path):
+    """Prose between two inline spans is not treated as code."""
+    assert _scan_code_only(tmp_path, "`a` deploy `b`\n", "deploy") == []
+
+
+def test_code_only_symbol_matches_inside_a_fenced_block(tmp_path):
+    """A name on a line inside a fenced block matches."""
+    text = "```bash\nmake deploy now\n```\n"
+    assert [m.line_number for m in _scan_code_only(tmp_path, text, "deploy")] == [2]
+
+
+def test_code_only_symbol_ignores_prose_around_a_fence(tmp_path):
+    """Prose before and after a fenced block is still prose."""
+    text = "deploy first\n```bash\nls\n```\ndeploy last\n"
+    assert _scan_code_only(tmp_path, text, "deploy") == []
+
+
+def test_code_only_symbol_works_with_tilde_fences(tmp_path):
+    """A tilde fence counts as code too."""
+    assert _scan_code_only(tmp_path, "~~~\nmake deploy\n~~~\n", "deploy")
+
+
+def test_code_only_symbol_still_matches_a_span_that_starts_with_it(tmp_path):
+    """The original backtick rule keeps working for code-only symbols."""
+    assert _scan_code_only(tmp_path, "Use `deploy` to ship.\n", "deploy")
+
+
+def test_force_backtick_only_wins_over_code_only(tmp_path):
+    """A noise-listed symbol keeps the stricter span-start rule."""
+    readme = _readme(tmp_path, "Run `make build` now.\n")
+    hits = scan_readme_for_symbols(
+        readme, ["build"], force_backtick_only={"build"}, code_only_symbols={"build"}
+    )
+    assert hits == {}
+
+
+def test_code_only_symbol_ignores_comments_inside_a_fenced_block(tmp_path):
+    """A comment line or trailing comment in a code block is prose, not code."""
+    text = (
+        "```toml\n# dependency with extras\nfoo = 1  # extras here\nextras = 2\n```\n"
+    )
+    assert [m.line_number for m in _scan_code_only(tmp_path, text, "extras")] == [4]

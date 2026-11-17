@@ -123,6 +123,8 @@ readme-drift --base-ref origin/main --verify      # also verify README commands 
 
 `readme-drift` matches symbols two ways: inside backtick spans (`` `Client.connect` ``) and, for longer names, as plain text. **Backtick references are the reliable channel** — plain-text matching exists as a convenience but is deliberately dampened by a [noise blocklist](https://sachn1.github.io/readme-drift/configuration/#noise-blocklist-default) and a minimum length, so common words don't turn every commit into a false positive.
 
+Config keys and Makefile targets are matched only inside backticks or code blocks, never in plain prose, because they are often ordinary words (`include`, `extras`). A key removed from a `.toml` file whose name still appears in the new file (for example a dependency moved to a new layout) is not reported.
+
 Practical implication: if a public function, class, or config key is mentioned in prose without backticks (e.g. "call connect to open a session" instead of "call `` `connect` `` to open a session"), a rename of that symbol may pass the hook silently. This is a real detection gap, not a bug — treat backtick-wrapping your public API references as the thing that makes the hook actually work, not just a style preference.
 
 If you're starting from scratch, `readme-drift --init` creates a bare-bones `README.md` with template subheadings (Installation, Usage, API Reference, License) and a reminder comment about backticks. It does not scan your code or generate documentation — it only refuses to run if a non-empty README already exists, so it's safe to run once and won't clobber real content.

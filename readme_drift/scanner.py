@@ -133,6 +133,47 @@ def _patterns_for(symbol_name: str, *, plain_text: bool) -> list[re.Pattern[str]
     return patterns
 
 
+_FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
+_INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
+_COMMENT_RE = re.compile(r"(^|\s)#.*$")
+
+
+def _fenced_code_lines(lines: list[str]) -> frozenset[int]:
+    """Return 1-indexed line numbers inside fenced code blocks, markers excluded."""
+    inside: set[int] = set()
+    fence: tuple[str, int] | None = None
+    for number, line in enumerate(lines, start=1):
+        match = _FENCE_RE.match(line)
+        if fence is None:
+            if match:
+                fence = (match.group(1)[0], len(match.group(1)))
+            continue
+        closes = (
+            match
+            and match.group(1)[0] == fence[0]
+            and len(match.group(1)) >= fence[1]
+            and not line.strip().strip(fence[0])
+        )
+        if closes:
+            fence = None
+        else:
+            inside.add(number)
+    return frozenset(inside)
+
+
+def _code_context_match(
+    name: str, line: str, line_number: int, code_lines: frozenset[int]
+) -> re.Match[str] | None:
+    """Match a name only where it is code: in an inline span or a fenced code line."""
+    word = _plain_text_pattern(name)
+    if line_number in code_lines:
+        return word.search(_COMMENT_RE.sub("", line))
+    for span in _INLINE_CODE_RE.finditer(line):
+        if word.search(span.group(1)):
+            return span
+    return None
+
+
 def _search_lines(
     lines: list[str],
     readme_path: Path,
@@ -140,6 +181,8 @@ def _search_lines(
     *,
     plain_text: bool,
     diagrams: tuple[_ClassDiagram, ...] = (),
+    code_only: bool = False,
+    code_lines: frozenset[int] = frozenset(),
 ) -> list[ReadmeMatch]:
     """Search pre-split lines for a symbol using cached compiled patterns."""
     patterns = _patterns_for(symbol_name, plain_text=plain_text)
@@ -157,6 +200,11 @@ def _search_lines(
         # plain_text and noise settings (same trust tier as backticks).
         if match is None and diagrams:
             match = _diagram_match(bare_name, line_num, line, diagrams)
+
+        # Code-only symbols (config keys, Makefile targets) match inside inline
+        # code or a fenced code line, never in ordinary prose.
+        if match is None and code_only:
+            match = _code_context_match(bare_name, line, line_num, code_lines)
 
         if match:
             matches.append(
@@ -222,6 +270,7 @@ def scan_readme_for_symbols(
     *,
     plain_text: bool = True,
     force_backtick_only: set[str] | None = None,
+    code_only_symbols: set[str] | None = None,
 ) -> dict[str, list[ReadmeMatch]]:
     """Scan a README for references to multiple symbols.
 
@@ -239,6 +288,10 @@ def scan_readme_for_symbols(
         Symbols restricted to backtick-span matching even when ``plain_text`` is
         True. Used by noise suppression for short or common tokens. Class-diagram
         matches are structural and not affected.
+    code_only_symbols : set[str] or None, optional
+        Symbols matched only in code (an inline span or a fenced code line),
+        never in plain prose. Used for config keys and Makefile targets. A
+        symbol also in ``force_backtick_only`` keeps the stricter rule.
 
     Returns
     -------
@@ -251,16 +304,22 @@ def scan_readme_for_symbols(
     lines = readme_path.read_text(encoding="utf-8").splitlines()
     diagrams = _parse_class_diagrams(lines)
     _backtick_only = force_backtick_only or set()
+    _code_only = code_only_symbols or set()
+    code_lines = _fenced_code_lines(lines) if _code_only else frozenset()
 
     results: dict[str, list[ReadmeMatch]] = {}
     for symbol in symbols:
-        use_plain = plain_text and symbol not in _backtick_only
+        restricted = symbol in _backtick_only
+        code_only = symbol in _code_only and not restricted
+        use_plain = plain_text and not restricted and not code_only
         matches = _search_lines(
             lines,
             readme_path,
             symbol,
             plain_text=use_plain,
             diagrams=diagrams,
+            code_only=code_only,
+            code_lines=code_lines,
         )
         if matches:
             results[symbol] = matches

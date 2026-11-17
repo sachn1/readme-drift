@@ -544,3 +544,109 @@ def test_path_with_glob_or_url_is_not_judged(tmp_path):
     """Globs and URLs yield no result, falling back to unverifiable."""
     assert _statuses(_verify(tmp_path, "bash", "scripts/*.sh")) == [U]
     assert _statuses(_verify(tmp_path, "bash", "https://x/y.sh")) == [U]
+
+
+# --- nested READMEs: check next to the README first, then the repo root ------
+
+
+def _verify_nested(root: Path, readme: str, head: str, *args: str):
+    """Verify a claim found in a README at a path below the repo root."""
+    claim = Claim(
+        head=head,
+        args=tuple(args),
+        raw=" ".join([head, *args]),
+        readme_path=root / readme,
+        line_number=1,
+    )
+    return verify_claim(claim, RepoFacts(root))
+
+
+def test_nested_readme_make_target_found_in_its_own_makefile(tmp_path):
+    """A nested README's make target is checked against the Makefile beside it."""
+    _write(tmp_path, "Makefile", "lint:\n\techo\n")
+    _write(tmp_path, "tests/certs/Makefile", "all:\n\techo\nclean:\n\techo\n")
+    results = _verify_nested(tmp_path, "tests/certs/README.md", "make", "clean", "all")
+    assert _statuses(results) == [V, V]
+
+
+def test_nested_readme_make_target_falls_back_to_root_makefile(tmp_path):
+    """With no Makefile beside the README, the root Makefile still verifies."""
+    _write(tmp_path, "Makefile", "lint:\n\techo\n")
+    results = _verify_nested(tmp_path, "docs/README.md", "make", "lint")
+    assert _statuses(results) == [V]
+
+
+def test_nested_readme_make_target_missing_everywhere_is_broken(tmp_path):
+    """A target absent from both Makefiles is broken."""
+    _write(tmp_path, "Makefile", "lint:\n\techo\n")
+    _write(tmp_path, "sub/Makefile", "all:\n\techo\n")
+    results = _verify_nested(tmp_path, "sub/README.md", "make", "ghost")
+    assert _statuses(results) == [B]
+
+
+def test_nested_readme_target_in_root_only_is_verified_not_broken(tmp_path):
+    """A subproject Makefile lacking the target does not hide the root target."""
+    _write(tmp_path, "Makefile", "lint:\n\techo\n")
+    _write(tmp_path, "sub/Makefile", "all:\n\techo\n")
+    assert _statuses(_verify_nested(tmp_path, "sub/README.md", "make", "lint")) == [V]
+
+
+def test_nested_readme_without_any_makefile_target_is_broken_in_root(tmp_path):
+    """No Makefile beside the README and a root Makefile lacking it: broken."""
+    _write(tmp_path, "Makefile", "lint:\n\techo\n")
+    assert _statuses(_verify_nested(tmp_path, "docs/README.md", "make", "html")) == [B]
+
+
+def test_nested_readme_script_next_to_it_is_verified(tmp_path):
+    """python justify.py resolves to examples/justify.py beside the README."""
+    _write(tmp_path, "examples/justify.py", "print(1)\n")
+    results = _verify_nested(tmp_path, "examples/README.md", "python", "justify.py")
+    assert _statuses(results) == [V]
+
+
+def test_nested_readme_missing_script_is_broken(tmp_path):
+    """A script found neither beside the README nor at the root is broken."""
+    _write(tmp_path, "examples/other.py", "print(1)\n")
+    results = _verify_nested(tmp_path, "examples/README.md", "python", "example.py")
+    assert _statuses(results) == [B]
+
+
+def test_nested_readme_root_script_path_still_verifies(tmp_path):
+    """A repo-root-relative script path used from a nested README verifies."""
+    _write(tmp_path, "scripts/deploy.sh", "echo\n")
+    results = _verify_nested(tmp_path, "docs/README.md", "bash", "scripts/deploy.sh")
+    assert _statuses(results) == [V]
+
+
+def test_nested_readme_npm_script_from_its_own_package_json(tmp_path):
+    """npm run uses the package.json beside the README when present."""
+    _write(tmp_path, "package.json", '{"scripts": {"root": "x"}}')
+    _write(tmp_path, "web/package.json", '{"scripts": {"dev": "x"}}')
+    assert _statuses(
+        _verify_nested(tmp_path, "web/README.md", "npm", "run", "dev")
+    ) == [V]
+    assert _statuses(
+        _verify_nested(tmp_path, "web/README.md", "npm", "run", "root")
+    ) == [V]
+
+
+def test_nested_readme_compose_service_from_its_own_compose_file(tmp_path):
+    """docker compose up uses the compose file beside the README when present."""
+    _write(tmp_path, "app/docker-compose.yml", "services:\n  web:\n    image: x\n")
+    results = _verify_nested(
+        tmp_path, "app/README.md", "docker", "compose", "up", "web"
+    )
+    assert _statuses(results) == [V]
+
+
+def test_nested_readme_uncertain_local_result_is_not_called_broken(tmp_path):
+    """An uncertain Makefile beside the README keeps the outcome unverifiable."""
+    _write(tmp_path, "Makefile", "lint:\n\techo\n")
+    _write(tmp_path, "sub/Makefile", "include common.mk\nall:\n\techo\n")
+    assert _statuses(_verify_nested(tmp_path, "sub/README.md", "make", "ghost")) == [U]
+
+
+def test_root_readme_behaviour_is_unchanged(tmp_path):
+    """A README in the repo root is verified against the root only."""
+    _write(tmp_path, "Makefile", "lint:\n\techo\n")
+    assert _statuses(_verify_nested(tmp_path, "README.md", "make", "ghost")) == [B]

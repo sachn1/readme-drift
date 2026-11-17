@@ -143,6 +143,8 @@ By default `readme-drift` reacts to code changes. With `--verify` it also reads 
 | `python scripts/x.py`, `python -m pkg.mod`, `bash x.sh`, `./run.sh` | the file or local module exists |
 | `make -f x.mk`, `docker build -f F`, `kubectl apply -f x.yaml`, `helm … -f v.yaml` | the named file exists |
 
+Commands in a nested README are checked against files next to that README first (its own `Makefile`, `package.json`, compose file or script), then against the repository root.
+
 Each command ends in one of three states: **verified**, **broken**, or **unverifiable**. Only *broken* fails the run. The tool never judges the syntax of third-party commands (`docker run -it`, `pip install`), and it reports anything uncertain — an `include` in a Makefile, a `cd` earlier in the block, a path in a build directory, placeholders like `<name>` or `$VAR` — as unverifiable rather than guessing.
 
 ```bash

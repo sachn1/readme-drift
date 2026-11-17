@@ -169,6 +169,27 @@ class RepoFacts:
             self._cache[key] = loader()
         return self._cache[key]
 
+    def bases_for(self, readme_path: Path) -> list["RepoFacts"]:
+        """Return the facts to consult for a README: its own directory, then the root.
+
+        Parameters
+        ----------
+        readme_path : Path
+            README the command was found in.
+
+        Returns
+        -------
+        list[RepoFacts]
+            Facts for the README's directory (when it is a different directory
+            inside the repository) followed by the repository root facts.
+        """
+        root = self.root.resolve()
+        directory = readme_path.resolve().parent
+        if directory == root or not directory.is_relative_to(root):
+            return [self]
+        local = self._cached(f"dir:{directory}", lambda: RepoFacts(directory))
+        return [local, self]  # type: ignore[list-item]
+
     def make_facts(self) -> _MakeFacts | None:
         """Return the Makefile's targets, or None if there is no Makefile.
 
@@ -684,6 +705,60 @@ def _verifier_for(head: str, facts: RepoFacts) -> _Verifier | None:
     return _VERIFIERS.get(head)
 
 
+_ABSENT_REASONS = frozenset(
+    {
+        messages.REASON_MAKE_NO_FILE,
+        messages.REASON_JS_NO_FILE,
+        messages.REASON_COMPOSE_NO_FILE,
+    }
+)
+
+
+def _claim_checks(claim: Claim, facts: RepoFacts) -> list[_Check]:
+    """Run every applicable check for a claim against one set of repository facts."""
+    if claim.cwd_changed:
+        checks: list[_Check] = [(_U, messages.REASON_CWD_CHANGED)]
+    elif claim.head.startswith(("./", "../")) or "/" in claim.head:
+        path_check = _check_path(facts.root, claim.head)
+        checks = [path_check] if path_check is not None else []
+    else:
+        checks = _file_arg_checks(claim, facts.root)
+        verifier = _verifier_for(claim.head, facts)
+        if verifier is None:
+            checks.append((_U, messages.REASON_NO_VERIFIER.format(head=claim.head)))
+        else:
+            checks.extend(verifier(claim, facts))
+    return checks
+
+
+def _has(checks: list[_Check], status: ClaimStatus) -> bool:
+    """Return True if any check has the given status."""
+    return any(s is status for s, _ in checks)
+
+
+# Verified if either location verifies; broken only if every location where the
+# thing could live lacks it; otherwise unverifiable.
+def _merge_checks(per_base: list[list[_Check]]) -> list[_Check]:
+    """Combine checks made next to the README and at the repo root into one outcome."""
+    if len(per_base) == 1:
+        return per_base[0]
+    for checks in per_base:
+        if _has(checks, _V) and not _has(checks, _B):
+            return checks
+    broken = [c for c in per_base if _has(c, _B)]
+    if not broken:
+        return next(
+            (c for c in per_base if any(r not in _ABSENT_REASONS for _, r in c)),
+            per_base[-1],
+        )
+    for checks in per_base:
+        if checks not in broken and any(
+            s is _U and r not in _ABSENT_REASONS for s, r in checks
+        ):
+            return checks
+    return broken[-1]
+
+
 def verify_claim(claim: Claim, facts: RepoFacts) -> list[ClaimResult]:
     """Verify one claim against repository-owned facts.
 
@@ -705,18 +780,10 @@ def verify_claim(claim: Claim, facts: RepoFacts) -> list[ClaimResult]:
         One result per individual check; a single unverifiable result when
         nothing repo-owned could be checked.
     """
-    if claim.cwd_changed:
-        checks: list[_Check] = [(_U, messages.REASON_CWD_CHANGED)]
-    elif claim.head.startswith(("./", "../")) or "/" in claim.head:
-        path_check = _check_path(facts.root, claim.head)
-        checks = [path_check] if path_check is not None else []
-    else:
-        checks = _file_arg_checks(claim, facts.root)
-        verifier = _verifier_for(claim.head, facts)
-        if verifier is None:
-            checks.append((_U, messages.REASON_NO_VERIFIER.format(head=claim.head)))
-        else:
-            checks.extend(verifier(claim, facts))
+    per_base = [
+        _claim_checks(claim, base) for base in facts.bases_for(claim.readme_path)
+    ]
+    checks = _merge_checks(per_base)
     if not checks:
         checks = [(_U, messages.REASON_NOTHING)]
     return [ClaimResult(claim, status, reason) for status, reason in checks]

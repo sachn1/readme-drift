@@ -1,9 +1,4 @@
-"""All user-facing message text in one place.
-
-This module holds wording only: no I/O and no decisions about *when* a
-message is shown. Gating logic lives next to the code that needs it
-(``tips.py``, ``cli.py``, ``report.py``), which import their text from here.
-"""
+"""User-facing message text, with no I/O and no display logic."""
 
 PREFIX = "readme-drift:"
 
@@ -25,10 +20,34 @@ WARN_BLOCKLIST_OVERRIDES_ALLOWLIST = (
 
 
 def init_refused(target: object) -> str:
+    """Return the message shown when ``--init`` refuses to overwrite a README.
+
+    Parameters
+    ----------
+    target : object
+        Path of the existing README.
+
+    Returns
+    -------
+    str
+        Message text.
+    """
     return f"README already exists and is not empty: {target}"
 
 
 def init_created(target: object) -> str:
+    """Return the message shown after ``--init`` creates a README.
+
+    Parameters
+    ----------
+    target : object
+        Path of the created README.
+
+    Returns
+    -------
+    str
+        Message text.
+    """
     return f"Created {target}"
 
 
@@ -36,6 +55,18 @@ def init_created(target: object) -> str:
 
 
 def report_skipped(reason: str) -> str:
+    """Return the report line for a skipped run.
+
+    Parameters
+    ----------
+    reason : str
+        Why the run was skipped.
+
+    Returns
+    -------
+    str
+        Report text.
+    """
     return f"{PREFIX} skipped ({reason})"
 
 
@@ -45,14 +76,45 @@ REPORT_FORCE_FLAGGED = "    (force-flagged via allowlist — not found in README
 
 
 def report_failed_header(readme_label: str) -> str:
+    """Return the header line of a failing report.
+
+    Parameters
+    ----------
+    readme_label : str
+        Comma-separated README file names.
+
+    Returns
+    -------
+    str
+        Header text.
+    """
     return f"{PREFIX} ❌ {readme_label} may be stale:\n"
 
 
 def report_verbose_header() -> str:
+    """Return the header line of the verbose log block.
+
+    Returns
+    -------
+    str
+        Header text.
+    """
     return f"{PREFIX} verbose log:\n"
 
 
 def suppressed_hint(count: int) -> str:
+    """Return the hint about noise-suppressed plain-text matches.
+
+    Parameters
+    ----------
+    count : int
+        Number of changed symbols that were noise-suppressed.
+
+    Returns
+    -------
+    str
+        Hint text.
+    """
     noun = "symbols" if count != 1 else "symbol"
     verb = "were" if count != 1 else "was"
     return (

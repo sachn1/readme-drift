@@ -38,12 +38,14 @@ def new_function(z):
 
 
 def test_extract_public_api_functions():
+    """Extract public API functions."""
     api = extract_public_api(OLD_SOURCE)
     assert "helper" in api.functions
     assert "_private" not in api.functions
 
 
 def test_extract_public_api_classes():
+    """Extract public API classes."""
     api = extract_public_api(OLD_SOURCE)
     assert "Client" in api.classes
     assert "Client.connect" in api.methods
@@ -52,6 +54,7 @@ def test_extract_public_api_classes():
 
 
 def test_diff_detects_signature_change():
+    """Diff detects signature change."""
     changes = diff_apis(OLD_SOURCE, NEW_SOURCE)
     names = [c.name for c in changes]
     types = [c.change_type for c in changes]
@@ -61,12 +64,14 @@ def test_diff_detects_signature_change():
 
 
 def test_diff_detects_removed_method():
+    """Diff detects removed method."""
     changes = diff_apis(OLD_SOURCE, NEW_SOURCE)
     removed = [c for c in changes if c.change_type == ChangeType.REMOVED]
     assert any("disconnect" in c.name for c in removed)
 
 
 def test_diff_detects_added_method():
+    """Diff detects added method."""
     changes = diff_apis(OLD_SOURCE, NEW_SOURCE)
     added = [c for c in changes if c.change_type == ChangeType.ADDED]
     assert any("reconnect" in c.name for c in added)
@@ -74,6 +79,7 @@ def test_diff_detects_added_method():
 
 
 def test_diff_empty_old_source():
+    """Diff empty old source."""
     changes = diff_apis("", NEW_SOURCE)
     types = {c.change_type for c in changes}
     assert ChangeType.ADDED in types
@@ -81,6 +87,7 @@ def test_diff_empty_old_source():
 
 
 def test_diff_empty_new_source():
+    """Diff empty new source."""
     changes = diff_apis(OLD_SOURCE, "")
     types = {c.change_type for c in changes}
     assert ChangeType.REMOVED in types
@@ -88,11 +95,13 @@ def test_diff_empty_new_source():
 
 
 def test_diff_no_changes():
+    """Diff no changes."""
     changes = diff_apis(OLD_SOURCE, OLD_SOURCE)
     assert changes == []
 
 
 def test_private_methods_ignored():
+    """Private methods ignored."""
     old = "class A:\n    def _hidden(self): pass\n"
     new = "class A:\n    def _hidden(self, extra): pass\n"
     changes = diff_apis(old, new)
@@ -103,6 +112,7 @@ def test_class_methods_not_in_functions():
     # Regression: ast.walk picked up methods as top-level functions, causing
     # every method change to be reported twice (once as ClassName.method, once
     # as bare method).
+    """Class methods not in functions."""
     api = extract_public_api(OLD_SOURCE)
     assert "connect" not in api.functions
     assert "disconnect" not in api.functions
@@ -111,6 +121,7 @@ def test_class_methods_not_in_functions():
 
 def test_keyword_only_arg_change_detected():
     # def func(a, b=1)  →  def func(a, *, b=1): b becomes keyword-only
+    """Keyword only arg change detected."""
     old = "def func(a, b=1): pass\n"
     new = "def func(a, *, b=1): pass\n"
     changes = diff_apis(old, new)
@@ -118,6 +129,7 @@ def test_keyword_only_arg_change_detected():
 
 
 def test_positional_only_arg_in_signature():
+    """Positional only arg in signature."""
     source = "def func(a, b, /, c): pass\n"
     api = extract_public_api(source)
     sig = api.functions["func"]
@@ -127,6 +139,7 @@ def test_positional_only_arg_in_signature():
 
 
 def test_keyword_only_arg_in_signature():
+    """Keyword only arg in signature."""
     source = "def func(a, *, b, c=1): pass\n"
     api = extract_public_api(source)
     sig = api.functions["func"]
@@ -136,6 +149,7 @@ def test_keyword_only_arg_in_signature():
 
 
 def test_include_private_exposes_private_methods():
+    """Include private exposes private methods."""
     old = "class A:\n    def _hidden(self): pass\n"
     new = "class A:\n    def _hidden(self, extra): pass\n"
     changes = diff_apis(old, new, include_private=True)
@@ -143,6 +157,7 @@ def test_include_private_exposes_private_methods():
 
 
 def test_include_private_exposes_private_functions():
+    """Include private exposes private functions."""
     old = "def _helper(x): pass\n"
     new = "def _helper(x, y): pass\n"
     changes = diff_apis(old, new, include_private=True)
@@ -150,6 +165,7 @@ def test_include_private_exposes_private_functions():
 
 
 def test_include_private_false_ignores_private():
+    """Include private false ignores private."""
     old = "def _helper(x): pass\n"
     new = "def _helper(x, y): pass\n"
     changes = diff_apis(old, new, include_private=False)

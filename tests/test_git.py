@@ -9,15 +9,18 @@ from readme_drift.git import find_readmes, validate_repo_root
 
 @pytest.fixture
 def repo(tmp_path: Path) -> Path:
+    """Provide a temporary directory containing a root README.md."""
     (tmp_path / "README.md").write_text("root readme")
     return tmp_path
 
 
 def test_finds_root_readme(repo: Path):
+    """Finds root README."""
     assert any(p.name == "README.md" for p in find_readmes(repo))
 
 
 def test_finds_nested_readme(repo: Path):
+    """Finds nested README."""
     pkg = repo / "packages" / "core"
     pkg.mkdir(parents=True)
     (pkg / "README.md").write_text("pkg readme")
@@ -26,6 +29,7 @@ def test_finds_nested_readme(repo: Path):
 
 
 def test_skips_git_dir(repo: Path):
+    """Skips git dir."""
     git_dir = repo / ".git"
     git_dir.mkdir()
     (git_dir / "README.md").write_text("should be ignored")
@@ -34,6 +38,7 @@ def test_skips_git_dir(repo: Path):
 
 
 def test_skips_node_modules(repo: Path):
+    """Skips node modules."""
     bad_readme = repo / "node_modules" / "some-pkg" / "README.md"
     bad_readme.parent.mkdir(parents=True)
     bad_readme.write_text("should be ignored")
@@ -42,6 +47,7 @@ def test_skips_node_modules(repo: Path):
 
 
 def test_skips_venv(repo: Path):
+    """Skips venv."""
     bad_readme = repo / "venv" / "lib" / "README.md"
     bad_readme.parent.mkdir(parents=True)
     bad_readme.write_text("should be ignored")
@@ -50,6 +56,7 @@ def test_skips_venv(repo: Path):
 
 
 def test_skips_symlink_dirs(repo: Path):
+    """Skips symlink dirs."""
     target = repo / "real_dir"
     target.mkdir()
     (target / "README.md").write_text("real")
@@ -63,6 +70,7 @@ def test_skips_symlink_dirs(repo: Path):
 
 
 def test_finds_markdown_extension(repo: Path):
+    """Finds markdown extension."""
     (repo / "README.markdown").write_text("markdown readme")
     found = find_readmes(repo)
     extensions = {p.suffix for p in found}
@@ -70,6 +78,7 @@ def test_finds_markdown_extension(repo: Path):
 
 
 def test_finds_rst_readme(repo: Path):
+    """Finds rst README."""
     (repo / "README.rst").write_text("rst readme")
     found = find_readmes(repo)
     extensions = {p.suffix for p in found}
@@ -77,22 +86,26 @@ def test_finds_rst_readme(repo: Path):
 
 
 def test_case_insensitive_readme_name(repo: Path):
+    """Case insensitive README name."""
     (repo / "readme.md").write_text("lowercase")
     found = find_readmes(repo)
     assert any(p.name == "readme.md" for p in found)
 
 
 def test_validate_repo_root_not_a_directory(tmp_path):
+    """Validate repo root not a directory."""
     with pytest.raises(ValueError, match="not a directory"):
         validate_repo_root(tmp_path / "nonexistent")
 
 
 def test_validate_repo_root_not_a_git_repo(tmp_path):
+    """Validate repo root not a git repo."""
     with pytest.raises(ValueError, match="not a git repository"):
         validate_repo_root(tmp_path)
 
 
 def test_get_diff_rejects_dash_base_ref():
+    """Get diff rejects dash base ref."""
     from readme_drift.git import get_diff
 
     with pytest.raises(ValueError, match="cannot start with"):
@@ -100,11 +113,13 @@ def test_get_diff_rejects_dash_base_ref():
 
 
 def test_get_diff_classifies_makefile_as_config(tmp_path):
+    """Get diff classifies makefile as config."""
     import subprocess
 
     from readme_drift.git import get_diff
 
     def run(*args):
+        """Run a git command in tmp_path, failing the test on error."""
         subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
 
     run("init")

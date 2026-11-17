@@ -1,3 +1,5 @@
+"""Shared pytest fixtures for the readme-drift test suite."""
+
 import pytest
 
 from readme_drift.tips import NO_TIPS_ENV

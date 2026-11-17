@@ -24,14 +24,21 @@ _MAKEFILE_NAMES: frozenset[str] = frozenset({"Makefile", "makefile", "GNUmakefil
 
 @runtime_checkable
 class KeyExtractor(Protocol):
-    """Extract a flat key-path mapping from a config file's text content.
-
-    Implement this protocol to add support for a new file type — no other
-    module needs to change.
-    """
+    """Protocol for extracting a flat key-path mapping from config text."""
 
     def extract(self, content: str) -> dict[str, str]:
-        """Return {dot-notation-key-path: string-value} for all leaf nodes."""
+        """Return a dot-notation key path to value mapping for all leaf nodes.
+
+        Parameters
+        ----------
+        content : str
+            Text content of the config file.
+
+        Returns
+        -------
+        dict[str, str]
+            Mapping of dot-notation key path to string value.
+        """
         ...
 
 
@@ -59,8 +66,21 @@ def _all_segments(key_path: str) -> set[str]:
 
 
 class JsonExtractor:
+    """Extract key paths from JSON content."""
+
     def extract(self, content: str) -> dict[str, str]:
-        """Parse JSON and return flat key-path → value dict."""
+        """Parse JSON and return a flat key-path to value mapping.
+
+        Parameters
+        ----------
+        content : str
+            JSON text. Empty or invalid input yields an empty mapping.
+
+        Returns
+        -------
+        dict[str, str]
+            Mapping of dot-notation key path to string value.
+        """
         if not content.strip():
             return {}
         try:
@@ -70,8 +90,21 @@ class JsonExtractor:
 
 
 class TomlExtractor:
+    """Extract key paths from TOML content."""
+
     def extract(self, content: str) -> dict[str, str]:
-        """Parse TOML and return flat key-path → value dict."""
+        """Parse TOML and return a flat key-path to value mapping.
+
+        Parameters
+        ----------
+        content : str
+            TOML text. Empty or invalid input yields an empty mapping.
+
+        Returns
+        -------
+        dict[str, str]
+            Mapping of dot-notation key path to string value.
+        """
         if not content.strip():
             return {}
         try:
@@ -81,8 +114,21 @@ class TomlExtractor:
 
 
 class YamlExtractor:
+    """Extract key paths from YAML content."""
+
     def extract(self, content: str) -> dict[str, str]:
-        """Parse YAML and return flat key-path → value dict."""
+        """Parse YAML and return a flat key-path to value mapping.
+
+        Parameters
+        ----------
+        content : str
+            YAML text. Empty or invalid input yields an empty mapping.
+
+        Returns
+        -------
+        dict[str, str]
+            Mapping of dot-notation key path to string value.
+        """
         if not content.strip():
             return {}
         try:
@@ -93,12 +139,23 @@ class YamlExtractor:
 
 
 class MakefileExtractor:
-    def extract(self, content: str) -> dict[str, str]:
-        """Parse a Makefile and return target-name → target-name dict.
+    """Extract rule target names from a Makefile."""
 
-        Only the first target on a rule line is captured; recipe lines
-        (tab-indented) and variable assignments are ignored. ``.PHONY`` is
-        excluded since it's bookkeeping, not a callable target.
+    def extract(self, content: str) -> dict[str, str]:
+        """Parse a Makefile and return a target-name mapping.
+
+        Only the first target on a rule line is captured. Recipe lines
+        (tab-indented), comments, variable assignments and ``.PHONY`` are ignored.
+
+        Parameters
+        ----------
+        content : str
+            Makefile text.
+
+        Returns
+        -------
+        dict[str, str]
+            Mapping of target name to itself.
         """
         targets: dict[str, str] = {}
         for line in content.splitlines():
@@ -142,18 +199,19 @@ def diff_config(
 
     Parameters
     ----------
-    old_source:
+    old_source : str
         Text content of the old version of the file.
-    new_source:
+    new_source : str
         Text content of the new version of the file.
-    file:
-        Path of the file (used to select the right extractor and for reporting).
+    file : str, optional
+        Path of the file, used to select the extractor and for reporting,
+        by default "".
 
     Returns
     -------
     list[SymbolChange]
-        Changes detected; leaf key names are used as symbol names so they
-        match natural README references (e.g. ``build`` in ``npm run build``).
+        Detected changes. Leaf key names are used as symbol names so they match
+        natural README references (e.g. ``build`` in ``npm run build``).
     """
     path = Path(file) if file else None
     if path is not None and path.name in _FILENAME_EXTRACTORS:
@@ -174,19 +232,7 @@ def _diff_key_paths(
     new: dict[str, str],
     file: str,
 ) -> list[SymbolChange]:
-    """Diff two key-path dicts and emit SymbolChange entries.
-
-    Only REMOVED and ADDED changes are emitted.  Rename detection for config
-    keys is deferred — the same-value heuristic is too ambiguous when multiple
-    keys share a value (e.g. several jobs using ``runs-on: ubuntu-latest``).
-
-    All path segments (not just the leaf) are inspected so that an intermediate
-    key like ``black`` in ``tool.black.line-length`` is correctly detected as
-    removed even though ``line-length`` survives in ``tool.ruff.line-length``.
-    Segments are cross-referenced against the *full* opposite dict so that
-    structural keys (``jobs``, ``scripts``, ``tool``) that still exist in the
-    other version are not spuriously reported.
-    """
+    """Diff two key-path mappings into REMOVED and ADDED symbol changes."""
     changes: list[SymbolChange] = []
 
     removed_paths = set(old) - set(new)

@@ -13,6 +13,7 @@ __all__ = ["BACKTICK_TIP", "NO_TIPS_ENV", "first_use_tip", "tips_disabled"]
 
 
 def _marker_path(repo_root: Path, env: Mapping[str, str]) -> Path:
+    """Return the per-repo marker file recording that the tip was shown."""
     cache_home = env.get("XDG_CACHE_HOME") or str(Path.home() / ".cache")
     digest = hashlib.sha256(str(repo_root.resolve()).encode("utf-8")).hexdigest()[:16]
     return Path(cache_home) / "readme-drift" / "tips" / f"backtick-{digest}"
@@ -21,7 +22,23 @@ def _marker_path(repo_root: Path, env: Mapping[str, str]) -> Path:
 def tips_disabled(
     cfg: Mapping[str, object], env: Mapping[str, str] | None = None
 ) -> bool:
-    """True if tips are switched off via env var, CI, or ``tips = false``."""
+    """Return whether tips are switched off.
+
+    Tips are off when ``README_DRIFT_NO_TIPS`` is set, when running in CI, or
+    when ``tips = false`` is configured.
+
+    Parameters
+    ----------
+    cfg : Mapping[str, object]
+        The ``[tool.readme-drift]`` config section.
+    env : Mapping[str, str] or None, optional
+        Environment to inspect; defaults to ``os.environ``.
+
+    Returns
+    -------
+    bool
+        True if tips are disabled.
+    """
     env = os.environ if env is None else env
     if env.get(NO_TIPS_ENV):
         return True
@@ -39,15 +56,27 @@ def first_use_tip(
 ) -> str | None:
     """Return the backtick tip if it should be shown now, else None.
 
-    The tip is shown at most once per repository per machine. A marker file
-    in the user cache directory records that it was shown.
+    The tip is shown at most once per repository per machine, tracked by a
+    marker file in the user cache directory. pre-commit hides the output of
+    passing hooks, so inside pre-commit a passing run neither shows nor consumes
+    the tip; it appears on the first failing run. If the marker cannot be
+    written, the tip is skipped rather than repeated.
 
-    pre-commit hides the output of hooks that pass, so inside pre-commit a
-    passing run neither shows nor consumes the tip; it appears on the first
-    failing run, where the output is visible.
+    Parameters
+    ----------
+    repo_root : Path
+        Repository root, used to key the marker file.
+    passed : bool
+        Whether the check passed (or was skipped).
+    cfg : Mapping[str, object] or None, optional
+        The ``[tool.readme-drift]`` config section.
+    env : Mapping[str, str] or None, optional
+        Environment to inspect; defaults to ``os.environ``.
 
-    If the marker cannot be written (read-only home, sandbox), the tip is
-    skipped rather than repeated on every run.
+    Returns
+    -------
+    str or None
+        The tip text, or None if it should not be shown.
     """
     _env = os.environ if env is None else env
     if tips_disabled(cfg or {}, _env):

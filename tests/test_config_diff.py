@@ -12,33 +12,39 @@ from readme_drift.models import ChangeType
 
 
 def test_flatten_flat_dict():
+    """Flatten flat dict."""
     result = _flatten({"a": 1, "b": "hello"})
     assert result == {"a": "1", "b": "hello"}
 
 
 def test_flatten_nested_dict():
+    """Flatten nested dict."""
     result = _flatten({"scripts": {"build": "webpack", "test": "jest"}})
     assert result["scripts.build"] == "webpack"
     assert result["scripts.test"] == "jest"
 
 
 def test_flatten_list():
+    """Flatten list."""
     result = _flatten({"steps": ["checkout", "build"]})
     assert result["steps[0]"] == "checkout"
     assert result["steps[1]"] == "build"
 
 
 def test_flatten_empty():
+    """Flatten empty."""
     assert _flatten({}) == {}
     assert _flatten([]) == {}
 
 
 def test_extractors_satisfy_protocol():
+    """Extractors satisfy protocol."""
     for extractor in (JsonExtractor(), TomlExtractor(), YamlExtractor()):
         assert isinstance(extractor, KeyExtractor)
 
 
 def test_json_extracts_scripts():
+    """JSON extracts scripts."""
     content = '{"scripts": {"build": "webpack", "test": "jest"}}'
     result = JsonExtractor().extract(content)
     assert result["scripts.build"] == "webpack"
@@ -46,15 +52,18 @@ def test_json_extracts_scripts():
 
 
 def test_json_empty_content():
+    """JSON empty content."""
     assert JsonExtractor().extract("") == {}
     assert JsonExtractor().extract("   ") == {}
 
 
 def test_json_invalid_returns_empty():
+    """JSON invalid returns empty."""
     assert JsonExtractor().extract("{not valid json}") == {}
 
 
 def test_json_extracts_top_level_keys():
+    """JSON extracts top level keys."""
     content = '{"name": "my-pkg", "version": "1.0.0"}'
     result = JsonExtractor().extract(content)
     assert result["name"] == "my-pkg"
@@ -62,51 +71,61 @@ def test_json_extracts_top_level_keys():
 
 
 def test_toml_extracts_tool_sections():
+    """TOML extracts tool sections."""
     content = "[tool.ruff]\nline-length = 88\n"
     result = TomlExtractor().extract(content)
     assert result["tool.ruff.line-length"] == "88"
 
 
 def test_toml_empty_content():
+    """TOML empty content."""
     assert TomlExtractor().extract("") == {}
 
 
 def test_toml_invalid_returns_empty():
+    """TOML invalid returns empty."""
     assert TomlExtractor().extract("not = valid = toml =") == {}
 
 
 def test_toml_extracts_scripts():
+    """TOML extracts scripts."""
     content = '[tool.poetry.scripts]\nreadme-drift = "readme_drift.cli:main"\n'
     result = TomlExtractor().extract(content)
     assert "tool.poetry.scripts.readme-drift" in result
 
 
 def test_yaml_extracts_github_actions_jobs():
+    """YAML extracts github actions jobs."""
     content = "jobs:\n  build:\n    runs-on: ubuntu-latest\n"
     result = YamlExtractor().extract(content)
     assert result["jobs.build.runs-on"] == "ubuntu-latest"
 
 
 def test_yaml_empty_content():
+    """YAML empty content."""
     assert YamlExtractor().extract("") == {}
 
 
 def test_yaml_null_document():
+    """YAML null document."""
     assert YamlExtractor().extract("---\n") == {}
 
 
 def test_yaml_invalid_returns_empty():
     # Deliberately malformed YAML (tab indentation is invalid)
+    """YAML invalid returns empty."""
     assert YamlExtractor().extract("key:\n\tvalue") == {}
 
 
 def test_yaml_extracts_top_level_name():
+    """YAML extracts top level name."""
     content = "name: My Workflow\non: [push]\n"
     result = YamlExtractor().extract(content)
     assert result["name"] == "My Workflow"
 
 
 def test_diff_json_removed_script():
+    """Diff JSON removed script."""
     old = '{"scripts": {"build": "webpack", "test": "jest"}}'
     new = '{"scripts": {"compile": "webpack", "test": "jest"}}'
     changes = diff_config(old, new, file="package.json")
@@ -117,6 +136,7 @@ def test_diff_json_removed_script():
 
 
 def test_diff_toml_removed_section():
+    """Diff TOML removed section."""
     old = "[tool.black]\nline-length = 88\n"
     new = "[tool.ruff]\nline-length = 88\n"
     changes = diff_config(old, new, file="pyproject.toml")
@@ -127,6 +147,7 @@ def test_diff_toml_removed_section():
 
 
 def test_diff_yaml_removed_job():
+    """Diff YAML removed job."""
     old = "jobs:\n  build:\n    runs-on: ubuntu-latest\n"
     new = "jobs:\n  ci:\n    runs-on: ubuntu-latest\n"
     changes = diff_config(old, new, file="ci.yml")
@@ -137,28 +158,33 @@ def test_diff_yaml_removed_job():
 
 
 def test_diff_no_changes():
+    """Diff no changes."""
     content = '{"scripts": {"build": "webpack"}}'
     assert diff_config(content, content, file="package.json") == []
 
 
 def test_diff_empty_old():
+    """Diff empty old."""
     new = '{"scripts": {"build": "webpack"}}'
     changes = diff_config("", new, file="package.json")
     assert all(c.change_type == ChangeType.ADDED for c in changes)
 
 
 def test_diff_empty_new():
+    """Diff empty new."""
     old = '{"scripts": {"build": "webpack"}}'
     changes = diff_config(old, "", file="package.json")
     assert all(c.change_type == ChangeType.REMOVED for c in changes)
 
 
 def test_diff_unknown_extension_returns_empty():
+    """Diff unknown extension returns empty."""
     changes = diff_config('{"a": 1}', '{"b": 2}', file="config.cfg")
     assert changes == []
 
 
 def test_key_paths_populated_for_removed_leaf():
+    """Key paths populated for removed leaf."""
     old = '{"scripts": {"build": "webpack", "test": "jest"}}'
     new = '{"scripts": {"test": "jest"}}'
     changes = diff_config(old, new, file="package.json")
@@ -171,6 +197,7 @@ def test_key_paths_populated_for_removed_leaf():
 
 
 def test_makefile_extracts_targets():
+    """Makefile extracts targets."""
     from readme_drift.config_diff import MakefileExtractor
 
     content = "build:\n\tgo build ./...\n\ntest: build\n\tgo test ./...\n"
@@ -179,6 +206,7 @@ def test_makefile_extracts_targets():
 
 
 def test_makefile_ignores_recipe_lines_and_comments():
+    """Makefile ignores recipe lines and comments."""
     from readme_drift.config_diff import MakefileExtractor
 
     content = "# top-level comment\nbuild:\n\t# a comment inside a recipe\n\techo hi\n"
@@ -187,6 +215,7 @@ def test_makefile_ignores_recipe_lines_and_comments():
 
 
 def test_makefile_ignores_variable_assignments():
+    """Makefile ignores variable assignments."""
     from readme_drift.config_diff import MakefileExtractor
 
     content = "CFLAGS := -O2\nbuild:\n\tcc $(CFLAGS) -o out main.c\n"
@@ -195,6 +224,7 @@ def test_makefile_ignores_variable_assignments():
 
 
 def test_makefile_ignores_phony_target():
+    """Makefile ignores phony target."""
     from readme_drift.config_diff import MakefileExtractor
 
     content = ".PHONY: build test\nbuild:\n\techo build\n"
@@ -203,6 +233,7 @@ def test_makefile_ignores_phony_target():
 
 
 def test_diff_config_detects_makefile_by_filename():
+    """Diff config detects makefile by filename."""
     old = "build:\n\techo old\n\ntest:\n\techo test\n"
     new = "test:\n\techo test\n"
     changes = diff_config(old, new, file="Makefile")
@@ -212,6 +243,7 @@ def test_diff_config_detects_makefile_by_filename():
 
 
 def test_key_paths_populated_for_added_leaf():
+    """Key paths populated for added leaf."""
     old = '{"scripts": {"test": "jest"}}'
     new = '{"scripts": {"lint": "eslint", "test": "jest"}}'
     changes = diff_config(old, new, file="package.json")
@@ -221,6 +253,7 @@ def test_key_paths_populated_for_added_leaf():
 
 
 def test_key_paths_contain_full_nested_path():
+    """Key paths contain full nested path."""
     old = "[tool.black]\nline-length = 88\n"
     new = "[tool.ruff]\nline-length = 88\n"
     changes = diff_config(old, new, file="pyproject.toml")
@@ -232,6 +265,7 @@ def test_key_paths_contain_full_nested_path():
 
 
 def test_key_paths_empty_for_py_changes():
+    """Key paths empty for Python changes."""
     from readme_drift.ast_diff import diff_apis
 
     old = "def connect(host, port): pass\n"
@@ -244,6 +278,7 @@ def test_key_paths_empty_for_py_changes():
 def test_diff_leaf_deduplication():
     # 'name' key appears in multiple job sections. When removed from all of them
     # it should be reported exactly once, not once per occurrence.
+    """Diff leaf deduplication."""
     old = "jobs:\n  build:\n    name: build\n  test:\n    name: test\n"
     new = "jobs:\n  build:\n    id: build\n  test:\n    id: test\n"
     changes = diff_config(old, new, file="ci.yml")
@@ -255,6 +290,7 @@ def test_diff_leaf_deduplication():
 
 
 def test_diff_added_not_flagged_as_stale():
+    """Diff added not flagged as stale."""
     from readme_drift.drift_checker import _symbols_from_changes
     from readme_drift.models import SymbolChange
 

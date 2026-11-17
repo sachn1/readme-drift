@@ -63,13 +63,32 @@ cat .github/workflows/*.yml
 
 For each `[tool.poetry.group.dev.dependencies]` entry, confirm it's actually used somewhere (Makefile, CI, a config section). A dependency like a type-stub package with no corresponding tool invocation anywhere is dead weight — flag it, don't remove it silently.
 
+### 8. Docstring convention
+
+The project uses numpy-format docstrings (see `CONTRIBUTING.md`, "Docstrings"):
+
+- Module, class (public or private), private function/method, test function/fixture/helper, and property: **one line**.
+- Public function or method in `readme_drift/`: **full numpy docstring**, with a `Parameters` section when it takes arguments, a `Returns` section when it returns a value, and `Raises` when it raises deliberately.
+
+`ruff` (`extend-select = ["D"]`, `convention = "numpy"`) checks section formatting and `tests/test_docstrings.py` checks the structure above, so a clean gate run in step 1 already covers most of this. Still verify by hand what neither can see:
+
+- Parameter names and types in a docstring match the actual signature (a stale `Parameters` entry after a rename is the same drift this tool exists to catch).
+- `Returns` / `Raises` describe what the code really does now.
+- A new public function added since the last review has a real numpy docstring, not a placeholder.
+- The CLI `main` docstring keeps its `\f` marker; without it, the whole numpy block leaks into `--help` output.
+
+```bash
+poetry run ruff check . --select D
+poetry run pytest tests/test_docstrings.py -q
+```
+
 ## Reporting
 
 Output a punch list ranked most-severe first:
 
 - **Critical** — security issues, or something that would break CI/publish/install for every user
 - **High** — a real functional gap a user would hit (e.g., a hook that silently never triggers)
-- **Medium** — stale or inconsistent documentation that could mislead but doesn't break anything
+- **Medium** — stale or inconsistent documentation that could mislead but doesn't break anything (including docstrings that no longer match their signature)
 - **Low** — cosmetic or dependency-hygiene nits
 
 For each finding: file path, what's wrong, and a one-line suggested fix. If nothing is wrong in a category, say so briefly rather than omitting it — an empty section is a claim that you checked, not that you skipped it.

@@ -47,12 +47,7 @@ def _kwonly_args(
 
 
 def _format_signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
-    """Format a function/method signature as a readable string.
-
-    ast.unparse is intentionally avoided: it retains self/cls and type
-    annotations, which only affects report readability — the signature
-    string is never used for detection, only for display in the output.
-    """
+    """Format a function or method signature as a readable string."""
     func_args = node.args
     num_all = len(func_args.posonlyargs) + len(func_args.args)
 
@@ -83,17 +78,20 @@ def _format_signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
 
 
 def extract_public_api(source: str, *, include_private: bool = False) -> PublicAPI:
-    """Parse Python source and extract the public API surface.
+    """Parse Python source and extract its public API surface.
 
     Parameters
     ----------
     source : str
-        The source code of a Python module.
+        Source code of a Python module. Empty or syntactically invalid source
+        yields an empty API.
+    include_private : bool, optional
+        If True, also include underscore-prefixed names, by default False.
 
     Returns
     -------
     PublicAPI
-        An object containing the public functions, classes, and methods defined in the source.
+        Public functions, classes and methods defined in the source.
     """
     if not source.strip():
         return PublicAPI()
@@ -200,7 +198,7 @@ def _diff_signatures(
     new: dict[str, str],
     file: str,
 ) -> list[SymbolChange]:
-    """Helper to diff two sets of signatures (functions or methods)."""
+    """Diff two signature mappings into REMOVED, ADDED and SIGNATURE_CHANGED changes."""
     changes: list[SymbolChange] = []
 
     for name in set(old) - set(new):

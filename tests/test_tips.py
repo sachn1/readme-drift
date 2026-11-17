@@ -9,10 +9,12 @@ from readme_drift.tips import BACKTICK_TIP, first_use_tip, tips_disabled
 
 
 def _env(tmp_path, **extra):
+    """Build an isolated environment mapping with a temporary cache directory."""
     return {"XDG_CACHE_HOME": str(tmp_path / "cache"), **extra}
 
 
 def test_tip_shown_once_per_repo(tmp_path):
+    """Tip shown once per repo."""
     repo = tmp_path / "repo"
     repo.mkdir()
     env = _env(tmp_path)
@@ -21,6 +23,7 @@ def test_tip_shown_once_per_repo(tmp_path):
 
 
 def test_tip_is_per_repo(tmp_path):
+    """Tip is per repo."""
     a, b = tmp_path / "a", tmp_path / "b"
     a.mkdir()
     b.mkdir()
@@ -30,21 +33,25 @@ def test_tip_is_per_repo(tmp_path):
 
 
 def test_tip_mentions_backticks_and_how_to_silence():
+    """Tip mentions backticks and how to silence."""
     assert "backticks" in BACKTICK_TIP
     assert "tips = false" in BACKTICK_TIP
 
 
 def test_disabled_by_env_var(tmp_path):
+    """Disabled by env var."""
     env = _env(tmp_path, README_DRIFT_NO_TIPS="1")
     assert tips_disabled({}, env)
     assert first_use_tip(tmp_path, passed=True, env=env) is None
 
 
 def test_disabled_in_ci(tmp_path):
+    """Disabled in CI."""
     assert first_use_tip(tmp_path, passed=True, env=_env(tmp_path, CI="true")) is None
 
 
 def test_disabled_by_config(tmp_path):
+    """Disabled by config."""
     assert (
         first_use_tip(tmp_path, passed=True, cfg={"tips": False}, env=_env(tmp_path))
         is None
@@ -52,6 +59,7 @@ def test_disabled_by_config(tmp_path):
 
 
 def test_pre_commit_pass_does_not_consume_tip(tmp_path):
+    """Pre commit pass does not consume tip."""
     repo = tmp_path / "repo"
     repo.mkdir()
     env = _env(tmp_path, PRE_COMMIT="1")
@@ -63,6 +71,7 @@ def test_pre_commit_pass_does_not_consume_tip(tmp_path):
 
 
 def test_unwritable_cache_skips_tip(tmp_path):
+    """Unwritable cache skips tip."""
     blocker = tmp_path / "file"
     blocker.write_text("x")
     env = {"XDG_CACHE_HOME": str(blocker)}  # a file, so mkdir fails
@@ -70,6 +79,7 @@ def test_unwritable_cache_skips_tip(tmp_path):
 
 
 def test_cli_prints_tip_to_stderr_once(tmp_path, monkeypatch):
+    """CLI prints tip to stderr once."""
     monkeypatch.delenv("README_DRIFT_NO_TIPS")
     monkeypatch.delenv("CI", raising=False)
     monkeypatch.delenv("PRE_COMMIT", raising=False)

@@ -16,13 +16,7 @@ def _normalize(name: str) -> str:
 
 @lru_cache(maxsize=_BACKTICK_PATTERN_CACHE_SIZE)
 def _backtick_pattern(bare_name: str) -> re.Pattern[str]:
-    """Compiled backtick-span pattern for a symbol, memoized per name.
-
-    Symbol names repeat across README files (monorepos) and across
-    subsequent runs within the same process, so caching the compiled
-    pattern avoids re-compiling identical regex for every (readme, symbol)
-    pair.
-    """
+    """Return the compiled backtick-span pattern for a name, memoized."""
     return re.compile(rf"`{re.escape(bare_name)}[^`]*`")
 
 
@@ -33,6 +27,7 @@ def _plain_text_pattern(bare_name: str) -> re.Pattern[str]:
 
 
 def _patterns_for(symbol_name: str, *, plain_text: bool) -> list[re.Pattern[str]]:
+    """Return the compiled patterns used to search for a symbol."""
     bare_name = _normalize(symbol_name)
     patterns = [_backtick_pattern(bare_name)]
     if plain_text:
@@ -75,13 +70,24 @@ def find_symbol_in_readme(
     *,
     plain_text: bool = True,
 ) -> list[ReadmeMatch]:
-    """
-    Search a README file for references to a symbol name.
+    """Search a README file for references to a symbol name.
 
-    Matches:
-    - Exact backtick references: `symbol_name`
-    - Method references: `Class.method` or `class.method()`
-    - Plain text occurrences of the symbol name (word boundary match)
+    Matches exact backtick references (``Class.method``) and, when enabled,
+    plain-text occurrences using a word-boundary match.
+
+    Parameters
+    ----------
+    readme_path : Path
+        README file to search.
+    symbol_name : str
+        Symbol to look for; must not be empty.
+    plain_text : bool, optional
+        Also match plain-text occurrences, by default True.
+
+    Returns
+    -------
+    list[ReadmeMatch]
+        One match per matching line; empty if the file is absent or nothing matches.
     """
     assert symbol_name, "symbol_name must not be empty"
 
@@ -99,22 +105,26 @@ def scan_readme_for_symbols(
     plain_text: bool = True,
     force_backtick_only: set[str] | None = None,
 ) -> dict[str, list[ReadmeMatch]]:
-    """
-    Scan README for multiple symbols.
+    """Scan a README for references to multiple symbols.
 
-    Returns a dict of symbol → list of matches.
-    Only symbols that ARE found in the README are included.
-
-    The file is read and split into lines once, then reused for every
-    symbol — avoids re-reading and re-splitting the same README once per
-    symbol, which otherwise dominates cost on repos with many changes.
+    The file is read and split once, then reused for every symbol.
 
     Parameters
     ----------
-    force_backtick_only:
-        A set of symbol names that must only be matched inside backtick spans,
-        even when plain_text=True.  Used by the noise-suppression layer to
-        restrict short or common tokens to the more precise backtick match.
+    readme_path : Path
+        README file to scan.
+    symbols : list[str]
+        Symbol names to look for.
+    plain_text : bool, optional
+        Also match plain-text occurrences, by default True.
+    force_backtick_only : set[str] or None, optional
+        Symbols restricted to backtick-span matching even when ``plain_text`` is
+        True. Used by noise suppression for short or common tokens.
+
+    Returns
+    -------
+    dict[str, list[ReadmeMatch]]
+        Mapping of symbol to its matches; symbols not found are omitted.
     """
     if not readme_path.exists():
         return {}

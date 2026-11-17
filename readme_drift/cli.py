@@ -39,7 +39,26 @@ def validate_options(
     noise_blocklist: tuple[str, ...],
     noise_allowlist: tuple[str, ...],
 ) -> list[str]:
-    """Return warnings for option combinations where one flag overrides another."""
+    """Return warnings for option combinations where one flag overrides another.
+
+    Parameters
+    ----------
+    readme_paths : tuple[str, ...]
+        Explicit README paths.
+    readme_exclude_dirs : tuple[str, ...]
+        Extra directory names to skip during README discovery.
+    plain_text_search : bool
+        Whether plain-text matching is enabled.
+    noise_blocklist : tuple[str, ...]
+        Replacement noise blocklist words.
+    noise_allowlist : tuple[str, ...]
+        Words to remove from the built-in noise blocklist.
+
+    Returns
+    -------
+    list[str]
+        One warning message per conflicting combination; empty if none.
+    """
     warnings: list[str] = []
     if readme_paths and readme_exclude_dirs:
         warnings.append(messages.WARN_READMEPATHS_EXCLUDEDIRS)
@@ -51,11 +70,27 @@ def validate_options(
 
 
 class _ConfigCommand(click.Command):
-    """Pre-parse --repo-root to load pyproject.toml defaults before click processes args."""
+    """Click command that loads pyproject defaults before parsing arguments."""
 
     def make_context(
         self, info_name: str | None, args: list[str], **extra: Any
     ) -> click.Context:
+        """Create the click context with ``[tool.readme-drift]`` values as defaults.
+
+        Parameters
+        ----------
+        info_name : str or None
+            Name of the command as invoked.
+        args : list[str]
+            Raw command-line arguments; ``--repo-root`` is pre-scanned here.
+        **extra : Any
+            Extra keyword arguments forwarded to ``click.Command.make_context``.
+
+        Returns
+        -------
+        click.Context
+            Context whose ``meta["toml_cfg"]`` holds the loaded config section.
+        """
         repo_root: Path | None = None
         for i, arg in enumerate(args):
             if arg == "--repo-root" and i + 1 < len(args):
@@ -227,7 +262,47 @@ def main(
     warn_only: bool,
     verbose: bool,
 ) -> None:
-    """Check if README may be stale after code changes."""
+    """Check if README may be stale after code changes.
+
+    \f
+
+    Parameters
+    ----------
+    ctx : click.Context
+        Click context carrying the loaded ``pyproject.toml`` config.
+    init : bool
+        Create a README template and exit.
+    base_ref : str
+        Git ref to diff against.
+    staged : bool
+        Check staged changes only.
+    repo_root : Path or None
+        Repository root; auto-detected if None.
+    exclude : tuple[str, ...]
+        Glob patterns for source files or directories to skip.
+    include_private : bool
+        Track private (underscore-prefixed) Python symbols.
+    readme_paths : tuple[str, ...]
+        Explicit README files; disables discovery.
+    readme_exclude_dirs : tuple[str, ...]
+        Extra directory names to skip during README discovery.
+    symbol_allowlist : tuple[str, ...]
+        Symbols always flagged when changed.
+    symbol_denylist : tuple[str, ...]
+        Symbols never flagged; takes priority over the allowlist.
+    min_symbol_length : int
+        Minimum symbol length for plain-text matching.
+    noise_blocklist : tuple[str, ...]
+        Words replacing the built-in noise blocklist.
+    noise_allowlist : tuple[str, ...]
+        Words removed from the built-in noise blocklist.
+    plain_text_search : bool
+        Match symbols as plain text as well as in backtick spans.
+    warn_only : bool
+        Print findings but always exit 0.
+    verbose : bool
+        Print per-symbol scan outcomes.
+    """  # noqa: D301 -- the literal \f truncates click's --help text
     if init:
         root = (
             validate_repo_root(repo_root) if repo_root is not None else get_repo_root()

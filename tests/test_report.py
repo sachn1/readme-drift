@@ -15,6 +15,7 @@ from readme_drift.report import format_report
 def _make_finding(
     symbol: str, change_type: ChangeType, line: int = 5
 ) -> StalenessFinding:
+    """Build a StalenessFinding for a symbol with a README match on a line."""
     change = SymbolChange(
         name=symbol,
         change_type=change_type,
@@ -36,12 +37,14 @@ def _make_finding(
 
 
 def test_passed_no_findings():
+    """Passed no findings."""
     result = DriftCheckResult(findings=[])
     assert result.passed
     assert "✅" in format_report(result)
 
 
 def test_failed_with_findings():
+    """Failed with findings."""
     finding = _make_finding("Client.connect", ChangeType.SIGNATURE_CHANGED)
     result = DriftCheckResult(findings=[finding], readme_paths=[Path("README.md")])
     assert result.failed
@@ -51,12 +54,14 @@ def test_failed_with_findings():
 
 
 def test_skipped_result():
+    """Skipped result."""
     result = DriftCheckResult(skipped=True, skip_reason="no Python files changed")
     assert result.passed
     assert "skipped" in format_report(result)
 
 
 def test_report_shows_line_number():
+    """Report shows line number."""
     finding = _make_finding("helper", ChangeType.REMOVED, line=42)
     result = DriftCheckResult(findings=[finding], readme_paths=[Path("README.md")])
     report = format_report(result)
@@ -64,12 +69,14 @@ def test_report_shows_line_number():
 
 
 def test_report_shows_update_hint():
+    """Report shows update hint."""
     finding = _make_finding("func", ChangeType.REMOVED)
     result = DriftCheckResult(findings=[finding], readme_paths=[Path("README.md")])
     assert "update" in format_report(result).lower()
 
 
 def test_report_multiple_findings():
+    """Report multiple findings."""
     findings = [
         _make_finding("func_a", ChangeType.REMOVED),
         _make_finding("func_b", ChangeType.SIGNATURE_CHANGED),
@@ -91,6 +98,7 @@ def test_report_multiple_findings():
 
 
 def test_report_shows_verbose_log_on_pass():
+    """Report shows verbose log on pass."""
     result = DriftCheckResult(
         findings=[],
         verbose_log=["helper [removed] → not found in any README → skipped"],
@@ -102,6 +110,7 @@ def test_report_shows_verbose_log_on_pass():
 
 
 def test_report_shows_verbose_log_on_fail():
+    """Report shows verbose log on fail."""
     finding = _make_finding("connect", ChangeType.REMOVED)
     result = DriftCheckResult(
         findings=[finding],
@@ -115,6 +124,7 @@ def test_report_shows_verbose_log_on_fail():
 
 
 def test_report_suppressed_hint_shown_on_pass():
+    """Report suppressed hint shown on pass."""
     result = DriftCheckResult(findings=[], suppressed_hint_count=2)
     report = format_report(result)
     assert "✅" in report
@@ -123,6 +133,7 @@ def test_report_suppressed_hint_shown_on_pass():
 
 
 def test_report_suppressed_hint_singular():
+    """Report suppressed hint singular."""
     result = DriftCheckResult(findings=[], suppressed_hint_count=1)
     report = format_report(result)
     assert "1 changed symbol " in report
@@ -130,12 +141,14 @@ def test_report_suppressed_hint_singular():
 
 
 def test_report_no_suppressed_hint_when_zero():
+    """Report no suppressed hint when zero."""
     result = DriftCheckResult(findings=[])
     report = format_report(result)
     assert "noise-suppressed" not in report
 
 
 def test_report_suppressed_hint_shown_on_fail():
+    """Report suppressed hint shown on fail."""
     finding = _make_finding("func", ChangeType.REMOVED)
     result = DriftCheckResult(
         findings=[finding],
@@ -148,6 +161,7 @@ def test_report_suppressed_hint_shown_on_fail():
 
 
 def test_report_force_flagged_finding_shows_allowlist_note():
+    """Report force flagged finding shows allowlist note."""
     change = SymbolChange(name="critical_api", change_type=ChangeType.REMOVED)
     # No readme_matches — this is an allowlist force-flag
     finding = StalenessFinding(change=change, readme_matches=[])

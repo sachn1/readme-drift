@@ -74,6 +74,7 @@ BREAKING CHANGE: --warn-only is now --no-fail; update any CI scripts
 - All existing tests must pass: `poetry run pytest`
 - New behaviour must be covered by tests — bug fixes included (add a regression test that would have caught the bug).
 - Tests live in `tests/` and mirror the module they cover (e.g. `tests/test_config_diff.py` for `readme_drift/config_diff.py`).
+- `tests/test_docs_sync.py` fails if README, the docs site, the CLI and `action.yml` disagree (flags, config keys, version pins, Action inputs). If you add or rename a flag or key, update every place it is documented.
 
 ---
 

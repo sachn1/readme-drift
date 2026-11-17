@@ -70,6 +70,7 @@ tips = true
 | `symbol-denylist` | list of strings | `--symbol-denylist` (repeatable) | `[]` |
 | `readme-paths` | list of strings | `--readme-paths` (repeatable) | `[]` (auto-discover) |
 | `readme-exclude-dirs` | list of strings | `--readme-exclude-dirs` (repeatable) | `[]` |
+| `verbose` | bool | `--verbose` | `false` |
 | `tips` | bool | — (env: `README_DRIFT_NO_TIPS=1`) | `true` |
 
 ## Noise blocklist default

@@ -149,6 +149,7 @@ tips = true                          # one-time first-run backtick tip; false si
 | Key | CLI flag | Default |
 |---|---|---|
 | `base-ref` | `--base-ref` | `"HEAD"` |
+| `staged` | `--staged` | `false` |
 | `warn-only` | `--warn-only` | `false` |
 | `include-private` | `--include-private` | `false` |
 | `plain-text-search` | `--plain-text-search` / `--no-plain-text-search` | `true` |
@@ -160,6 +161,7 @@ tips = true                          # one-time first-run backtick tip; false si
 | `noise-allowlist` | `--noise-allowlist` (repeatable) | `[]` |
 | `readme-paths` | `--readme-paths` (repeatable) | `[]` (auto-discover) |
 | `readme-exclude-dirs` | `--readme-exclude-dirs` (repeatable) | `[]` |
+| `verbose` | `--verbose` | `false` |
 | `tips` | — (or env `README_DRIFT_NO_TIPS=1`) | `true` |
 
 `pyproject.toml` is discovered by walking up from the current directory (or `--repo-root` if set). If no `[tool.readme-drift]` section is present, all defaults apply.

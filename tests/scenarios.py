@@ -305,6 +305,14 @@ SCENARIOS = {
         [("build", "removed")],
         0,
     ),
+    "py-method-instance-reference": (
+        {"client.py": "class Console:\n    def print(self, text):\n        pass\n"},
+        {"client.py": "class Console:\n    def show(self, text):\n        pass\n"},
+        ['Use `console.print("hi")` to write.\n'],
+        {},
+        [("Console.print", "removed")],
+        0,
+    ),
     # -- Backtick spans match the whole name, not a prefix ------------------------
     "backtick-prefix-is-not-a-match": (
         {"client.py": PY_CONNECT},

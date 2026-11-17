@@ -454,3 +454,60 @@ def test_backtick_span_for_a_dotted_symbol_with_a_call_is_a_match(tmp_path):
 def test_backtick_span_with_an_attribute_after_the_name_is_a_match(tmp_path):
     """`connect.timeout` still starts with the whole name `connect`."""
     assert _ticked(tmp_path, "Set `connect.timeout`.\n", "connect")
+
+
+# --- instance-style method references -----------------------------------------
+
+
+def _method_hits(tmp_path, text, symbol="Console.print"):
+    """Return matches for a Class.method symbol with plain-text matching off."""
+    readme = _readme(tmp_path, text)
+    return scan_readme_for_symbols(readme, [symbol], plain_text=False).get(symbol, [])
+
+
+def test_instance_call_matches_the_method_of_its_lowercase_class(tmp_path):
+    """console.print(...) references Console.print."""
+    assert _method_hits(tmp_path, "Use `console.print(text)` to write.\n")
+
+
+def test_instance_call_matches_inside_a_code_block(tmp_path):
+    """An instance call on a code line is matched too."""
+    assert _method_hits(tmp_path, "```python\nconsole.print('hi')\n```\n")
+
+
+def test_instance_call_through_an_attribute_chain_matches(tmp_path):
+    """self.console.print(...) still ends in console.print(."""
+    assert _method_hits(tmp_path, "self.console.print(x)\n")
+
+
+def test_instance_call_with_a_longer_receiver_does_not_match(tmp_path):
+    """my_console.print(...) is a different object."""
+    assert _method_hits(tmp_path, "my_console.print(x)\n") == []
+
+
+def test_instance_reference_without_a_call_does_not_match(tmp_path):
+    """console.print with no parentheses is not treated as a call."""
+    assert _method_hits(tmp_path, "the console.print attribute\n") == []
+
+
+def test_instance_call_of_a_different_method_does_not_match(tmp_path):
+    """console.log(...) is another method."""
+    assert _method_hits(tmp_path, "console.log(x)\n") == []
+
+
+def test_instance_call_uses_snake_case_for_camel_case_classes(tmp_path):
+    """RouteContext.name is referenced as route_context.name(...)."""
+    hits = _method_hits(tmp_path, "route_context.name()\n", "RouteContext.name")
+    assert hits
+
+
+def test_instance_call_also_accepts_the_joined_lowercase_receiver(tmp_path):
+    """routecontext.name(...) is accepted as well."""
+    assert _method_hits(tmp_path, "routecontext.name()\n", "RouteContext.name")
+
+
+def test_instance_matching_applies_only_to_class_method_symbols(tmp_path):
+    """A module function symbol is not given an instance pattern."""
+    readme = _readme(tmp_path, "console.print(x)\n")
+    hits = scan_readme_for_symbols(readme, ["console.print"], plain_text=False)
+    assert hits == {}

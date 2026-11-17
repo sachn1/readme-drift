@@ -133,6 +133,24 @@ def _patterns_for(symbol_name: str, *, plain_text: bool) -> list[re.Pattern[str]
     return patterns
 
 
+_CLASS_METHOD_RE = re.compile(r"^([A-Z][A-Za-z0-9]*)\.([A-Za-z_][A-Za-z0-9_]*)$")
+_CAMEL_BREAK_RE = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
+
+
+@lru_cache(maxsize=_BACKTICK_PATTERN_CACHE_SIZE)
+def _instance_pattern(bare_name: str) -> re.Pattern[str] | None:
+    """Return a pattern for receiver.method( calls of a Class.method symbol, if any."""
+    # The receiver must be the class name in lowercase or snake_case (Console gives
+    # console), stand alone as a word, and be followed by a call.
+    match = _CLASS_METHOD_RE.match(bare_name)
+    if not match:
+        return None
+    cls, method = match.groups()
+    receivers = {cls.lower(), _CAMEL_BREAK_RE.sub("_", cls).lower()}
+    alternatives = "|".join(re.escape(r) for r in sorted(receivers))
+    return re.compile(rf"(?<![\w])(?:{alternatives})\.{re.escape(method)}\s*\(")
+
+
 _FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
 _INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
 _COMMENT_RE = re.compile(r"(^|\s)#.*$")
@@ -187,6 +205,7 @@ def _search_lines(
     """Search pre-split lines for a symbol using cached compiled patterns."""
     patterns = _patterns_for(symbol_name, plain_text=plain_text)
     bare_name = _normalize(symbol_name)
+    instance = _instance_pattern(bare_name)
     matches: list[ReadmeMatch] = []
 
     for line_num, line in enumerate(lines, start=1):
@@ -195,6 +214,10 @@ def _search_lines(
             match = pattern.search(line)
             if match:
                 break
+
+        # An instance call such as ``console.print(`` references ``Console.print``.
+        if match is None and instance is not None:
+            match = instance.search(line)
 
         # Class-diagram lines are matched structurally, independent of the
         # plain_text and noise settings (same trust tier as backticks).

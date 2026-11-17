@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/logo.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -29,10 +29,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -612,8 +612,8 @@
 <p><code>pyproject.toml</code> is discovered by walking up from the current directory, or from <code>--repo-root</code> if set. If no <code>[tool.readme-drift]</code> section is present, all defaults apply.</p>
 <h2 id="full-example">Full example</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[tool.readme-drift]</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Git ref to diff against. Default: &quot;HEAD&quot;</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">base-ref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;origin/main&quot;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Git ref to diff against. Default: "HEAD"</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">base-ref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"origin/main"</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Print findings but never fail the build. Default: false</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">warn-only</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
@@ -622,7 +622,7 @@
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">include-private</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># Glob patterns for source files/dirs to skip. Default: []</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">exclude</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;generated/&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;vendor/&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">exclude</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"generated/"</span><span class="p">,</span><span class="w"> </span><span class="s2">"vendor/"</span><span class="p">]</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="c1"># Match symbols as plain text in addition to backtick spans. Default: true</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="n">plain-text-search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
@@ -633,24 +633,28 @@
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="c1"># Replace built-in noise blocklist entirely. Default: built-in list (see constants.py)</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="c1"># Set to [] to disable noise suppression entirely.</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="c1"># Use noise-allowlist instead if you only want to unlock a few words.</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="n">noise-blocklist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;run&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;build&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="n">noise-blocklist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"run"</span><span class="p">,</span><span class="w"> </span><span class="s2">"build"</span><span class="p">]</span>
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="c1"># Remove specific words from the built-in blocklist (re-enable plain-text matching).</span>
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="c1"># Ignored when noise-blocklist is set. Default: []</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="n">noise-allowlist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;run&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="n">noise-allowlist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"run"</span><span class="p">]</span>
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="c1"># Symbols to always flag when changed, even if not in README. Default: []</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="n">symbol-allowlist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;MyPublicClass&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;critical_function&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="n">symbol-allowlist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"MyPublicClass"</span><span class="p">,</span><span class="w"> </span><span class="s2">"critical_function"</span><span class="p">]</span>
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="c1"># Symbols to never flag. Default: []</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="n">symbol-denylist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;_internal_helper&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="n">symbol-denylist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"_internal_helper"</span><span class="p">]</span>
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="c1"># Explicit README paths to scan (disables discovery). Default: [] (auto-discover)</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="n">readme-paths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;README.md&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;docs/API.md&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="n">readme-paths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"README.md"</span><span class="p">,</span><span class="w"> </span><span class="s2">"docs/API.md"</span><span class="p">]</span>
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="c1"># Extra dirs to skip during README discovery. Default: []</span>
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="c1"># Ignored when readme-paths is set.</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="n">readme-exclude-dirs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;vendor&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;third_party&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="n">readme-exclude-dirs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"vendor"</span><span class="p">,</span><span class="w"> </span><span class="s2">"third_party"</span><span class="p">]</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="c1"># Show the one-time first-run tip recommending backticks for commands, names</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="c1"># and paths. Also silenced by README_DRIFT_NO_TIPS=1 and when CI is set. Default: true</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="n">tips</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 </code></pre></div>
 <h2 id="key-reference">Key reference</h2>
 <table>
@@ -741,6 +745,18 @@
 <td><code>--readme-exclude-dirs</code> (repeatable)</td>
 <td><code>[]</code></td>
 </tr>
+<tr>
+<td><code>verbose</code></td>
+<td>bool</td>
+<td><code>--verbose</code></td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>tips</code></td>
+<td>bool</td>
+<td>— (env: <code>README_DRIFT_NO_TIPS=1</code>)</td>
+<td><code>true</code></td>
+</tr>
 </tbody>
 </table>
 <h2 id="noise-blocklist-default">Noise blocklist default</h2>
@@ -806,10 +822,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.sections", "content.code.copy", "navigation.top"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.sections", "content.code.copy", "navigation.top"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

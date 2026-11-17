@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="assets/logo.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -29,10 +29,10 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -735,6 +735,14 @@
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">readme-drift</span>
 </code></pre></div>
 <p>See <a href="usage/pre-commit/">Usage → Pre-commit hook</a> for full setup, and <a href="usage/ci/">Usage → CI</a> for GitHub Actions integration.</p>
+<div class="admonition tip">
+<p class="admonition-title">Start in warn-only mode</p>
+<p>New to the tool? Add <code>args: [--warn-only]</code> to the hook for a week or two so it can prove its false-positive rate on your repo before it is allowed to fail a commit. Drop the argument once it only ever flags real drift.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Use backticks for commands, names and paths</p>
+<p>Wrap function and class names, config keys, CLI flags, file paths and shell commands in backticks (<code>`make lint`</code>, <code>`Client.connect`</code>). It is good documentation practice, and it is what keeps <code>readme-drift</code> accurate. The first run in a repository prints this tip once; silence it with <code>tips = false</code> or <code>README_DRIFT_NO_TIPS=1</code>.</p>
+</div>
 <h2 id="what-it-catches">What it catches</h2>
 <h3 id="python-files">Python files</h3>
 <table>
@@ -885,10 +893,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant", "navigation.sections", "content.code.copy", "navigation.top"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant", "navigation.sections", "content.code.copy", "navigation.top"], "search": "assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

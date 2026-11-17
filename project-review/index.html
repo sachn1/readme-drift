@@ -1,0 +1,891 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Detect stale README references after code changes — for pre-commit and CI.">
+      
+      
+      
+        <link rel="canonical" href="https://sachn1.github.io/readme-drift/project-review/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Project review and closure plan - readme-drift</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#project-review-and-closure-plan" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="readme-drift" class="md-header__button md-logo" aria-label="readme-drift" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            readme-drift
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Project review and closure plan
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/sachn1/readme-drift" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    sachn1/readme-drift
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="readme-drift" class="md-nav__button md-logo" aria-label="readme-drift" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    readme-drift
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sachn1/readme-drift" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    sachn1/readme-drift
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Usage
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/pre-commit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pre-commit hook
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI / GitHub Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/cli-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-definition-of-terms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Definition of terms
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-local-model-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Local model question
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-keep-good-choices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Keep — good choices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-change-update-adapt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Change / update / adapt
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-remove" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Remove
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-add-definitely" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Add — definitely
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-add-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Add — optional
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-nice-to-have-but-too-much-for-a-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Nice to have, but too much for a plugin
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-out-of-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Out of scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-exit-criteria-for-a-v40-freeze" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Exit criteria for a v4.0 freeze
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-open-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Open decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="project-review-and-closure-plan">Project review and closure plan</h1>
+<p>Status snapshot: v3.2.0 (latest tag on <code>origin/master</code>). This document records what is good, what should change, and where the scope ends, so the project can be brought to a defined finish.</p>
+<blockquote>
+<p>Verified against the local checkout (v3.0.1 plus a fetch of the remote). Items marked <strong>(verify)</strong> were inferred from commit messages or the roadmap and should be checked against v3.2.0 code before acting.</p>
+</blockquote>
+<hr />
+<h2 id="1-definition-of-terms">1. Definition of terms</h2>
+<p><strong>Claim</strong> — a statement in the documentation that can be true or false about the repository. Today the tool treats a README as a bag of words and asks: "does this changed name appear anywhere?". The proposed model treats the README as a list of claims, each with a kind and a verifier:</p>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Example in README</th>
+<th>True when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td><code>`Client.connect`</code></td>
+<td>the symbol exists in the public API</td>
+</tr>
+<tr>
+<td>command</td>
+<td><code>make lint</code>, <code>docker compose up web</code>, <code>npm run build</code></td>
+<td>the repo-owned arguments resolve (target, service, script)</td>
+</tr>
+<tr>
+<td>flag</td>
+<td><code>myapp --verbose</code></td>
+<td>the flag is defined by the project's own CLI</td>
+</tr>
+<tr>
+<td>path</td>
+<td><code>docs/usage/ci.md</code>, <code>-f k8s/x.yaml</code></td>
+<td>the file exists</td>
+</tr>
+<tr>
+<td>env var</td>
+<td><code>export DATABASE_URL=...</code></td>
+<td>the variable is read in code or listed in <code>.env.example</code></td>
+</tr>
+<tr>
+<td>code example</td>
+<td>a Python block calling <code>connect(url=...)</code></td>
+<td>imports resolve and arguments match the signature</td>
+</tr>
+<tr>
+<td>link</td>
+<td><code>[Config](configuration.md#keys)</code></td>
+<td>file and anchor exist</td>
+</tr>
+<tr>
+<td>version</td>
+<td>"Python 3.9+", <code>rev: v3.0.0</code></td>
+<td>matches <code>requires-python</code> / the latest tag</td>
+</tr>
+</tbody>
+</table>
+<p>Each claim ends in one of three states: <strong>verified</strong>, <strong>broken</strong>, or <strong>unverifiable</strong>. Only <em>broken</em> fails a run.</p>
+<p><strong>Owned names</strong> — names defined by files in this repo. The tool verifies these. It does not verify the syntax of third-party tools (<code>docker run -it</code> is Docker's concern; the <code>web</code> in <code>docker compose up web</code> is ours).</p>
+<hr />
+<h2 id="2-local-model-question">2. Local model question</h2>
+<ul>
+<li><strong>Laya</strong> (https://laya-ai.com/laya-vs-jev) — an open-weight <em>decision</em> model for typed decisions (pick a label, score, yes/no), not text generation. The vendor page states Apache 2.0, self-hosted (CPU is enough at low volume; <code>laya-serve</code>, ollaya on port 11435), and an endpoint compatible with the hosted Jev API (<code>POST /v1/systemone</code>). Parameter count and file size are not stated on that page. Its own zero-shot numbers show it is close to the hosted Jev model on 2-label tasks (SST-2 0.920 vs 0.963) but weak on many labels (Banking77 0.363 vs 0.813) and over-confident there; the page advises keeping choices under ~20. These are vendor benchmarks and are not validated for documentation drift. (An earlier search wrongly matched an unrelated EEG model, arXiv 2603.16281.)</li>
+<li><strong>Where Laya fits:</strong> as the <em>judge</em> over a small label set, e.g. <code>{stale, still-correct, unrelated}</code> for a (README claim, code change) pair. It does not generate text, so it cannot extract claims from prose; that would need a generative model (e.g. Qwen) or stays out of scope.</li>
+<li><strong>Gate before adopting:</strong> build a labelled set of ~100 (claim, change) pairs from this repo's real history, run Laya zero-shot, and measure precision. Ship as advisory only if precision is high enough that warnings are trusted; otherwise stay deterministic. Verify the license and weights on the model card, not the comparison page.</li>
+<li><strong>Embeddings (SQLite cache)</strong> — useful only for <em>retrieval</em> ("which paragraph relates to this diff"). They cannot judge truth. For identifiers, exact match already beats them.</li>
+<li><strong>Small generative model (e.g. Qwen 0.5B–3B)</strong> — Qwen2.5 small GGUF builds are listed under Apache 2.0; confirm on the official model card before shipping, and re-check for newer releases. Suitable only as an <strong>opt-in advisory layer</strong>, never a gate.</li>
+<li><strong>Recommendation:</strong> claims verification is deterministic and should ship first. A model, if added, has one narrow job: extract claims from <em>prose</em> ("listens on port 8080"). Verification stays deterministic. Prefer a bring-your-own endpoint (Ollama or any OpenAI-compatible URL) over bundling weights; download nothing without an explicit <code>readme-drift model pull</code>.</li>
+</ul>
+<hr />
+<h2 id="3-keep-good-choices">3. Keep — good choices</h2>
+<ul>
+<li><strong>AST-based diffing</strong> instead of line diffs: signal only on real interface changes.</li>
+<li><strong><code>KeyExtractor</code> protocol + filename-keyed registry</strong>: new file types without touching other modules. This becomes the <em>fact index</em> for claim verification.</li>
+<li><strong>Filter priority</strong> (denylist &gt; allowlist &gt; noise suppression) with a documented order.</li>
+<li><strong>Noise controls</strong>: <code>min-symbol-length</code>, blocklist, allowlist, <code>--verbose</code> trace.</li>
+<li><strong>Distribution</strong>: pre-commit hook, GitHub Action, <code>pip install</code>, <code>--init</code> scaffold, trusted PyPI publishing.</li>
+<li><strong>Config via <code>[tool.readme-drift]</code></strong>, CLI overrides file.</li>
+<li><strong>Small dependency footprint</strong> (<code>click</code>, <code>pyyaml</code>); offline and fast.</li>
+<li><strong>Trunk-based flow + commitizen</strong> release automation.</li>
+<li><strong>Test discipline</strong>: 133 tests at v3.0.1, strong coverage in core diff/scan modules.</li>
+<li><strong>Honest "What it doesn't catch" section</strong> in the README.</li>
+</ul>
+<h2 id="4-change-update-adapt">4. Change / update / adapt</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Why</th>
+<th>Direction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/roadmap.md</code> still lists v3.1/v3.2 as planned</td>
+<td>Docs drift in the drift tool</td>
+<td>Mark shipped; automate version references in the release workflow</td>
+</tr>
+<tr>
+<td>README/docs pin <code>rev:</code> and <code>@v</code> versions by hand</td>
+<td><code>version_files</code> in <code>pyproject.toml</code> covers only four files, so a new doc with a pin would silently go stale</td>
+<td>Keep <code>version_files</code> complete or add a <code>version</code> claim check</td>
+</tr>
+<tr>
+<td>Scanner is line-based, one match per line, name-only</td>
+<td>Cannot see command/flag/path claims</td>
+<td>Introduce claims model (section 1)</td>
+</tr>
+<tr>
+<td><code>run_check()</code> has ~15 parameters</td>
+<td>Hard to extend</td>
+<td>Replace with a config dataclass shared by CLI, hook and Action</td>
+</tr>
+<tr>
+<td>Only removed/signature-changed names are flagged; additions ignored</td>
+<td>Fine for diff mode, wrong for verify mode</td>
+<td>Keep diff mode; add separate <code>verify</code> mode</td>
+</tr>
+<tr>
+<td>Rename = remove + add</td>
+<td>Misses the most common doc breakage</td>
+<td>Detect via normalized AST body hash</td>
+</tr>
+<tr>
+<td>Hardcoded English noise blocklist</td>
+<td>Fails on other-language docs and domain nouns</td>
+<td>Keep default; make extension ergonomic (allowlist already exists)</td>
+</tr>
+<tr>
+<td><code>git.py</code> coverage was 57% at v3.0.1 <strong>(verify)</strong></td>
+<td>Real-world git edge cases live here</td>
+<td>Add renames, deletes, binary, submodule, shallow-clone tests</td>
+</tr>
+<tr>
+<td><code>--noise-blocklist</code> vs <code>--noise-allowlist</code></td>
+<td>Two overlapping knobs</td>
+<td>Document one primary path; keep both for compatibility</td>
+</tr>
+<tr>
+<td>README broadening (3.1: CONTRIBUTING, docs/) <strong>(verify)</strong></td>
+<td>Check how targets are chosen and configured</td>
+<td>Confirm defaults and the config key are documented</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-remove">5. Remove</h2>
+<ul>
+<li>Stale roadmap text for shipped versions (collapse to a changelog-style list; the roadmap should hold only the future).</li>
+<li>Duplicate "deferred" lists that live in both roadmap and architecture docs.</li>
+<li>Untracked local artifacts from the working tree (<code>.coverage</code>, <code>site/</code>, caches) — confirm they are gitignored.</li>
+<li>The <code>.txt</code> and extension-less README names from default discovery <em>if</em> false positives are observed <strong>(verify first)</strong>.</li>
+<li>Backlog items that contradict the final scope (VS Code extension, <code>--fix</code>; see section 8).</li>
+</ul>
+<h2 id="6-add-definitely">6. Add — definitely</h2>
+<ol>
+<li><strong>Claims extractor</strong> for fenced shell blocks and command-like inline spans (handle <code>$</code> prompts, <code>\</code> continuations, <code>&amp;&amp;</code>, placeholders, <code>&lt;!-- readme-drift: ignore --&gt;</code>).</li>
+<li><strong>Repo-owned verifiers</strong>: path existence, <code>make</code>, <code>npm run</code> / <code>yarn</code>, <code>docker compose</code> services and <code>-f</code>, <code>docker build --target</code>, <code>tox -e</code>, <code>pip install pkg[extra]</code>, <code>python -m</code> / script paths.</li>
+<li><strong>Own-CLI flag verification</strong> from click/argparse definitions (AST first; <code>--help</code> introspection later).</li>
+<li><strong><code>verify</code> mode</strong> (full-README scan, not diff-driven) with the verified / broken / unverifiable states.</li>
+<li><strong>Python code-block checks</strong>: <code>ast.parse</code>, import resolution, call arguments vs. real signatures.</li>
+<li><strong>Link and anchor checks</strong> and <strong>version-pin checks</strong> (<code>rev:</code>, <code>requires-python</code>).</li>
+<li><strong>Body-hash rename detection.</strong></li>
+<li><strong>JSON output</strong> (and optionally SARIF for CI annotations).</li>
+<li><strong>Docs that say what is and is not verified</strong>, per claim kind.</li>
+<li><strong>A frozen public API</strong> declaration and a non-goals page.</li>
+</ol>
+<h2 id="7-add-optional">7. Add — optional</h2>
+<ul>
+<li>Env var verification (<code>.env.example</code>, <code>os.environ</code> usage) — noisy; gated behind noise suppression.</li>
+<li>kubectl / helm checks limited to file existence, manifest names and <code>values.yaml</code> key paths.</li>
+<li>Migration/SQL file existence (<code>alembic</code>, <code>psql -f</code>); no database state.</li>
+<li>Execution tier: <code>make -n</code>, <code>docker compose config</code>, <code>--dry-run=client</code>, <code>--help</code>, only for blocks annotated <code>&lt;!-- readme-drift: run --&gt;</code>, CI-only.</li>
+<li>Optional <code>[semantic]</code> extra: bring-your-own LLM endpoint for prose claim extraction; advisory, warn-only, off by default.</li>
+<li><code>.rst</code> claim parsing beyond what discovery already does.</li>
+</ul>
+<h2 id="8-nice-to-have-but-too-much-for-a-plugin">8. Nice to have, but too much for a plugin</h2>
+<ul>
+<li>VS Code / editor extension.</li>
+<li><code>--fix</code> auto-editing or LLM-written README patches.</li>
+<li>Bundled model weights and a managed model lifecycle.</li>
+<li>A vector index of docs with incremental re-embedding.</li>
+<li>Hosted dashboard or history of doc health over time.</li>
+</ul>
+<h2 id="9-out-of-scope">9. Out of scope</h2>
+<ul>
+<li>Judging prose quality, tone, or completeness.</li>
+<li>Verifying third-party tool syntax (<code>docker</code>, <code>kubectl</code>, <code>git</code> flags).</li>
+<li>Live infrastructure or database state.</li>
+<li>Non-Python source languages (JS/TS, Go, Rust) via tree-sitter.</li>
+<li>Behavioural changes that do not alter names, signatures or config surface.</li>
+<li>Verifying external URLs (link rot) — use a dedicated link checker.</li>
+<li>Running arbitrary README commands by default.</li>
+</ul>
+<hr />
+<h2 id="10-exit-criteria-for-a-v40-freeze">10. Exit criteria for a v4.0 freeze</h2>
+<ol>
+<li>Claims model, owned-name verifiers (section 6, items 1–4) and <code>verify</code> mode shipped.</li>
+<li>Python code-block and link/version checks shipped.</li>
+<li>Body-hash rename detection shipped.</li>
+<li>JSON output shipped; public API declared stable.</li>
+<li>Docs and version references generated, not hand-edited; roadmap holds only the future.</li>
+<li>Non-goals page published (sections 8 and 9).</li>
+<li>Then maintenance only: dependency bumps and bug fixes.</li>
+</ol>
+<h2 id="11-open-decisions">11. Open decisions</h2>
+<ul>
+<li>Is <code>verify</code> mode a new command or a flag on the existing one?</li>
+<li>Is the execution tier in or out for v4.0?</li>
+<li>Is the <code>[semantic]</code> extra built, or explicitly deferred?</li>
+<li>Which claim kinds are in the default set, and which are opt-in?</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.sections", "content.code.copy", "navigation.top"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

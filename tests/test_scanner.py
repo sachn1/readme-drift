@@ -405,3 +405,52 @@ def test_code_only_symbol_ignores_comments_inside_a_fenced_block(tmp_path):
         "```toml\n# dependency with extras\nfoo = 1  # extras here\nextras = 2\n```\n"
     )
     assert [m.line_number for m in _scan_code_only(tmp_path, text, "extras")] == [4]
+
+
+# --- backtick spans match the whole name, not a prefix ------------------------
+
+
+def _ticked(tmp_path, text, symbol):
+    """Return matches for a symbol in backticks only (plain-text matching off)."""
+    readme = _readme(tmp_path, text)
+    return scan_readme_for_symbols(readme, [symbol], plain_text=False).get(symbol, [])
+
+
+def test_backtick_span_with_a_longer_identifier_is_not_a_match(tmp_path):
+    """`get_extra_info(info)` is not a reference to `get`."""
+    assert _ticked(tmp_path, "* `get_extra_info(info) -> Any`\n", "get") == []
+
+
+def test_backtick_span_of_a_prefixed_name_is_not_a_match(tmp_path):
+    """`connection_pool` is not a reference to `connect`."""
+    assert _ticked(tmp_path, "See `connection_pool` here.\n", "connect") == []
+
+
+def test_backtick_span_of_a_plural_library_name_is_not_a_match(tmp_path):
+    """`requests` is not a reference to `request`."""
+    assert _ticked(tmp_path, "Built on `requests`.\n", "request") == []
+
+
+def test_backtick_span_with_a_hyphenated_longer_name_is_not_a_match(tmp_path):
+    """`lint-docs` is not a reference to `lint`."""
+    assert _ticked(tmp_path, "Run `lint-docs`.\n", "lint") == []
+
+
+def test_backtick_span_with_arguments_is_a_match(tmp_path):
+    """`connect(host, port)` is a reference to `connect`."""
+    assert _ticked(tmp_path, "Call `connect(host, port)`.\n", "connect")
+
+
+def test_backtick_span_that_is_exactly_the_name_is_a_match(tmp_path):
+    """`connect` is a reference to `connect`."""
+    assert _ticked(tmp_path, "Call `connect` first.\n", "connect")
+
+
+def test_backtick_span_for_a_dotted_symbol_with_a_call_is_a_match(tmp_path):
+    """`Client.connect()` is a reference to `Client.connect`."""
+    assert _ticked(tmp_path, "Use `Client.connect()` now.\n", "Client.connect")
+
+
+def test_backtick_span_with_an_attribute_after_the_name_is_a_match(tmp_path):
+    """`connect.timeout` still starts with the whole name `connect`."""
+    assert _ticked(tmp_path, "Set `connect.timeout`.\n", "connect")

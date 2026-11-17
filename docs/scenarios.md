@@ -12,10 +12,6 @@ Each image is generated from a real run of the tool. A test fails if one goes st
 
 ![Change behaviour, keep the signature: not tracked](assets/scenarios/py-body-only-change.svg)
 
-![Remove connect, README mentions connection_pool: false alarm, known gap](assets/scenarios/false-positive-backtick-prefix.svg)
-
-Fix: `symbol-denylist = ["connect"]`.
-
 ## Check the commands too: `--verify`
 
 The default check reacts to names that changed in your diff. `--verify` reads the commands in your README, in code blocks and in sentences, and checks them against what the repo defines.

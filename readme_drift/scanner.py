@@ -115,7 +115,7 @@ def _normalize(name: str) -> str:
 @lru_cache(maxsize=_BACKTICK_PATTERN_CACHE_SIZE)
 def _backtick_pattern(bare_name: str) -> re.Pattern[str]:
     """Return the compiled backtick-span pattern for a name, memoized."""
-    return re.compile(rf"`{re.escape(bare_name)}[^`]*`")
+    return re.compile(rf"`{re.escape(bare_name)}(?![\w-])[^`]*`")
 
 
 @lru_cache(maxsize=_BACKTICK_PATTERN_CACHE_SIZE)

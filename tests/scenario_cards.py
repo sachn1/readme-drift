@@ -51,13 +51,6 @@ CARDS: dict[str, tuple[str, str, str, str]] = {
         "The signature is identical, so nothing looks changed. Only names and "
         "signatures are compared, not what the code does.",
     ),
-    "false-positive-backtick-prefix": (
-        "Remove connect, README mentions connection_pool",
-        "FALSE ALARM (known gap)",
-        "#b62324",
-        "connection_pool has nothing to do with connect, but a backtick span that "
-        "merely starts with the removed name is treated as a match.",
-    ),
     "verify-make-build": (
         "--verify: a command in a sentence and in a code block",
         "CAUGHT WITH --verify",

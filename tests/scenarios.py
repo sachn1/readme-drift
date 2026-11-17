@@ -305,13 +305,29 @@ SCENARIOS = {
         [("build", "removed")],
         0,
     ),
-    # -- Known false positives --------------------------------------------------
-    "false-positive-backtick-prefix": (
+    # -- Backtick spans match the whole name, not a prefix ------------------------
+    "backtick-prefix-is-not-a-match": (
         {"client.py": PY_CONNECT},
         {"client.py": "x = 1\n"},
         ["See `connection_pool` for pooling.\n"],
         {},
+        [],
+        0,
+    ),
+    "backtick-span-with-arguments-is-a-match": (
+        {"client.py": PY_CONNECT},
+        {"client.py": "x = 1\n"},
+        ["See `connect(host, port)` for details.\n"],
+        {},
         [("connect", "removed")],
+        0,
+    ),
+    "backtick-span-of-a-longer-library-name-is-not-a-match": (
+        {"client.py": "def request(url):\n    pass\n"},
+        {"client.py": "x = 1\n"},
+        ["HTTPX builds on `requests`.\n"],
+        {},
+        [],
         0,
     ),
     # -- Mermaid ----------------------------------------------------------------

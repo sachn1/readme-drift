@@ -194,7 +194,6 @@ See the [project review](project-review.md) for the full keep / change / add / o
 ## Known gaps (documented in [scenarios](scenarios.md))
 
 - In diff mode, commands whose name is on the noise list (`make build`, `make lint`, `npm run build`) are missed when the target is removed, because the surrounding backtick span does not start with the name. `--verify` closes this for commands in code blocks and inline spans; diff mode alone still misses it.
-- A backtick span that merely starts with a removed name (`` `connection_pool` `` for `connect`) is flagged.
 
 ---
 

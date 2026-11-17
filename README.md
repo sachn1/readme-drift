@@ -11,6 +11,10 @@
 
 When you rename a function, change a method signature, remove a class, or rename a key in a config file, `readme-drift` warns you if those names are still referenced in your README — before the commit lands.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/sachn1/readme-drift/master/docs/assets/scenarios/py-rename.svg" alt="A renamed function is still mentioned in the README, and readme-drift flags it" width="700">
+</p>
+
 ---
 
 ## How it works
@@ -189,6 +193,12 @@ readme-drift: ❌ README.md may be stale:
 
   → Please update the README or run with --no-verify to skip.
 ```
+
+---
+
+## See it in practice
+
+More scenarios, including what it misses and where it can raise false alarms, are in the [gallery](https://sachn1.github.io/readme-drift/scenarios/).
 
 ---
 

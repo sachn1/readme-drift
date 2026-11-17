@@ -94,3 +94,11 @@ def test_action_inputs_are_documented_in_ci_doc():
     inputs = yaml.safe_load((ROOT / "action.yml").read_text())["inputs"]
     text = CI_DOC.read_text()
     assert [name for name in inputs if name not in text] == []
+
+
+def test_scenarios_page_is_linked_from_readme_nav_and_index():
+    """The scenarios page exists and is reachable from README, nav and docs home."""
+    assert (ROOT / "docs" / "scenarios.md").is_file()
+    assert "/scenarios/" in README.read_text()
+    assert "scenarios.md" in (ROOT / "mkdocs.yml").read_text()
+    assert "scenarios.md" in (ROOT / "docs" / "index.md").read_text()

@@ -30,6 +30,7 @@ extra_css:
 
 nav:
   - Home: index.md
+  - How it works in practice: scenarios.md
   - Usage:
     - Pre-commit hook: usage/pre-commit.md
     - CI / GitHub Actions: usage/ci.md

@@ -184,6 +184,13 @@ See the [project review](project-review.md) for the full keep / change / add / o
 
 ---
 
+## Known gaps (documented in [scenarios](scenarios.md))
+
+- Commands whose name is on the noise list (`make build`, `make lint`, `npm run build`) are missed when the target is removed, because the surrounding backtick span does not start with the name.
+- A backtick span that merely starts with a removed name (`` `connection_pool` `` for `connect`) is flagged.
+
+---
+
 ## Backlog (unscheduled)
 
 - **Python rename detection** — removed in v0.2.x; the "same params = rename" heuristic produced false positives for zero-parameter functions and any unrelated functions that happened to share parameter names. Needs a reliable signal (e.g. git-level rename tracking, or AST body similarity) before it can be reintroduced. Config-key rename detection has the same problem with shared values (e.g. `runs-on: ubuntu-latest` across many jobs).

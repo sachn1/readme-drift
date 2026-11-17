@@ -94,6 +94,8 @@ The same facts live in several files. Each fact has **one authoritative source**
 | Action inputs | `action.yml` | `docs/usage/ci.md`, README CI section |
 | Supported file types | `git.py`, `config_diff.py`, `.pre-commit-hooks.yaml` | README "What it catches", `docs/index.md`, `docs/usage/pre-commit.md` |
 | Onboarding guidance (warn-only, backticks) | README | `docs/index.md`, `docs/usage/pre-commit.md`, `docs/usage/ci.md` |
+| Scenario images and examples | `tests/scenarios.py` (run by `tests/test_scenarios.py`) | `docs/assets/scenarios/*.svg` (regenerate with `make cards`), `docs/scenarios.md`, README hero |
+| Known gaps (cards badged MISSED or FALSE ALARM, `docs/roadmap.md` "Known gaps", fix lines on `docs/scenarios.md`) | the feature PRs that close them (e.g. `--verify` closes the `make build` miss) | when a feature closes a gap, update the card and its fix line, and remove the roadmap entry, in the same PR |
 | Shipped vs planned releases | `git tag` and GitHub releases | `docs/roadmap.md` headings |
 
 **Automated first.** `tests/test_docs_sync.py` already covers CLI flags, config keys, version pins and Action inputs. A failure there is a High finding. When a new fact gets mirrored in more than one file, add it to the table above **and** extend that test.

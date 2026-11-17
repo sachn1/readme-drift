@@ -1,0 +1,189 @@
+"""Generate the scenario images in docs/assets/scenarios from real tool runs."""
+
+# Run `make cards` (or `python tests/scenario_cards.py`) to rewrite them.
+
+import difflib
+import tempfile
+import textwrap
+from pathlib import Path
+from xml.sax.saxutils import escape
+
+from scenarios import SCENARIOS, run_scenario
+
+from readme_drift.report import format_report
+
+OUT_DIR = Path(__file__).resolve().parent.parent / "docs" / "assets" / "scenarios"
+
+# id -> (title, badge label, badge colour, why-note shown under the panels).
+CARDS: dict[str, tuple[str, str, str, str]] = {
+    "py-rename": (
+        "Rename a function",
+        "CAUGHT",
+        "#238636",
+        "connect no longer exists, but the README still tells readers to call it. "
+        "The old name is found in the README, so the commit is flagged.",
+    ),
+    "makefile-target-removed": (
+        "Remove a Makefile target",
+        "CAUGHT",
+        "#238636",
+        "The deploy target is gone, but the README still says make deploy. The "
+        "removed name is found in the README, so it is flagged.",
+    ),
+    "mermaid-class-renamed": (
+        "Rename a class shown in a mermaid diagram",
+        "CAUGHT",
+        "#238636",
+        "Names inside a mermaid classDiagram are matched like backtick spans, so "
+        "the stale Client in the diagram is found.",
+    ),
+    "py-body-only-change": (
+        "Change behaviour, keep the signature",
+        "NOT TRACKED",
+        "#6e7681",
+        "The signature is identical, so nothing looks changed. Only names and "
+        "signatures are compared, not what the code does.",
+    ),
+    "makefile-build-removed": (
+        "The build target is removed, README still says make build",
+        "MISSED (known gap)",
+        "#9e6a03",
+        "The README now points at a target that no longer exists, and nothing is "
+        "flagged. build is a very common word, so it only counts inside a "
+        "backtick span that starts with it, and this span starts with make.",
+    ),
+    "false-positive-backtick-prefix": (
+        "Remove connect, README mentions connection_pool",
+        "FALSE ALARM (known gap)",
+        "#b62324",
+        "connection_pool has nothing to do with connect, but a backtick span that "
+        "merely starts with the removed name is treated as a match.",
+    ),
+}
+
+_WIDTH_CHARS = 88
+_CHAR_W = 7.9
+_LINE_H = 19
+_PAD = 22
+_BG = "#0d1117"
+_PANEL = "#161b22"
+_TEXT = "#e6edf3"
+_MUTED = "#8b949e"
+_ADD = "#7ee787"
+_DEL = "#ff7b72"
+_FONT = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+
+
+def _wrap(line: str) -> list[str]:
+    """Wrap a line at word boundaries so it fits the card width."""
+    if len(line) <= _WIDTH_CHARS:
+        return [line]
+    lead = len(line) - len(line.lstrip(" "))
+    return textwrap.wrap(
+        line,
+        width=_WIDTH_CHARS,
+        subsequent_indent=" " * (lead + 2),
+        break_long_words=True,
+        drop_whitespace=True,
+    )
+
+
+def _diff_lines(old: dict[str, str], new: dict[str, str]) -> list[tuple[str, str]]:
+    """Return (kind, text) lines showing what changed across files."""
+    out: list[tuple[str, str]] = []
+    for name in sorted(new):
+        before, after = old.get(name, ""), new[name]
+        if before == after:
+            continue
+        out.append(("head", name))
+        diff = difflib.unified_diff(
+            before.splitlines(), after.splitlines(), lineterm="", n=1
+        )
+        for line in list(diff)[2:]:
+            if line.startswith("@@"):
+                continue
+            kind = {"+": "add", "-": "del"}.get(line[0], "ctx")
+            out.append((kind, line))
+    return out
+
+
+def _panel(title: str, lines: list[tuple[str, str]], y: int) -> tuple[str, int]:
+    """Return (svg, height) for one titled panel starting at y."""
+    body: list[tuple[str, str]] = []
+    for kind, text in lines:
+        for chunk in _wrap(text):
+            body.append((kind, chunk))
+    height = 34 + len(body) * _LINE_H + 12
+    width = _PAD * 2 + int(_WIDTH_CHARS * _CHAR_W)
+    parts = [
+        f'<rect x="{_PAD}" y="{y}" width="{width - 2 * _PAD}" height="{height}" '
+        f'rx="8" fill="{_PANEL}"/>',
+        f'<text x="{_PAD + 14}" y="{y + 22}" fill="{_MUTED}" font-size="11" '
+        f'letter-spacing="0.5">{escape(title)}</text>',
+    ]
+    colours = {"add": _ADD, "del": _DEL, "head": _MUTED, "ctx": _TEXT, "txt": _TEXT}
+    for i, (kind, text) in enumerate(body):
+        ty = y + 44 + i * _LINE_H
+        if not text.strip():
+            continue
+        parts.append(
+            f'<text x="{_PAD + 14}" y="{ty}" fill="{colours[kind]}" '
+            f'xml:space="preserve">{escape(text)}</text>'
+        )
+    return "\n".join(parts), height
+
+
+def render_card(name: str) -> str:
+    """Run a scenario for real and return its SVG card as text."""
+    title, badge, badge_colour, note = CARDS[name]
+    old, new, readme, _kw, _expected, _hint = SCENARIOS[name]
+    with tempfile.TemporaryDirectory() as tmp:
+        result = run_scenario(name, Path(tmp))
+    output = [("txt", line) for line in format_report(result).splitlines()]
+    readme_lines = [("txt", line) for line in readme[-1].rstrip("\n").splitlines()]
+
+    width = _PAD * 2 + int(_WIDTH_CHARS * _CHAR_W)
+    y = 62
+    panels = []
+    for label, lines in (
+        ("You change", _diff_lines(old, new)),
+        ("README.md says", readme_lines),
+        ("readme-drift says", output),
+    ):
+        svg, h = _panel(label, lines, y)
+        panels.append(svg)
+        y += h + 12
+    if note:
+        svg, h = _panel(
+            "Why", [("txt", line) for line in textwrap.wrap(note, _WIDTH_CHARS)], y
+        )
+        panels.append(svg)
+        y += h + 12
+    height = y + 10
+    badge_w = int(len(badge) * 7.6 + 24)
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+        f'viewBox="0 0 {width} {height}" font-family="{_FONT}" font-size="13" '
+        f'role="img" aria-label="{escape(title)}: {escape(badge)}">\n'
+        f'<rect width="{width}" height="{height}" rx="12" fill="{_BG}"/>\n'
+        f'<text x="{_PAD}" y="38" fill="{_TEXT}" font-size="16" '
+        f'font-weight="bold">{escape(title)}</text>\n'
+        f'<rect x="{width - _PAD - badge_w}" y="20" width="{badge_w}" height="26" '
+        f'rx="13" fill="{badge_colour}"/>\n'
+        f'<text x="{width - _PAD - badge_w / 2}" y="37" fill="#ffffff" '
+        f'font-size="11" font-weight="bold" text-anchor="middle">{escape(badge)}</text>\n'
+        + "\n".join(panels)
+        + "\n</svg>\n"
+    )
+
+
+def main() -> None:
+    """Write every scenario card to docs/assets/scenarios."""
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    for name in CARDS:
+        (OUT_DIR / f"{name}.svg").write_text(render_card(name), encoding="utf-8")
+        print(f"wrote {OUT_DIR / (name + '.svg')}")
+
+
+if __name__ == "__main__":
+    main()

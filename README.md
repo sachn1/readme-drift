@@ -201,7 +201,7 @@ tips = true                          # one-time first-run backtick tip; false si
 
 ## Developer reference
 
-A fully annotated [Jupyter notebook](notebooks/demo.ipynb) walks through each module in depth — AST parsing, signature extraction, config diffing, the README scanner, and the complete end-to-end pipeline without git. Useful for understanding the internals or experimenting with edge cases.
+A fully annotated [Jupyter notebook](notebooks/demo.ipynb) walks through each module in depth — AST parsing, signature extraction, config diffing, the README scanner, README command verification (`--verify`), and the complete end-to-end pipeline without git. Useful for understanding the internals or experimenting with edge cases.
 
 ---
 

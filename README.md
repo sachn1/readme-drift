@@ -147,6 +147,8 @@ By default `readme-drift` reacts to code changes. With `--verify` it also reads 
 
 Commands in a nested README are checked against files next to that README first (its own `Makefile`, `package.json`, compose file or script), then against the repository root.
 
+For your own console script, long options are read statically from `click` and `argparse` declarations. An unknown option after a subcommand (`mytool run --debug`) is reported as unverifiable, because it may belong to that subcommand, and so is a command whose options are not declared as literals.
+
 Each command ends in one of three states: **verified**, **broken**, or **unverifiable**. Only *broken* fails the run. The tool never judges the syntax of third-party commands (`docker run -it`, `pip install`), and it reports anything uncertain — an `include` in a Makefile, a `cd` earlier in the block, a path in a build directory, placeholders like `<name>` or `$VAR` — as unverifiable rather than guessing.
 
 ```bash

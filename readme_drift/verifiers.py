@@ -358,6 +358,23 @@ def _parse_makefile(text: str, filename: str) -> _MakeFacts:
     return _MakeFacts(targets, patterns, uncertain, filename)
 
 
+def _literal_names(node: ast.expr) -> list[str] | None:
+    """Return the string constants of an option declaration, or None if not literal."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return [node.value]
+    if isinstance(node, (ast.List, ast.Tuple, ast.Set)):
+        names: list[str] = []
+        for item in node.elts:
+            if not (isinstance(item, ast.Constant) and isinstance(item.value, str)):
+                return None
+            names.append(item.value)
+        return names
+    return None
+
+
+# None means the options cannot be listed reliably: the source does not parse,
+# declares no options, or declares one in a way that is not a literal (for
+# example ``add_argument(*names)``).
 def _static_flags(source: str) -> set[str] | None:
     """Return option names declared via click/argparse-style calls, or None."""
     try:
@@ -378,9 +395,15 @@ def _static_flags(source: str) -> set[str] | None:
         )
         if name not in _OPTION_NAME_CALLS:
             continue
-        for arg in node.args:
-            if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
-                for part in arg.value.split("/"):
+        defines_option = name in {"option", "Option", "add_argument"}
+        for arg in node.args[:1] if defines_option else node.args:
+            literal = _literal_names(arg)
+            if literal is None:
+                if defines_option:
+                    return None
+                continue
+            for declared in literal:
+                for part in declared.split("/"):
                     if part.startswith("-"):
                         flags.add(part.strip())
     return flags | _ALWAYS_OK_FLAGS if flags else None
@@ -628,15 +651,27 @@ def _verify_own_cli(claim: Claim, facts: RepoFacts) -> list[_Check]:
     if flags is None:
         return [(_U, messages.REASON_CLI_UNREADABLE.format(head=claim.head))]
     checks: list[_Check] = []
+    previous_was_option = False
+    after_subcommand = False
     for arg in claim.args:
         if arg == "--":
             break
+        if not arg.startswith("-"):
+            # A bare word that does not follow an option is a subcommand.
+            after_subcommand = after_subcommand or not previous_was_option
+            previous_was_option = False
+            continue
+        previous_was_option = "=" not in arg
         if not arg.startswith("--"):
             continue
         flag = arg.split("=", 1)[0]
         if flag in flags:
             checks.append(
                 (_V, messages.REASON_CLI_OK.format(head=claim.head, flag=flag))
+            )
+        elif after_subcommand:
+            checks.append(
+                (_U, messages.REASON_CLI_SUBCOMMAND.format(head=claim.head, flag=flag))
             )
         else:
             checks.append(

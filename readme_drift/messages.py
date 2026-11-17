@@ -284,6 +284,9 @@ REASON_COMPOSE_NO_SERVICES = "subcommand '{sub}' names no services"
 REASON_CLI_OK = "'{head}' defines option {flag}"
 REASON_CLI_MISSING = "'{head}' has no option {flag}"
 REASON_CLI_UNREADABLE = "could not read the options of '{head}' statically"
+REASON_CLI_SUBCOMMAND = (
+    "option {flag} follows a subcommand of '{head}'; subcommand options are not read"
+)
 REASON_PY_MODULE_OK = "module '{module}' found in the repository"
 REASON_PY_MODULE_MISSING = "module '{module}' not found in the repository"
 REASON_PY_MODULE_EXTERNAL = "'{module}' is not a module of this repository"

@@ -650,3 +650,77 @@ def test_root_readme_behaviour_is_unchanged(tmp_path):
     """A README in the repo root is verified against the root only."""
     _write(tmp_path, "Makefile", "lint:\n\techo\n")
     assert _statuses(_verify_nested(tmp_path, "README.md", "make", "ghost")) == [B]
+
+
+# --- own CLI: subcommands and options that cannot be listed ----------------
+
+
+def test_own_cli_unknown_flag_after_a_subcommand_is_unverifiable(tmp_path):
+    """A flag following a subcommand may belong to that subcommand."""
+    _own_cli(tmp_path)
+    assert _statuses(_verify(tmp_path, "mytool", "run", "--debug")) == [U]
+
+
+def test_own_cli_unknown_flag_before_any_subcommand_is_still_broken(tmp_path):
+    """A leading unknown flag is judged against the top-level options."""
+    _own_cli(tmp_path)
+    assert _statuses(_verify(tmp_path, "mytool", "--nope", "run")) == [B]
+
+
+def test_own_cli_known_flag_after_a_subcommand_is_verified(tmp_path):
+    """A flag the script defines is verified wherever it appears."""
+    _own_cli(tmp_path)
+    assert _statuses(_verify(tmp_path, "mytool", "run", "--alpha")) == [V]
+
+
+def test_own_cli_option_value_is_not_mistaken_for_a_subcommand(tmp_path):
+    """The word after an option is its value, so a later bad flag stays broken."""
+    _own_cli(tmp_path)
+    results = _verify(tmp_path, "mytool", "--alpha", "value", "--nope")
+    assert _statuses(results) == [V, B]
+
+
+def test_own_cli_app_option_then_subcommand_then_flag(tmp_path):
+    """`mytool -A app run --debug`: --debug follows a subcommand and is not judged."""
+    _own_cli(tmp_path)
+    results = _verify(tmp_path, "mytool", "-A", "app", "run", "--debug")
+    assert _statuses(results) == [U]
+
+
+def test_static_flags_reads_click_option_objects():
+    """click.Option([...]) constructed directly contributes its names."""
+    source = (
+        "import click\n"
+        '_debug = click.Option(["--debug/--no-debug"], default=False)\n'
+        'opt = click.Option(["--app", "-A"])\n'
+    )
+    assert {"--debug", "--no-debug", "--app"} <= _static_flags(source)
+
+
+def test_static_flags_is_none_when_an_option_is_not_a_literal():
+    """An option declared with *names cannot be listed, so nothing is claimed."""
+    source = (
+        "import click\n"
+        '@click.option("--alpha")\n'
+        "def main(): pass\n"
+        "def add(parser, *names):\n"
+        "    parser.add_argument(*names)\n"
+    )
+    assert _static_flags(source) is None
+
+
+def test_static_flags_is_none_when_an_option_name_is_a_variable():
+    """click.option(NAME) is opaque."""
+    source = "import click\nNAME = '--x'\nclick.option(NAME)\n"
+    assert _static_flags(source) is None
+
+
+def test_static_flags_ignores_argument_declarations():
+    """click.Argument names are positional and do not make the module opaque."""
+    source = (
+        "import click\n"
+        '@click.argument("path")\n'
+        '@click.option("--alpha")\n'
+        "def main(): pass\n"
+    )
+    assert "--alpha" in _static_flags(source)

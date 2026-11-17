@@ -74,3 +74,7 @@ convention = "numpy"
 # imperative-mood summaries, and may start with a lowercase command name
 # (make, npm, docker ...).
 "tests/*" = ["D401", "D403"]
+
+[tool.readme-drift]
+# `main` is a CLI entry point whose signature changes, and the README says "origin/main".
+symbol-denylist = ["main"]

@@ -73,7 +73,7 @@ Add `--verify` to also check that the commands in your README (`make` targets, `
 With the bundled action, set the `verify` input instead:
 
 ```yaml
-- uses: sachn1/readme-drift@v3.2.0
+- uses: sachn1/readme-drift@v3.4.0
   with:
     verify: "true"
 ```

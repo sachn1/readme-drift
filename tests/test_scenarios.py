@@ -4,7 +4,7 @@ import subprocess
 
 import pytest
 
-from scenarios import SCENARIOS, run_scenario
+from scenarios import SCENARIOS, VERIFY_SCENARIOS, run_scenario, run_verify_scenario
 
 from readme_drift.drift_checker import run_check
 
@@ -21,6 +21,16 @@ def test_scenario(name, tmp_path):
     )
     assert flagged == expected
     assert result.suppressed_hint_count == hint
+
+
+@pytest.mark.parametrize("name", VERIFY_SCENARIOS)
+def test_verify_scenario(name, tmp_path):
+    """Each --verify scenario yields exactly the documented checks, in README order."""
+    *_, expected = VERIFY_SCENARIOS[name]
+
+    result = run_verify_scenario(name, tmp_path)
+
+    assert [(r.status.value, r.claim.raw) for r in result.results] == expected
 
 
 def test_js_only_change_is_skipped(tmp_path):

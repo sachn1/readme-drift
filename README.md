@@ -131,8 +131,9 @@ If you're starting from scratch, `readme-drift --init` creates a bare-bones `REA
 
 ## Verifying README commands (`--verify`)
 
-By default `readme-drift` reacts to code changes. With `--verify` it also reads the shell commands in your README's fenced code blocks (`bash`, `sh`, `shell`, `zsh`, `console`, or untagged) and checks that the names **your repository owns** still exist — across every README in full, not just the diff:
+By default `readme-drift` reacts to code changes. With `--verify` it also reads the shell commands in your README's fenced code blocks (`bash`, `sh`, `shell`, `zsh`, `console`, or untagged) and commands in **inline code spans** (`` `make build` `` in a sentence, including a span that wraps onto the next line) when they clearly are commands: `make` with a target, `npm`/`pnpm`/`yarn run`, `docker compose`, a Python or shell script with a file extension, or your own command followed by a flag. It then checks that the names **your repository owns** still exist — across every README in full, not just the diff:
 
+<!-- readme-drift: ignore -->
 | README says | Checked against |
 |---|---|
 | `make lint` | targets in the `Makefile` |
@@ -149,7 +150,7 @@ readme-drift --base-ref origin/main --verify            # diff check + command v
 readme-drift --verify --verbose --warn-only             # list every check, never fail
 ```
 
-To exempt a command that is intentionally different, put `<!-- readme-drift: ignore -->` on the line above a fenced block (skips the block) or above a single command inside it (skips that command). Command verification reads Markdown fences only.
+To exempt a command that is intentionally different, put `<!-- readme-drift: ignore -->` on the line above a fenced block (skips the block) or above a single command inside it (skips that command). For prose, put it on the first line of the paragraph (or table) to skip all of it. It does not read 4-space indented code blocks, and names like `` `build` `` or `` `python 3.11` `` in a sentence are ignored because they do not clearly read as commands.
 
 ---
 

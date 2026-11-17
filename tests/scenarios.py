@@ -5,7 +5,8 @@ from pathlib import Path
 
 from readme_drift.constants import DEFAULT_NOISE_BLOCKLIST
 from readme_drift.drift_checker import run_check
-from readme_drift.models import DriftCheckResult
+from readme_drift.models import DriftCheckResult, VerifyResult
+from readme_drift.verify import run_verify
 
 PY_CONNECT = "def connect(host, port):\n    pass\n"
 CLASS_DIAGRAM = (
@@ -14,6 +15,7 @@ CLASS_DIAGRAM = (
 )
 FLOWCHART = "```mermaid\nflowchart LR\n    A[Client] --> B[run]\n```\n"
 NO_BUILD = [w for w in DEFAULT_NOISE_BLOCKLIST if w != "build"]
+FENCE = "`" * 3
 
 # id: (old files, new files, README before [, README after], run_check kwargs,
 #      expected flagged (name, change type) list, expected suppressed-hint count)
@@ -158,8 +160,8 @@ SCENARIOS = {
         0,
     ),
     "config-ci-job-renamed": (
-        {"w.yml": "jobs:\n  integration:\n    runs-on: x\n"},
-        {"w.yml": "jobs:\n  e2e:\n    runs-on: x\n"},
+        {"ci.yml": "jobs:\n  integration:\n    runs-on: ubuntu-latest\n"},
+        {"ci.yml": "jobs:\n  e2e:\n    runs-on: ubuntu-latest\n"},
         ["The `integration` job runs nightly.\n"],
         {},
         [("integration", "removed")],
@@ -313,3 +315,60 @@ def run_scenario(name: str, root: Path) -> DriftCheckResult:
         (root / rel).write_text(text)
     (root / "README.md").write_text(readme[-1])
     return run_check(base_ref="HEAD", repo_root=root, **kwargs)
+
+
+# id: (repo files, README text, expected (status, command) per check in README order).
+# These run `--verify`: a full scan of the README commands against the repository.
+VERIFY_SCENARIOS = {
+    "verify-make-build": (
+        {"Makefile": "lint:\n\techo lint\ntest:\n\techo test\n"},
+        "# Demo\n\nRun `make build` to package it.\n\n"
+        f"{FENCE}bash\nmake lint\nmake build\n{FENCE}\n",
+        [
+            ("broken", "make build"),
+            ("verified", "make lint"),
+            ("broken", "make build"),
+        ],
+    ),
+    "verify-code-block": (
+        {
+            "Makefile": "lint:\n\techo lint\ntest:\n\techo test\n",
+            "package.json": '{"scripts": {"lint-docs": "echo docs"}}',
+            "docker-compose.yml": "services:\n  web:\n    image: nginx\n",
+            "scripts/deploy.sh": "echo deploy\n",
+        },
+        f"{FENCE}bash\nmake lint test\nnpm run lint-docs && npm run publish\n"
+        f"docker compose up web db\nbash scripts/deploy.sh\n{FENCE}\n",
+        [
+            ("verified", "make lint test"),
+            ("verified", "make lint test"),
+            ("verified", "npm run lint-docs"),
+            ("broken", "npm run publish"),
+            ("verified", "docker compose up web db"),
+            ("broken", "docker compose up web db"),
+            ("verified", "bash scripts/deploy.sh"),
+        ],
+    ),
+    "verify-unverifiable": (
+        {"Makefile": "lint:\n\techo lint\n"},
+        f"{FENCE}bash\nmake <target>\ncd app && make anything\n{FENCE}\n\n"
+        f"<!-- readme-drift: ignore -->\n{FENCE}bash\nmake intentionally-missing\n{FENCE}\n",
+        [
+            ("unverifiable", "make"),
+            ("unverifiable", "cd app"),
+            ("unverifiable", "make anything"),
+        ],
+    ),
+}
+
+
+def run_verify_scenario(name: str, root: Path) -> VerifyResult:
+    """Build a verify scenario's repository under root and run the real verification."""
+    files, readme, _expected = VERIFY_SCENARIOS[name]
+    _git(root, "init", "-q")
+    for rel, text in files.items():
+        path = root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+    (root / "README.md").write_text(readme)
+    return run_verify(repo_root=root)

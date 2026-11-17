@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="739" height="912" viewBox="0 0 739 912" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" role="img" aria-label="--verify: every command in a code block: CAUGHT WITH --verify">
+<rect width="739" height="912" rx="12" fill="#0d1117"/>
+<text x="22" y="38" fill="#e6edf3" font-size="16" font-weight="bold">--verify: every command in a code block</text>
+<rect x="541" y="20" width="176" height="26" rx="13" fill="#238636"/>
+<text x="629.0" y="37" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">CAUGHT WITH --verify</text>
+<rect x="22" y="62" width="695" height="293" rx="8" fill="#161b22"/>
+<text x="36" y="84" fill="#8b949e" font-size="11" letter-spacing="0.5">The repo has</text>
+<text x="36" y="106" fill="#8b949e" xml:space="preserve">Makefile</text>
+<text x="36" y="125" fill="#e6edf3" xml:space="preserve">lint:</text>
+<text x="36" y="144" fill="#e6edf3" xml:space="preserve">    echo lint</text>
+<text x="36" y="163" fill="#e6edf3" xml:space="preserve">test:</text>
+<text x="36" y="182" fill="#e6edf3" xml:space="preserve">    echo test</text>
+<text x="36" y="201" fill="#8b949e" xml:space="preserve">package.json</text>
+<text x="36" y="220" fill="#e6edf3" xml:space="preserve">{"scripts": {"lint-docs": "echo docs"}}</text>
+<text x="36" y="239" fill="#8b949e" xml:space="preserve">docker-compose.yml</text>
+<text x="36" y="258" fill="#e6edf3" xml:space="preserve">services:</text>
+<text x="36" y="277" fill="#e6edf3" xml:space="preserve">  web:</text>
+<text x="36" y="296" fill="#e6edf3" xml:space="preserve">    image: nginx</text>
+<text x="36" y="315" fill="#8b949e" xml:space="preserve">scripts/deploy.sh</text>
+<text x="36" y="334" fill="#e6edf3" xml:space="preserve">echo deploy</text>
+<rect x="22" y="367" width="695" height="160" rx="8" fill="#161b22"/>
+<text x="36" y="389" fill="#8b949e" font-size="11" letter-spacing="0.5">README.md says</text>
+<text x="36" y="411" fill="#e6edf3" xml:space="preserve">```bash</text>
+<text x="36" y="430" fill="#e6edf3" xml:space="preserve">make lint test</text>
+<text x="36" y="449" fill="#e6edf3" xml:space="preserve">npm run lint-docs &amp;&amp; npm run publish</text>
+<text x="36" y="468" fill="#e6edf3" xml:space="preserve">docker compose up web db</text>
+<text x="36" y="487" fill="#e6edf3" xml:space="preserve">bash scripts/deploy.sh</text>
+<text x="36" y="506" fill="#e6edf3" xml:space="preserve">```</text>
+<rect x="22" y="539" width="695" height="255" rx="8" fill="#161b22"/>
+<text x="36" y="561" fill="#8b949e" font-size="11" letter-spacing="0.5">readme-drift --verify says</text>
+<text x="36" y="583" fill="#e6edf3" xml:space="preserve">readme-drift: ❌ verify: 2 README command check(s) do not match the repo:</text>
+<text x="36" y="621" fill="#e6edf3" xml:space="preserve">  • `npm run publish`</text>
+<text x="36" y="640" fill="#e6edf3" xml:space="preserve">    in README.md line 3: script 'publish' not found in package.json</text>
+<text x="36" y="678" fill="#e6edf3" xml:space="preserve">  • `docker compose up web db`</text>
+<text x="36" y="697" fill="#e6edf3" xml:space="preserve">    in README.md line 4: service 'db' not found in docker-compose.yml</text>
+<text x="36" y="735" fill="#e6edf3" xml:space="preserve">  verified: 5 · broken: 2 · unverifiable: 0</text>
+<text x="36" y="754" fill="#e6edf3" xml:space="preserve">  → Fix the README, or put &lt;!-- readme-drift: ignore --&gt; above a command that is</text>
+<text x="36" y="773" fill="#e6edf3" xml:space="preserve">    intentionally different.</text>
+<rect x="22" y="806" width="695" height="84" rx="8" fill="#161b22"/>
+<text x="36" y="828" fill="#8b949e" font-size="11" letter-spacing="0.5">Why</text>
+<text x="36" y="850" fill="#e6edf3" xml:space="preserve">Each line, each chained command and each argument is checked, not just the first word:</text>
+<text x="36" y="869" fill="#e6edf3" xml:space="preserve">two missing names are found among the working ones.</text>
+</svg>

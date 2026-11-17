@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="739" height="589" viewBox="0 0 739 589" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" role="img" aria-label="Rename a CI job: CAUGHT">
+<rect width="739" height="589" rx="12" fill="#0d1117"/>
+<text x="22" y="38" fill="#e6edf3" font-size="16" font-weight="bold">Rename a CI job</text>
+<rect x="648" y="20" width="69" height="26" rx="13" fill="#238636"/>
+<text x="682.5" y="37" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">CAUGHT</text>
+<rect x="22" y="62" width="695" height="141" rx="8" fill="#161b22"/>
+<text x="36" y="84" fill="#8b949e" font-size="11" letter-spacing="0.5">You change</text>
+<text x="36" y="106" fill="#8b949e" xml:space="preserve">ci.yml</text>
+<text x="36" y="125" fill="#e6edf3" xml:space="preserve"> jobs:</text>
+<text x="36" y="144" fill="#ff7b72" xml:space="preserve">-  integration:</text>
+<text x="36" y="163" fill="#7ee787" xml:space="preserve">+  e2e:</text>
+<text x="36" y="182" fill="#e6edf3" xml:space="preserve">     runs-on: ubuntu-latest</text>
+<rect x="22" y="215" width="695" height="65" rx="8" fill="#161b22"/>
+<text x="36" y="237" fill="#8b949e" font-size="11" letter-spacing="0.5">README.md says</text>
+<text x="36" y="259" fill="#e6edf3" xml:space="preserve">The `integration` job runs nightly.</text>
+<rect x="22" y="292" width="695" height="179" rx="8" fill="#161b22"/>
+<text x="36" y="314" fill="#8b949e" font-size="11" letter-spacing="0.5">readme-drift says</text>
+<text x="36" y="336" fill="#e6edf3" xml:space="preserve">readme-drift: ❌ README.md may be stale:</text>
+<text x="36" y="374" fill="#e6edf3" xml:space="preserve">  • `integration` was removed</text>
+<text x="36" y="393" fill="#e6edf3" xml:space="preserve">    in ci.yml</text>
+<text x="36" y="412" fill="#e6edf3" xml:space="preserve">    referenced in README.md line 1: …The `integration` job runs nightly.…</text>
+<text x="36" y="450" fill="#e6edf3" xml:space="preserve">  → Please update the README or run with --no-verify to skip.</text>
+<rect x="22" y="483" width="695" height="84" rx="8" fill="#161b22"/>
+<text x="36" y="505" fill="#8b949e" font-size="11" letter-spacing="0.5">Why</text>
+<text x="36" y="527" fill="#e6edf3" xml:space="preserve">Config files are compared too. The integration job is gone, but the README still</text>
+<text x="36" y="546" fill="#e6edf3" xml:space="preserve">describes it, so it is flagged.</text>
+</svg>

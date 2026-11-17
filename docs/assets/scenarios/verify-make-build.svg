@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="739" height="798" viewBox="0 0 739 798" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" role="img" aria-label="--verify: a command in a sentence and in a code block: CAUGHT WITH --verify">
+<rect width="739" height="798" rx="12" fill="#0d1117"/>
+<text x="22" y="38" fill="#e6edf3" font-size="16" font-weight="bold">--verify: a command in a sentence and in a code block</text>
+<rect x="541" y="20" width="176" height="26" rx="13" fill="#238636"/>
+<text x="629.0" y="37" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">CAUGHT WITH --verify</text>
+<rect x="22" y="62" width="695" height="141" rx="8" fill="#161b22"/>
+<text x="36" y="84" fill="#8b949e" font-size="11" letter-spacing="0.5">The repo has</text>
+<text x="36" y="106" fill="#8b949e" xml:space="preserve">Makefile</text>
+<text x="36" y="125" fill="#e6edf3" xml:space="preserve">lint:</text>
+<text x="36" y="144" fill="#e6edf3" xml:space="preserve">    echo lint</text>
+<text x="36" y="163" fill="#e6edf3" xml:space="preserve">test:</text>
+<text x="36" y="182" fill="#e6edf3" xml:space="preserve">    echo test</text>
+<rect x="22" y="215" width="695" height="198" rx="8" fill="#161b22"/>
+<text x="36" y="237" fill="#8b949e" font-size="11" letter-spacing="0.5">README.md says</text>
+<text x="36" y="259" fill="#e6edf3" xml:space="preserve"># Demo</text>
+<text x="36" y="297" fill="#e6edf3" xml:space="preserve">Run `make build` to package it.</text>
+<text x="36" y="335" fill="#e6edf3" xml:space="preserve">```bash</text>
+<text x="36" y="354" fill="#e6edf3" xml:space="preserve">make lint</text>
+<text x="36" y="373" fill="#e6edf3" xml:space="preserve">make build</text>
+<text x="36" y="392" fill="#e6edf3" xml:space="preserve">```</text>
+<rect x="22" y="425" width="695" height="255" rx="8" fill="#161b22"/>
+<text x="36" y="447" fill="#8b949e" font-size="11" letter-spacing="0.5">readme-drift --verify says</text>
+<text x="36" y="469" fill="#e6edf3" xml:space="preserve">readme-drift: ❌ verify: 2 README command check(s) do not match the repo:</text>
+<text x="36" y="507" fill="#e6edf3" xml:space="preserve">  • `make build`</text>
+<text x="36" y="526" fill="#e6edf3" xml:space="preserve">    in README.md line 3: make target 'build' not found in Makefile</text>
+<text x="36" y="564" fill="#e6edf3" xml:space="preserve">  • `make build`</text>
+<text x="36" y="583" fill="#e6edf3" xml:space="preserve">    in README.md line 7: make target 'build' not found in Makefile</text>
+<text x="36" y="621" fill="#e6edf3" xml:space="preserve">  verified: 1 · broken: 2 · unverifiable: 0</text>
+<text x="36" y="640" fill="#e6edf3" xml:space="preserve">  → Fix the README, or put &lt;!-- readme-drift: ignore --&gt; above a command that is</text>
+<text x="36" y="659" fill="#e6edf3" xml:space="preserve">    intentionally different.</text>
+<rect x="22" y="692" width="695" height="84" rx="8" fill="#161b22"/>
+<text x="36" y="714" fill="#8b949e" font-size="11" letter-spacing="0.5">Why</text>
+<text x="36" y="736" fill="#e6edf3" xml:space="preserve">make build appears twice and both are checked against the Makefile. Diff mode alone</text>
+<text x="36" y="755" fill="#e6edf3" xml:space="preserve">misses this, because build is a very common word.</text>
+</svg>

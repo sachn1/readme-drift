@@ -118,9 +118,9 @@ Use this instead of `--noise-blocklist` when you only want to unlock one or two 
 ## Verification
 
 ### `--verify`
-Also verify the shell commands in README code blocks against the repository. Scans every README in full (not just the diff) and checks names the repo owns: `make` targets, `package.json` scripts (`npm run`, `yarn run`, `pnpm run`), `docker compose` services and `-f` files, the project's own console-script options, and files or local modules named by `python`, `bash`, `./script`, `make -f`, `docker build -f`, `kubectl apply -f` and `helm -f`.
+Also verify the shell commands in README code blocks and inline code spans against the repository. Scans every README in full (not just the diff) and checks names the repo owns: `make` targets, `package.json` scripts (`npm run`, `yarn run`, `pnpm run`), `docker compose` services and `-f` files, the project's own console-script options, and files or local modules named by `python`, `bash`, `./script`, `make -f`, `docker build -f`, `kubectl apply -f` and `helm -f`.
 
-Each command is **verified**, **broken** or **unverifiable**; only broken fails the run. Combine with `--verbose` to list every check and `--warn-only` to never fail. Put `<!-- readme-drift: ignore -->` above a fenced block, or above one command inside it, to skip it.
+Each command is **verified**, **broken** or **unverifiable**; only broken fails the run. Combine with `--verbose` to list every check and `--warn-only` to never fail. Inline spans count only when they clearly are commands (`make <target>`, `npm|pnpm|yarn run`, `docker compose`, a script with a file extension, or your own command followed by a flag). Put `<!-- readme-drift: ignore -->` above a fenced block, above one command inside it, or on the first line of a paragraph, to skip it.
 
 ---
 

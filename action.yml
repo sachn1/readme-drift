@@ -29,7 +29,7 @@ inputs:
     required: false
     default: ""
   verify:
-    description: "Also verify shell commands in README code blocks against the repo (requires a readme-drift release that supports --verify)."
+    description: "Also verify shell commands in README code blocks and inline code spans against the repo (requires a readme-drift release that supports --verify)."
     required: false
     default: "false"
   version:

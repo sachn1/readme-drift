@@ -1,4 +1,4 @@
-"""Extract shell-command claims from fenced code blocks in README files."""
+"""Extract shell-command claims from README code blocks and inline code spans."""
 
 import re
 import shlex
@@ -24,6 +24,14 @@ _ANGLE_PLACEHOLDER_RE = re.compile(r"<[^<>\s]+>")
 _WRAPPERS = frozenset({"sudo", "time", "nohup", "exec", "command"})
 _RUNNER_PREFIXES = frozenset({("poetry", "run"), ("uv", "run"), ("pipenv", "run")})
 _CWD_COMMANDS = frozenset({"cd", "pushd", "popd"})
+
+# Inline code spans: a run of backticks closed by a run of the same length, which
+# may continue over several lines of one paragraph (CommonMark).
+_INLINE_SPAN_RE = re.compile(r"(?<!`)(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.S)
+_SCRIPT_EXTS = (".py", ".sh", ".bash")
+_JS_RUNNERS = frozenset({"npm", "pnpm", "yarn"})
+_PYTHON_HEAD_RE = re.compile(r"^python[0-9.]*$")
+_SHELL_HEADS = frozenset({"bash", "sh", "zsh", "source"})
 
 
 def _is_placeholder(token: str) -> bool:
@@ -147,8 +155,81 @@ def _claims_from_line(
     return claims, cwd_changed, heredoc
 
 
-def extract_claims(readme_path: Path) -> list[Claim]:
-    """Extract shell-command claims from a Markdown README's fenced code blocks.
+def _prose_blocks(lines: list[str]) -> list[tuple[int, list[str]]]:
+    """Return (first line index, lines) for each paragraph outside code fences."""
+    blocks: list[tuple[int, list[str]]] = []
+    current: list[str] = []
+    start = 0
+    fence: tuple[str, int] | None = None
+
+    def flush() -> None:
+        """Close the paragraph being collected, if any."""
+        nonlocal current
+        if current:
+            blocks.append((start, current))
+        current = []
+
+    for index, line in enumerate(lines):
+        if fence is not None:
+            if _is_closing_fence(line, *fence):
+                fence = None
+            continue
+        opening = _FENCE_OPEN_RE.match(line)
+        if opening:
+            flush()
+            fence = (opening.group(1)[0], len(opening.group(1)))
+            continue
+        if not line.strip():
+            flush()
+            continue
+        if not current:
+            start = index
+        current.append(line)
+    flush()
+    return blocks
+
+
+def _inline_eligible(claim: Claim, entry_points: frozenset[str]) -> bool:
+    """Return True if an inline span clearly reads as a command worth verifying."""
+    head, args = claim.head, claim.args
+    if head in {"make", "gmake"}:
+        return bool(args)
+    if head in _JS_RUNNERS:
+        return len(args) >= 2 and args[0] in {"run", "run-script"}
+    if head == "docker":
+        return len(args) >= 2 and args[0] == "compose"
+    if head == "docker-compose":
+        return bool(args)
+    if _PYTHON_HEAD_RE.match(head) or head in _SHELL_HEADS:
+        return any(arg.endswith(_SCRIPT_EXTS) for arg in args)
+    if head.startswith("./"):
+        return head.endswith(_SCRIPT_EXTS)
+    if head in entry_points:
+        return bool(args) and args[0].startswith("-")
+    return False
+
+
+def _inline_claims(
+    lines: list[str], readme_path: Path, entry_points: frozenset[str]
+) -> list[Claim]:
+    """Extract claims from inline code spans that clearly read as commands."""
+    claims: list[Claim] = []
+    for start, block in _prose_blocks(lines):
+        if block[0].strip() == IGNORE_MARKER:
+            continue
+        text = "\n".join(block)
+        for match in _INLINE_SPAN_RE.finditer(text):
+            span = " ".join(match.group(2).split())
+            line_number = start + 1 + text.count("\n", 0, match.start())
+            found, _, _ = _claims_from_line(span, readme_path, line_number, False)
+            claims.extend(c for c in found if _inline_eligible(c, entry_points))
+    return claims
+
+
+def extract_claims(
+    readme_path: Path, entry_points: frozenset[str] | None = None
+) -> list[Claim]:
+    """Extract shell-command claims from a Markdown README.
 
     Only fences tagged ``bash``, ``sh``, ``shell``, ``zsh``, ``console`` (or
     untagged) are read. Prompts (``$ ``), backslash continuations,
@@ -157,10 +238,20 @@ def extract_claims(readme_path: Path) -> list[Claim]:
     a block (or a single command) preceded by ``<!-- readme-drift: ignore -->``
     is skipped.
 
+    Inline code spans in prose are read too, but only when they clearly are
+    commands: ``make <target>``, ``npm|pnpm|yarn run <script>``,
+    ``docker compose ...``, a Python or shell script with a file extension, or
+    one of the project's own commands followed by a flag. A span may continue
+    over several lines of a paragraph. A paragraph whose first line is the
+    ignore marker is skipped.
+
     Parameters
     ----------
     readme_path : Path
         README file to read.
+    entry_points : frozenset[str] or None, optional
+        Names of the project's console scripts, so ``` `mytool --flag` ``` in
+        prose counts as a command; None disables that case.
 
     Returns
     -------
@@ -226,4 +317,5 @@ def extract_claims(readme_path: Path) -> list[Claim]:
             while i < len(lines) and lines[i].strip() != heredoc:
                 i += 1
             i += 1
-    return claims
+    claims.extend(_inline_claims(lines, readme_path, entry_points or frozenset()))
+    return sorted(claims, key=lambda claim: claim.line_number)

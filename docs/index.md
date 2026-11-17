@@ -84,7 +84,7 @@ Names are matched in backtick spans, as plain text, and inside ` ```mermaid ` bl
 
 ### README commands (opt-in)
 
-With `--verify`, shell commands in README code blocks are checked against names the repo owns — `make` targets, `package.json` scripts, compose services, paths, local modules and the project's own CLI flags. See [Usage → CLI reference](usage/cli-reference.md#-verify).
+With `--verify`, shell commands in README code blocks and inline code spans are checked against names the repo owns — `make` targets, `package.json` scripts, compose services, paths, local modules and the project's own CLI flags. See [Usage → CLI reference](usage/cli-reference.md#-verify).
 
 ## What it doesn't catch
 

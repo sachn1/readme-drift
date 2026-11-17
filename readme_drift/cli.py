@@ -231,7 +231,7 @@ class _ConfigCommand(click.Command):
     is_flag=True,
     default=False,
     help=(
-        "Also verify shell commands in README code blocks against the repo "
+        "Also verify shell commands in README code blocks and inline code spans against the repo "
         "(Makefile targets, package.json scripts, compose services, paths, "
         "own CLI flags). Scans every README in full, not just the diff."
     ),

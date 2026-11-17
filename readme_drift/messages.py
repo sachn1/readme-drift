@@ -126,7 +126,7 @@ def suppressed_hint(count: int) -> str:
 
 # -- Claim verification (--verify) --------------------------------------------
 
-VERIFY_NO_CLAIMS = f"{PREFIX} verify: no shell commands found in README code blocks."
+VERIFY_NO_CLAIMS = f"{PREFIX} verify: no shell commands found in README code blocks or inline code spans."
 VERIFY_FIX_ADVICE = (
     "  → Fix the README, or put <!-- readme-drift: ignore --> above a command "
     "that is intentionally different."

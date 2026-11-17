@@ -158,3 +158,85 @@ def test_unparseable_line_is_skipped(tmp_path):
     """A line with an unbalanced quote yields no claim but does not stop parsing."""
     claims = _claims(tmp_path, "```bash\necho 'oops\nmake ok\n```\n")
     assert _raws(claims) == ["make ok"]
+
+
+# --- inline code spans ------------------------------------------------------
+
+
+def test_inline_make_span_is_a_claim_with_its_line_number(tmp_path):
+    """A make command in an inline span becomes a claim on the right line."""
+    claims = _claims(tmp_path, "# Demo\n\nRun `make build` to package it.\n")
+    assert _raws(claims) == ["make build"]
+    assert claims[0].line_number == 3
+
+
+def test_inline_span_continued_over_two_lines_is_read(tmp_path):
+    """A span that wraps onto the next line is joined into one command."""
+    claims = _claims(tmp_path, "Use `make\nmulti-target` here.\n")
+    assert _raws(claims) == ["make multi-target"]
+    assert claims[0].line_number == 1
+
+
+def test_inline_double_backtick_span_is_read(tmp_path):
+    """A span delimited by double backticks is read like a single one."""
+    assert _raws(_claims(tmp_path, "Use ``make lint`` now.\n")) == ["make lint"]
+
+
+def test_inline_package_runners_docker_compose_and_scripts_are_read(tmp_path):
+    """npm run, docker compose and script paths are recognised inline."""
+    text = (
+        "`npm run lint-docs`, `yarn run build`, `docker compose up web`, "
+        "`python scripts/x.py`, `bash deploy.sh`, `./run.sh`.\n"
+    )
+    assert _raws(_claims(tmp_path, text)) == [
+        "npm run lint-docs",
+        "yarn run build",
+        "docker compose up web",
+        "python scripts/x.py",
+        "bash deploy.sh",
+        "./run.sh",
+    ]
+
+
+def test_inline_spans_that_are_not_clearly_commands_are_ignored(tmp_path):
+    """Names, versions and bare tool names in prose are not commands."""
+    text = (
+        "The `build` target, `python 3.11`, `make`, `npm run <script>`, "
+        "`yarn lint`, `docker run -it x`, `pip install foo`, `Client.connect`.\n"
+    )
+    assert _claims(tmp_path, text) == []
+
+
+def test_inline_own_command_counts_only_with_a_flag(tmp_path):
+    """A project console script in prose is a claim only when followed by a flag."""
+    path = tmp_path / "README.md"
+    path.write_text("Run `mytool --verify`, or just `mytool`.\n", encoding="utf-8")
+    claims = extract_claims(path, frozenset({"mytool"}))
+    assert _raws(claims) == ["mytool --verify"]
+    assert extract_claims(path) == []
+
+
+def test_text_inside_fences_is_not_read_as_inline_spans(tmp_path):
+    """A backticked mention inside a code block is not picked up as prose."""
+    claims = _claims(tmp_path, "```bash\n# later, `make hidden`\nmake lint\n```\n")
+    assert _raws(claims) == ["make lint"]
+
+
+def test_inline_ignore_marker_skips_its_paragraph(tmp_path):
+    """A paragraph starting with the ignore marker is not checked."""
+    text = f"{IGNORE_MARKER}\nRun `make skipped`.\n\nRun `make checked`.\n"
+    assert _raws(_claims(tmp_path, text)) == ["make checked"]
+
+
+def test_inline_and_block_claims_are_ordered_by_line(tmp_path):
+    """Claims from code blocks and prose come back in README order."""
+    text = "```bash\nmake second\n```\n\nThen `make third`.\n"
+    claims = _claims(tmp_path, "Start with `make first`.\n\n" + text)
+    assert _raws(claims) == ["make first", "make second", "make third"]
+    assert [c.line_number for c in claims] == [1, 4, 7]
+
+
+def test_inline_chain_in_one_span_yields_each_command(tmp_path):
+    """Several commands chained inside one span are each a claim."""
+    claims = _claims(tmp_path, "Run `make lint && make test`.\n")
+    assert _raws(claims) == ["make lint", "make test"]

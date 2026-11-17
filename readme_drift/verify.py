@@ -38,6 +38,6 @@ def run_verify(
     facts = RepoFacts(root)
     results: list[ClaimResult] = []
     for readme in readmes:
-        for claim in extract_claims(readme):
+        for claim in extract_claims(readme, frozenset(facts.entry_points())):
             results.extend(verify_claim(claim, facts))
     return VerifyResult(results=results, readme_paths=readmes)

@@ -136,7 +136,7 @@ First-use guidance.
 
 ## Unreleased — Claim verification
 
-- `--verify` (opt-in): claim verification for shell commands in README code blocks. Verifies repo-owned names only — `Makefile` targets, `package.json` scripts, compose services, paths and local modules, and the project's own console-script options (read statically). Three outcomes (verified / broken / unverifiable); only broken fails. `verify` config key; `<!-- readme-drift: ignore -->` opt-out.
+- `--verify` (opt-in): claim verification for shell commands in README code blocks and inline code spans. Verifies repo-owned names only — `Makefile` targets, `package.json` scripts, compose services, paths and local modules, and the project's own console-script options (read statically). Three outcomes (verified / broken / unverifiable); only broken fails. `verify` config key; `<!-- readme-drift: ignore -->` opt-out.
 
 ---
 
@@ -193,7 +193,7 @@ See the [project review](project-review.md) for the full keep / change / add / o
 
 ## Known gaps (documented in [scenarios](scenarios.md))
 
-- Commands whose name is on the noise list (`make build`, `make lint`, `npm run build`) are missed when the target is removed, because the surrounding backtick span does not start with the name.
+- In diff mode, commands whose name is on the noise list (`make build`, `make lint`, `npm run build`) are missed when the target is removed, because the surrounding backtick span does not start with the name. `--verify` closes this for commands in code blocks and inline spans; diff mode alone still misses it.
 - A backtick span that merely starts with a removed name (`` `connection_pool` `` for `connect`) is flagged.
 
 ---

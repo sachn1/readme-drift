@@ -313,6 +313,22 @@ SCENARIOS = {
         [("Console.print", "removed")],
         0,
     ),
+    "py-generated-docs-directive-ignored": (
+        {"client.py": "def send_payload(data):\n    pass\n"},
+        {"client.py": "def send_payload(data, encoding):\n    pass\n"},
+        ["::: client.send_payload\n"],
+        {},
+        [],
+        0,
+    ),
+    "py-generated-directive-next-to-hand-written-text": (
+        {"client.py": "def send_payload(data):\n    pass\n"},
+        {"client.py": "def send_payload(data, encoding):\n    pass\n"},
+        ["::: client.send_payload\n\nCall `send_payload(data)` first.\n"],
+        {},
+        [("send_payload", "signature_changed")],
+        0,
+    ),
     # -- Backtick spans match the whole name, not a prefix ------------------------
     "backtick-prefix-is-not-a-match": (
         {"client.py": PY_CONNECT},

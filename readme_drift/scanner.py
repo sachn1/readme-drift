@@ -151,6 +151,9 @@ def _instance_pattern(bare_name: str) -> re.Pattern[str] | None:
     return re.compile(rf"(?<![\w])(?:{alternatives})\.{re.escape(method)}\s*\(")
 
 
+# mkdocstrings (``::: pkg.name``) and Sphinx (``.. autofunction:: pkg.name``)
+# pull API docs from the code, so those lines can never be stale text.
+_GENERATED_RE = re.compile(r"^\s*(?::::|\.\.\s+auto\w*::)")
 _FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
 _INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
 _COMMENT_RE = re.compile(r"(^|\s)#.*$")
@@ -209,6 +212,8 @@ def _search_lines(
     matches: list[ReadmeMatch] = []
 
     for line_num, line in enumerate(lines, start=1):
+        if _GENERATED_RE.match(line):
+            continue
         match = None
         for pattern in patterns:
             match = pattern.search(line)

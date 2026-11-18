@@ -511,3 +511,48 @@ def test_instance_matching_applies_only_to_class_method_symbols(tmp_path):
     readme = _readme(tmp_path, "console.print(x)\n")
     hits = scan_readme_for_symbols(readme, ["console.print"], plain_text=False)
     assert hits == {}
+
+
+# --- generated documentation directives ---------------------------------------
+
+
+def _generated_hits(tmp_path, text, symbol="send_payload"):
+    """Return matches for a symbol with plain-text matching on."""
+    readme = _readme(tmp_path, text)
+    return scan_readme_for_symbols(readme, [symbol]).get(symbol, [])
+
+
+def test_mkdocstrings_directive_is_ignored(tmp_path):
+    """`::: pkg.send_payload` is generated from the code."""
+    assert _generated_hits(tmp_path, "::: pkg.send_payload\n") == []
+
+
+def test_sphinx_autodoc_directives_are_ignored(tmp_path):
+    """Sphinx .. auto...:: directives are generated from the code."""
+    text = (
+        ".. autofunction:: pkg.send_payload\n"
+        ".. autoclass:: pkg.send_payload\n"
+        ".. automethod:: pkg.send_payload\n"
+    )
+    assert _generated_hits(tmp_path, text) == []
+
+
+def test_indented_generated_directive_is_ignored(tmp_path):
+    """An indented directive, as inside a block, is still generated."""
+    assert _generated_hits(tmp_path, "   .. automethod:: Client.send_payload\n") == []
+
+
+def test_hand_written_line_next_to_a_directive_still_matches(tmp_path):
+    """Only the directive line is skipped, not the rest of the file."""
+    text = "::: pkg.send_payload\n\nCall `send_payload(data)` first.\n"
+    assert [m.line_number for m in _generated_hits(tmp_path, text)] == [3]
+
+
+def test_triple_colon_inside_prose_is_not_a_directive(tmp_path):
+    """Only a line that starts with the marker is a directive."""
+    assert _generated_hits(tmp_path, "see send_payload ::: here\n")
+
+
+def test_non_auto_rst_directive_is_still_scanned(tmp_path):
+    """A hand-written directive such as .. note:: is ordinary text."""
+    assert _generated_hits(tmp_path, ".. note:: send_payload is slow\n")

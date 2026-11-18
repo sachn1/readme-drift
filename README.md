@@ -129,6 +129,8 @@ A backtick span matches only the whole name: `` `connect(host)` `` and `` `Clien
 
 A method symbol `Console.print` is also matched by an instance call written with the lowercase class name, such as `console.print(...)`.
 
+Lines that pull in generated API docs (`::: pkg.name` for mkdocstrings, `.. autofunction:: pkg.name` and the other Sphinx `.. auto…::` directives) are ignored, because they are rebuilt from the code and cannot go stale.
+
 Practical implication: if a public function, class, or config key is mentioned in prose without backticks (e.g. "call connect to open a session" instead of "call `` `connect` `` to open a session"), a rename of that symbol may pass the hook silently. This is a real detection gap, not a bug — treat backtick-wrapping your public API references as the thing that makes the hook actually work, not just a style preference.
 
 If you're starting from scratch, `readme-drift --init` creates a bare-bones `README.md` with template subheadings (Installation, Usage, API Reference, License) and a reminder comment about backticks. It does not scan your code or generate documentation — it only refuses to run if a non-empty README already exists, so it's safe to run once and won't clobber real content.

@@ -89,6 +89,51 @@ def test_root_readme_is_global(tmp_path):
     assert _where(result) == {tmp_path.name + "/README.md"}
 
 
+def test_nested_readme_covers_the_root_makefile_it_tells_you_to_run(tmp_path):
+    """A service README that says `make build` is checked against the root Makefile."""
+    result = _repo(
+        tmp_path,
+        {
+            "Makefile": "generate-protobuf:\n\techo x\n",
+            "src/accounting/README.md": "```sh\nmake generate-protobuf\n```\n",
+        },
+        {"Makefile": "other:\n\techo x\n"},
+    )
+    assert "generate-protobuf" in _flagged(result)
+
+
+def test_nested_readme_covers_the_root_compose_file(tmp_path):
+    """A service README that runs docker compose is checked against the root compose file."""
+    result = _repo(
+        tmp_path,
+        {
+            "compose.yaml": "services:\n  cart:\n    image: c\n",
+            "src/cart/README.md": "```sh\ndocker compose build cart\n```\n",
+        },
+        {"compose.yaml": "services:\n  basket:\n    image: c\n"},
+    )
+    assert "cart" in _flagged(result)
+
+
+def test_nested_readme_covers_files_in_a_parent_folder(tmp_path):
+    """A file directly in a folder above the README counts, a sibling subtree does not."""
+    result = _repo(
+        tmp_path,
+        {
+            "services/shared.yaml": "settings:\n  retries: 3\n",
+            "services/cart/README.md": "```yaml\nretries: 3\n```\n",
+            "services/search/other.yaml": "settings:\n  retries: 3\n",
+        },
+        {
+            "services/shared.yaml": "settings:\n  attempts: 3\n",
+            "services/search/other.yaml": "settings:\n  attempts: 3\n",
+        },
+    )
+    assert "retries" in _flagged(result)
+    # Only the parent folder's file reaches services/cart; the sibling's does not.
+    assert {f.change.file for f in result.findings} == {"services/shared.yaml"}
+
+
 def test_nested_readme_still_fires_on_an_exact_backtick_reference_elsewhere(tmp_path):
     """A distinctive name in a backtick span is stale wherever the change happened."""
     result = _repo(

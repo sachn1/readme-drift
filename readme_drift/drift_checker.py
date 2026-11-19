@@ -387,12 +387,17 @@ _STRONG_MIN_LENGTH = 4
 
 
 def _readme_in_scope(readme: Path, changed_file: str, resolved_root: Path) -> bool:
-    """Return True if a README covers a changed file: it is global or in an enclosing folder."""
+    """Return True if a README covers a changed file: global, in its subtree, or in a folder above it."""
     try:
         folder = readme.resolve().parent.relative_to(resolved_root)
     except ValueError:
         return True
-    return folder == Path(".") or Path(changed_file).is_relative_to(folder)
+    changed = Path(changed_file)
+    return (
+        folder == Path(".")
+        or changed.is_relative_to(folder)
+        or changed.parent in folder.parents
+    )
 
 
 def _is_strong_match(match: ReadmeMatch, name: str, blocklist: frozenset[str]) -> bool:
@@ -406,8 +411,9 @@ def _is_strong_match(match: ReadmeMatch, name: str, blocklist: frozenset[str]) -
 
 
 # A README in the repository root, or any README named explicitly, is global. A
-# README in a subfolder covers changes under that folder, plus exact backtick
-# references to a distinctive name from anywhere in the repository.
+# README in a subfolder covers changes under that folder and files in the folders
+# above it (a root Makefile or compose file it tells you to run), plus exact
+# backtick references to a distinctive name from anywhere in the repository.
 def _within_scope(
     matches: list[ReadmeMatch],
     change: SymbolChange,

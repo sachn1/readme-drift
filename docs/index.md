@@ -83,7 +83,7 @@ See [How it works in practice](scenarios.md) for concrete examples, including wh
 
 Names are matched in backtick spans, as plain text, and inside ` ```mermaid ` blocks that start with `classDiagram`. In a class diagram, matching follows the diagram's structure: a class name matches that class, and `Class.method` matches only inside that class's block, so short or everyday names like `run` still work. Functions and config keys never match through a diagram. Other mermaid diagram types (flowcharts and so on) are ordinary prose. Config keys and Makefile targets are matched only inside backticks or code blocks, never in plain prose.
 
-A README in a subfolder is checked only against changes under that folder, and the root README against every change. An exact backtick reference to a distinctive name (four or more characters, not a common word) is still checked from anywhere. READMEs named with `--readme-paths` are always global.
+A README in a subfolder is checked against changes under that folder and files in the folders above it (such as the root `Makefile`), not other services' folders, and the root README against every change. An exact backtick reference to a distinctive name (four or more characters, not a common word) is still checked from anywhere. READMEs named with `--readme-paths` are always global.
 
 ### README commands (opt-in)
 

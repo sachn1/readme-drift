@@ -69,6 +69,7 @@ See [How it works in practice](scenarios.md) for concrete examples, including wh
 | Tool section removed | ✅ |
 | Key renamed at same level | ✅ reported as remove + add |
 | Value changed, key unchanged | ➖ not tracked |
+| Lockfile changed (`package-lock.json`, `pnpm-lock.yaml`, `poetry.lock`, ...) | ➖ ignored (generated) |
 
 ### `Makefile` / `makefile` / `GNUmakefile`
 

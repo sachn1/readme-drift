@@ -265,6 +265,7 @@ More scenarios, including what it misses and where it can raise false alarms, ar
 | Tool section removed (`[tool.black]` → gone) | ✅ |
 | Key renamed at same level | ✅ (reported as remove + add) |
 | Value changed, key unchanged | ➖ not tracked |
+| Lockfile changed (`package-lock.json`, `pnpm-lock.yaml`, `poetry.lock`, `uv.lock`, `Cargo.lock`, `Pipfile.lock`, …) | ➖ ignored: generated, and a single `npm install` would produce thousands of meaningless names |
 
 ### `Makefile` / `makefile` / `GNUmakefile`
 

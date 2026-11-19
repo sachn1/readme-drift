@@ -307,3 +307,12 @@ def test_diff_added_not_flagged_as_stale():
         if c.name in fake_matches:
             findings.append(c)
     assert findings == []
+
+
+def test_lockfiles_are_not_diffed():
+    """A lockfile yields no changes, however many keys differ."""
+    old = '{"packages": {"a": {"version": "1"}, "b": {"version": "1"}}}'
+    new = '{"packages": {"c": {"version": "2"}}}'
+    assert diff_config(old, new, file="package-lock.json") == []
+    assert diff_config(old, new, file="frontend/package-lock.json") == []
+    assert diff_config(old, new, file="package.json") != []

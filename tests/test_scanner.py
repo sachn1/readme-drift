@@ -556,3 +556,75 @@ def test_triple_colon_inside_prose_is_not_a_directive(tmp_path):
 def test_non_auto_rst_directive_is_still_scanned(tmp_path):
     """A hand-written directive such as .. note:: is ordinary text."""
     assert _generated_hits(tmp_path, ".. note:: send_payload is slow\n")
+
+
+# --- scaling and the word pre-filter -----------------------------------------
+
+
+def test_scanning_many_symbols_against_many_readmes_is_fast(tmp_path):
+    """20,000 symbols against 50 READMEs of 200 lines finishes in a few seconds."""
+    import time
+
+    words = [f"word{i}" for i in range(400)]
+    readmes = []
+    for n in range(50):
+        path = tmp_path / f"README{n}.md"
+        lines = [
+            " ".join(words[(n * 7 + i * 3 + j) % 400] for j in range(8))
+            for i in range(200)
+        ]
+        lines[10] = "Call `needle_function` to start."
+        path.write_text("\n".join(lines), encoding="utf-8")
+        readmes.append(path)
+    symbols = [f"dependency_package_{i}" for i in range(20_000)] + ["needle_function"]
+
+    started = time.perf_counter()
+    found = [scan_readme_for_symbols(path, symbols) for path in readmes]
+    elapsed = time.perf_counter() - started
+
+    assert all(set(result) == {"needle_function"} for result in found)
+    # Linear scaling takes well under a second; the old per-symbol, per-line scan took
+    # minutes on this size. The generous bound keeps loaded CI machines from flaking.
+    assert elapsed < 8, f"took {elapsed:.1f}s"
+
+
+@pytest.mark.parametrize(
+    "symbol",
+    [
+        "connect",
+        "Client.connect",
+        "console.print",
+        "Console.print",
+        "scripts.build",
+        "lint-docs",
+        "pytest-cov",
+        "--verify",
+        "main()",
+        "Missing.thing",
+        "PROJECT_ID",
+        "nothing_here",
+    ],
+)
+def test_prefilter_never_changes_the_result(tmp_path, symbol):
+    """Skipping symbols whose words are absent gives the same matches as scanning each one."""
+    from readme_drift.scanner import _parse_class_diagrams, _search_lines
+
+    text = (
+        "Call `Client.connect(host)` or connect to it.\n"
+        "Run `console.print(x)` and set `PROJECT_ID` first.\n"
+        "```toml\n[scripts]\nbuild = 'x'\n```\n"
+        "Use `lint-docs` and `pytest-cov`; the flag is --verify; main() runs.\n"
+        "```mermaid\nclassDiagram\n    class Client {\n        +connect()\n    }\n```\n"
+    )
+    readme = tmp_path / "README.md"
+    readme.write_text(text, encoding="utf-8")
+    lines = text.splitlines()
+    brute = _search_lines(
+        lines,
+        readme,
+        symbol,
+        plain_text=True,
+        diagrams=_parse_class_diagrams(lines),
+    )
+    fast = scan_readme_for_symbols(readme, [symbol]).get(symbol, [])
+    assert [m.line_number for m in fast] == [m.line_number for m in brute]

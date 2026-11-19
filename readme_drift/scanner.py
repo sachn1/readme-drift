@@ -182,6 +182,49 @@ def _fenced_code_lines(lines: list[str]) -> frozenset[int]:
     return frozenset(inside)
 
 
+_WORD_RE = re.compile(r"\w+")
+_SIMPLE_NAME_RE = re.compile(r"[\w.\-]+")
+
+
+def _token_set(lines: list[str]) -> frozenset[str]:
+    """Return every word in a README, so symbols that cannot match are skipped cheaply."""
+    return frozenset(_WORD_RE.findall("\n".join(lines)))
+
+
+# A symbol can only match if every word it is made of appears in the README, so
+# this never rejects a real match. Names with unusual characters, and the
+# instance-style form of Class.method (console.print), are handled explicitly.
+# The words a symbol needs are the same for every README, so they are cached.
+@lru_cache(maxsize=65536)
+def _required_words(
+    symbol: str,
+) -> tuple[frozenset[str], frozenset[str], frozenset[str]] | None:
+    """Return (words, instance receivers, method) a symbol needs, or None to always scan."""
+    name = _normalize(symbol)
+    if not _SIMPLE_NAME_RE.fullmatch(name):
+        return None
+    pieces = frozenset(_WORD_RE.findall(name))
+    if not pieces:
+        return None
+    instance = _CLASS_METHOD_RE.match(name)
+    if not instance:
+        return pieces, frozenset(), frozenset()
+    cls, method = instance.groups()
+    receivers = frozenset({cls.lower(), _CAMEL_BREAK_RE.sub("_", cls).lower()})
+    return pieces, receivers, frozenset({method})
+
+
+def _could_match(symbol: str, tokens: frozenset[str]) -> bool:
+    """Return False only when a symbol certainly appears nowhere in a README."""
+    required = _required_words(symbol)
+    if required is None:
+        return True
+    words, receivers, method = required
+    if words <= tokens:
+        return True
+    return bool(receivers) and method <= tokens and not receivers.isdisjoint(tokens)
+
+
 def _code_context_match(
     name: str, line: str, line_number: int, code_lines: frozenset[int]
 ) -> re.Match[str] | None:
@@ -335,8 +378,11 @@ def scan_readme_for_symbols(
     _code_only = code_only_symbols or set()
     code_lines = _fenced_code_lines(lines) if _code_only else frozenset()
 
+    tokens = _token_set(lines)
     results: dict[str, list[ReadmeMatch]] = {}
     for symbol in symbols:
+        if not _could_match(symbol, tokens):
+            continue
         restricted = symbol in _backtick_only
         code_only = symbol in _code_only and not restricted
         use_plain = plain_text and not restricted and not code_only

@@ -5,6 +5,7 @@ import ast
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import time
@@ -29,6 +30,7 @@ REPOS = [
     "expressjs/express",
 ]
 CLONE_DEPTH = 400
+COMMIT_TIMEOUT_SECONDS = int(os.environ.get("BENCH_COMMIT_TIMEOUT", "10"))
 REPLAY_COMMITS = 150
 HOOK_COMMITS = 4
 INJECTIONS_PER_KIND = 6
@@ -67,6 +69,22 @@ def _clone(slug: str, dest: Path) -> None:
         check=True,
         timeout=1800,
     )
+
+
+def _with_timeout(seconds: int, fn):
+    """Call fn(), raising TimeoutError if it runs longer than the given seconds."""
+
+    def _alarm(_signum, _frame):
+        """Convert the alarm signal into a TimeoutError."""
+        raise TimeoutError(f"exceeded {seconds}s")
+
+    previous = signal.signal(signal.SIGALRM, _alarm)
+    signal.alarm(seconds)
+    try:
+        return fn()
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, previous)
 
 
 def _reset(repo: Path) -> None:
@@ -242,9 +260,18 @@ def _replay_phase(repo: Path, readme_paths: list[str] | None = None) -> dict:
                 continue
             started = time.perf_counter()
             try:
-                result = run_check(
-                    staged=True, repo_root=repo, readme_paths=readme_paths
+                result = _with_timeout(
+                    COMMIT_TIMEOUT_SECONDS,
+                    lambda: run_check(
+                        staged=True, repo_root=repo, readme_paths=readme_paths
+                    ),
                 )
+            except TimeoutError as exc:
+                rows.append(
+                    {"sha": sha[:10], "error": f"timeout: {exc}", "files": changed[:8]}
+                )
+                _reset(repo)
+                continue
             except Exception as exc:  # noqa: BLE001 - record and keep going
                 rows.append({"sha": sha[:10], "error": repr(exc)[:200]})
                 continue

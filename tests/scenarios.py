@@ -471,6 +471,17 @@ VERIFY_SCENARIOS = {
             ("unverifiable", "make anything"),
         ],
     ),
+    "verify-layered-compose": (
+        {
+            "compose.yaml": "services:\n  db:\n    image: postgres\n",
+            "compose.override.yml": "services:\n  mailpit:\n    image: axllent/mailpit\n",
+        },
+        f"{FENCE}bash\ndocker compose up -d db mailpit\n{FENCE}\n",
+        [
+            ("verified", "docker compose up -d db mailpit"),
+            ("verified", "docker compose up -d db mailpit"),
+        ],
+    ),
     "verify-ignores-command-output": (
         {"Makefile": "lint:\n\techo lint\n"},
         f"{FENCE}\nmake lint\n{FENCE}\n\nOutput of kubectl apply:\n\n"

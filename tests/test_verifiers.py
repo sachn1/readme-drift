@@ -276,6 +276,55 @@ def test_compose_missing_file_option_is_broken(tmp_path):
     assert B in _statuses(results)
 
 
+def test_compose_service_in_an_override_file_is_verified(tmp_path):
+    """A service defined only in compose.override.yml counts, since Compose merges it."""
+    _write(tmp_path, "compose.yml", COMPOSE)
+    _write(tmp_path, "compose.override.yml", "services:\n  mailpit:\n    image: m\n")
+    results = _verify(tmp_path, "docker", "compose", "up", "-d", "db", "mailpit")
+    assert _statuses(results) == [V, V]
+
+
+def test_compose_services_across_layered_files_are_verified(tmp_path):
+    """Services spread over compose.yaml, compose.full.yaml and compose.agent.yaml all count."""
+    _write(tmp_path, "compose.yaml", COMPOSE)
+    _write(tmp_path, "compose.full.yaml", "services:\n  accounting:\n    image: a\n")
+    _write(tmp_path, "compose.agent.yaml", "services:\n  chatbot:\n    image: c\n")
+    results = _verify(
+        tmp_path, "docker", "compose", "up", "web", "accounting", "chatbot"
+    )
+    assert _statuses(results) == [V, V, V]
+
+
+def test_compose_docker_compose_prefixed_layers_are_read(tmp_path):
+    """docker-compose.<name>.yml layers are read too."""
+    _write(tmp_path, "docker-compose.yml", COMPOSE)
+    _write(tmp_path, "docker-compose.prod.yml", "services:\n  worker:\n    image: w\n")
+    assert _statuses(_verify(tmp_path, "docker-compose", "up", "worker")) == [V]
+
+
+def test_compose_service_missing_from_every_layer_is_still_broken(tmp_path):
+    """A service no compose file defines is broken even when several files exist."""
+    _write(tmp_path, "compose.yaml", COMPOSE)
+    _write(tmp_path, "compose.override.yml", "services:\n  mailpit:\n    image: m\n")
+    assert _statuses(_verify(tmp_path, "docker", "compose", "up", "ghost")) == [B]
+
+
+def test_compose_explicit_file_option_does_not_read_other_layers(tmp_path):
+    """-f names the files in use, so a service in another layer is not defined."""
+    _write(tmp_path, "compose.yaml", COMPOSE)
+    _write(tmp_path, "compose.full.yaml", "services:\n  accounting:\n    image: a\n")
+    results = _verify(
+        tmp_path, "docker", "compose", "-f", "compose.yaml", "up", "accounting"
+    )
+    assert B in _statuses(results)
+
+
+def test_compose_without_any_file_stays_unverifiable(tmp_path):
+    """No compose file anywhere means nothing can be checked."""
+    results = _verify(tmp_path, "docker", "compose", "up", "web")
+    assert _statuses(results) == [U]
+
+
 def test_compose_include_makes_missing_service_unverifiable(tmp_path):
     """A compose include may hide more services."""
     _write(tmp_path, "compose.yml", "include:\n  - other.yml\nservices:\n  web: {}\n")

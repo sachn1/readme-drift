@@ -29,6 +29,7 @@ _COMPOSE_NAMES = (
     "docker-compose.yaml",
     "docker-compose.yml",
 )
+_COMPOSE_GLOBS = ("compose*.y*ml", "docker-compose*.y*ml")
 _MAKE_RULE_RE = re.compile(r"^([^\s#:=][^#:=]*):(?!=)")
 _MAKE_SPECIAL = frozenset(
     {".PHONY", ".DEFAULT", ".SUFFIXES", ".PRECIOUS", ".SILENT", ".ONESHELL"}
@@ -232,6 +233,14 @@ class RepoFacts:
         scripts = data.get("scripts") if isinstance(data, dict) else None
         return set(scripts) if isinstance(scripts, dict) else set()
 
+    def _compose_files(self) -> list[Path]:
+        """Return every layered compose file in the base directory, standard names first."""
+        found: set[Path] = {self.root / name for name in _COMPOSE_NAMES}
+        for pattern in _COMPOSE_GLOBS:
+            found.update(self.root.glob(pattern))
+        standard = {self.root / name for name in _COMPOSE_NAMES}
+        return sorted(found, key=lambda p: (p not in standard, p.name))
+
     def compose_services(
         self, files: list[Path] | None = None
     ) -> tuple[set[str], bool, str] | None:
@@ -240,8 +249,10 @@ class RepoFacts:
         Parameters
         ----------
         files : list[Path] or None, optional
-            Compose files to read; defaults to the standard names in the
-            repository root.
+            Compose files to read. By default every compose file in the base
+            directory counts (``compose.yaml`` plus layered files such as
+            ``compose.override.yml`` or ``compose.full.yaml``), because Compose
+            merges them.
 
         Returns
         -------
@@ -249,7 +260,7 @@ class RepoFacts:
             Service names, whether an ``include`` may hide more services, and
             the file names read.
         """
-        candidates = files or [self.root / n for n in _COMPOSE_NAMES]
+        candidates = files or self._compose_files()
         services: set[str] = set()
         uncertain = False
         names: list[str] = []

@@ -146,7 +146,7 @@ By default `readme-drift` reacts to code changes. With `--verify` it also reads 
 |---|---|
 | `make lint` | targets in the `Makefile` |
 | `npm run build`, `yarn run x`, `pnpm run x` | `scripts` in `package.json` |
-| `docker compose up web`, `docker compose -f ci/compose.yml run app` | services and files in the compose file |
+| `docker compose up web`, `docker compose -f ci/compose.yml run app` | services in the compose files (`compose.yaml` plus layered files such as `compose.override.yml`), and the named files |
 | `readme-drift --base-ref …` (your own console script) | long options defined by the command, read statically from `[tool.poetry.scripts]` / `[project.scripts]` |
 | `python scripts/x.py`, `python -m pkg.mod`, `bash x.sh`, `./run.sh` | the file or local module exists |
 | `make -f x.mk`, `docker build -f F`, `kubectl apply -f x.yaml`, `helm … -f v.yaml` | the named file exists |

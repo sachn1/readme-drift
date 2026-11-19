@@ -301,12 +301,21 @@ def run_check(
             if key not in seen:
                 seen.add(key)
                 deduped.append(m)
-        readme_matches = deduped
+        readme_matches, out_of_scope = _within_scope(
+            deduped, change, resolved_root, bool(readme_paths), _blocklist
+        )
+        shadow_in_scope, _ = _within_scope(
+            plain_text_shadow_matches.get(change.name, []),
+            change,
+            resolved_root,
+            bool(readme_paths),
+            frozenset(),
+        )
 
         in_readme = bool(readme_matches)
         on_allowlist = change.name in _allowlist
         suppressed = change.name in force_backtick_only and not in_readme
-        silently_missed = suppressed and change.name in plain_text_shadow_matches
+        silently_missed = suppressed and bool(shadow_in_scope)
         if silently_missed:
             silently_missed_symbols.add(change.name)
 
@@ -340,6 +349,8 @@ def run_check(
                     )
                 elif suppressed:
                     reason = "suppressed (noise filter, no backtick match)"
+                elif out_of_scope:
+                    reason = messages.OUT_OF_SCOPE_REASON
                 else:
                     reason = "not found in any README"
                 vlog.append(
@@ -370,6 +381,50 @@ def _symbols_from_changes(changes: list[SymbolChange]) -> list[str]:
 
 
 _COMMON_WORD_RE = re.compile(r"[a-z]+")
+# A nested README is checked against a change outside its folder only for an exact
+# backtick reference to a name at least this long.
+_STRONG_MIN_LENGTH = 4
+
+
+def _readme_in_scope(readme: Path, changed_file: str, resolved_root: Path) -> bool:
+    """Return True if a README covers a changed file: it is global or in an enclosing folder."""
+    try:
+        folder = readme.resolve().parent.relative_to(resolved_root)
+    except ValueError:
+        return True
+    return folder == Path(".") or Path(changed_file).is_relative_to(folder)
+
+
+def _is_strong_match(match: ReadmeMatch, name: str, blocklist: frozenset[str]) -> bool:
+    """Return True for an exact backtick reference to a distinctive name."""
+    return (
+        match.matched_text.startswith("`")
+        and len(name) >= _STRONG_MIN_LENGTH
+        and name not in blocklist
+        and name.lower() not in blocklist
+    )
+
+
+# A README in the repository root, or any README named explicitly, is global. A
+# README in a subfolder covers changes under that folder, plus exact backtick
+# references to a distinctive name from anywhere in the repository.
+def _within_scope(
+    matches: list[ReadmeMatch],
+    change: SymbolChange,
+    resolved_root: Path,
+    explicit_readmes: bool,
+    blocklist: frozenset[str],
+) -> tuple[list[ReadmeMatch], bool]:
+    """Keep the matches whose README covers the change and report whether any were dropped."""
+    if explicit_readmes:
+        return matches, False
+    kept = [
+        m
+        for m in matches
+        if _readme_in_scope(m.readme_path, change.file, resolved_root)
+        or _is_strong_match(m, change.name, blocklist)
+    ]
+    return kept, len(kept) < len(matches)
 
 
 def _is_config_change(change: SymbolChange) -> bool:

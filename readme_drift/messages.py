@@ -306,6 +306,13 @@ BACKTICK_TIP = f"""\
   This message is shown once per repository. Silence it with
   `tips = false` under [tool.readme-drift] or README_DRIFT_NO_TIPS=1."""
 
+# -- Locality (verbose log) ----------------------------------------------------
+
+OUT_OF_SCOPE_REASON = (
+    "mentioned only in READMEs of other folders (a README in a subfolder covers "
+    "changes under that folder; the root README covers everything)"
+)
+
 
 def survived_log(name: str) -> str:
     """Return the verbose line for a removed config key whose name lives on.

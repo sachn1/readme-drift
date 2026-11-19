@@ -288,6 +288,8 @@ More scenarios, including what it misses and where it can raise false alarms, ar
 
 Any file named `readme` (case-insensitive) with the extension `.md`, `.markdown`, `.rst`, `.txt`, or no extension is scanned. All README files in the repository are discovered recursively, including per-package READMEs in monorepos.
 
+**Each README covers its own folder.** A README in a subfolder (say `services/cart/README.md`) is checked only against changes under that folder, so a removed key in one service's config does not flag another service's README. The root README is global and is checked against every change, as is any README you name with `--readme-paths`. One exception keeps real drift from slipping through: an exact backtick reference to a distinctive name (at least four characters, not a common word) is checked wherever the change happened. Run with `--verbose` to see when a name was skipped because it only appeared in READMEs of other folders.
+
 Inside a README, names are matched in backtick spans, as plain text, and inside ` ```mermaid ` blocks that start with `classDiagram`. In a class diagram, matching follows the diagram's structure: a class name matches that class, and `Class.method` matches only inside that class's block, so short or everyday names like `run` still work. Functions and config keys never match through a diagram. Other mermaid diagram types (flowcharts and so on) are ordinary prose.
 
 The following directories are never searched:

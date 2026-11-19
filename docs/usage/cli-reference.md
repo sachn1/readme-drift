@@ -50,7 +50,7 @@ Track private (underscore-prefixed) Python symbols. Default: off.
 ## README targeting
 
 ### `--readme-paths PATH`
-Explicit README file to scan. Repeatable. When set, **disables recursive README discovery** entirely.
+Explicit README file to scan. Repeatable. When set, **disables recursive README discovery** entirely. Named READMEs are global: they are checked against every change, not only changes in their own folder.
 
 ```bash
 readme-drift --readme-paths README.md --readme-paths docs/API.md

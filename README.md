@@ -139,7 +139,7 @@ If you're starting from scratch, `readme-drift --init` creates a bare-bones `REA
 
 ## Verifying README commands (`--verify`)
 
-By default `readme-drift` reacts to code changes. With `--verify` it also reads the shell commands in your README's fenced code blocks (`bash`, `sh`, `shell`, `zsh`, `console`, or untagged) and commands in **inline code spans** (`` `make build` `` in a sentence, including a span that wraps onto the next line) when they clearly are commands: `make` with a target, `npm`/`pnpm`/`yarn run`, `docker compose`, a Python or shell script with a file extension, or your own command followed by a flag. It then checks that the names **your repository owns** still exist — across every README in full, not just the diff:
+By default `readme-drift` reacts to code changes. With `--verify` it also reads the shell commands in your README's fenced code blocks (`bash`, `sh`, `shell`, `zsh`, `console`, or untagged; in an untagged block only lines that start with `$ `, a path or a well-known command count, so pasted output such as `serviceaccount/x created` is ignored) and commands in **inline code spans** (`` `make build` `` in a sentence, including a span that wraps onto the next line) when they clearly are commands: `make` with a target, `npm`/`pnpm`/`yarn run`, `docker compose`, a Python or shell script with a file extension, or your own command followed by a flag. It then checks that the names **your repository owns** still exist — across every README in full, not just the diff:
 
 <!-- readme-drift: ignore -->
 | README says | Checked against |

@@ -19,7 +19,7 @@ _FENCE_OPEN_RE = re.compile(r"^\s*(`{3,}|~{3,})(.*)$")
 _SEPARATORS = frozenset({"&&", "||", ";", "|", "&", "(", ")"})
 _REDIRECT_RE = re.compile(r"^[<>&]+$")
 _ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
-_COMMAND_NAME_RE = re.compile(r"^[A-Za-z0-9_./+-]+$")
+_COMMAND_NAME_RE = re.compile(r"^[A-Za-z0-9_./+~-]+$")
 _ANGLE_PLACEHOLDER_RE = re.compile(r"<[^<>\s]+>")
 _WRAPPERS = frozenset({"sudo", "time", "nohup", "exec", "command"})
 _RUNNER_PREFIXES = frozenset({("poetry", "run"), ("uv", "run"), ("pipenv", "run")})
@@ -32,6 +32,58 @@ _SCRIPT_EXTS = (".py", ".sh", ".bash")
 _JS_RUNNERS = frozenset({"npm", "pnpm", "yarn"})
 _PYTHON_HEAD_RE = re.compile(r"^python[0-9.]*$")
 _SHELL_HEADS = frozenset({"bash", "sh", "zsh", "source"})
+
+# In an untagged fence a line is a command only when its first word is one of
+# these (or a path start, or one of the project's own commands). Everything else
+# in an untagged block is far more likely to be pasted output.
+_KNOWN_COMMANDS = frozenset(
+    {
+        "make",
+        "gmake",
+        "npm",
+        "yarn",
+        "pnpm",
+        "docker",
+        "docker-compose",
+        "bash",
+        "sh",
+        "zsh",
+        "git",
+        "kubectl",
+        "helm",
+        "skaffold",
+        "kustomize",
+        "gcloud",
+        "aws",
+        "az",
+        "terraform",
+        "curl",
+        "wget",
+        "cd",
+        "export",
+        "source",
+        "pip",
+        "pip3",
+        "uv",
+        "poetry",
+        "cargo",
+        "go",
+        "mvn",
+        "gradle",
+        "dotnet",
+        "java",
+        "node",
+        "npx",
+        "bun",
+        "flask",
+        "uvicorn",
+        "pytest",
+        "alembic",
+        "tox",
+        "nox",
+    }
+)
+_PATH_STARTS = ("./", "../", "/", "~/")
 
 
 def _is_placeholder(token: str) -> bool:
@@ -118,11 +170,34 @@ def _join_continuations(lines: list[str], index: int) -> tuple[str, int]:
     return text, index
 
 
+def _is_art(token: str) -> bool:
+    """Return True for a token with no letters or digits, such as ASCII art."""
+    return not re.search(r"[A-Za-z0-9]", token)
+
+
+def _is_plausible_head(head: str, strict: bool, entry_points: frozenset[str]) -> bool:
+    """Return True if a first word can be a command rather than output or art."""
+    if _is_art(head):
+        return False
+    if "/" in head and not head.startswith(_PATH_STARTS):
+        return False
+    if not strict:
+        return True
+    return (
+        head.startswith(_PATH_STARTS)
+        or head in _KNOWN_COMMANDS
+        or head in entry_points
+        or bool(_PYTHON_HEAD_RE.match(head))
+    )
+
+
 def _claims_from_line(
     text: str,
     readme_path: Path,
     line_number: int,
     cwd_changed: bool,
+    strict: bool = False,
+    entry_points: frozenset[str] = frozenset(),
 ) -> tuple[list[Claim], bool, str | None]:
     """Build claims from one logical line; return them, the cwd flag and heredoc."""
     tokens = _tokenize(text)
@@ -136,6 +211,7 @@ def _claims_from_line(
             not stripped
             or _is_placeholder(stripped[0])
             or not _COMMAND_NAME_RE.match(stripped[0])
+            or not _is_plausible_head(stripped[0], strict, entry_points)
         ):
             continue
         head = stripped[0]
@@ -232,7 +308,11 @@ def extract_claims(
     """Extract shell-command claims from a Markdown README.
 
     Only fences tagged ``bash``, ``sh``, ``shell``, ``zsh``, ``console`` (or
-    untagged) are read. Prompts (``$ ``), backslash continuations,
+    untagged) are read. In an untagged fence a line counts only if it has a
+    ``$`` prompt or starts with a path or a well-known command, so pasted
+    output is not mistaken for commands. A first word containing ``/`` is a
+    path only when it starts with ``./``, ``../``, ``/`` or ``~/``, and a word
+    with no letters or digits (ASCII art) is never a command. Prompts (``$ ``), backslash continuations,
     ``&&`` / ``;`` / ``|`` chains and redirections are handled. Placeholder
     tokens (``<name>``, ``$VAR``, ``...``) are dropped from the arguments, and
     a block (or a single command) preceded by ``<!-- readme-drift: ignore -->``
@@ -301,7 +381,8 @@ def extract_claims(
         if lang in _PROMPT_LANGS:
             if not stripped.startswith("$ "):
                 continue
-        if stripped.startswith("$ "):
+        prompted = stripped.startswith("$ ")
+        if prompted:
             stripped = stripped[2:]
         if stripped.startswith("#"):
             continue
@@ -310,7 +391,12 @@ def extract_claims(
             continue
 
         found, cwd_changed, heredoc = _claims_from_line(
-            stripped, readme_path, start, cwd_changed
+            stripped,
+            readme_path,
+            start,
+            cwd_changed,
+            strict=(lang == "" and not prompted),
+            entry_points=entry_points or frozenset(),
         )
         claims.extend(found)
         if heredoc is not None:

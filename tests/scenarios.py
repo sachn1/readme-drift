@@ -471,6 +471,13 @@ VERIFY_SCENARIOS = {
             ("unverifiable", "make anything"),
         ],
     ),
+    "verify-ignores-command-output": (
+        {"Makefile": "lint:\n\techo lint\n"},
+        f"{FENCE}\nmake lint\n{FENCE}\n\nOutput of kubectl apply:\n\n"
+        f"{FENCE}\nserviceaccount/adservice created\n16/16\n___________/\n"
+        f"Creating db ... done\n{FENCE}\n",
+        [("verified", "make lint")],
+    ),
 }
 
 

@@ -240,3 +240,59 @@ def test_inline_chain_in_one_span_yields_each_command(tmp_path):
     """Several commands chained inside one span are each a claim."""
     claims = _claims(tmp_path, "Run `make lint && make test`.\n")
     assert _raws(claims) == ["make lint", "make test"]
+
+
+# --- command output and ASCII art in code blocks ----------------------------
+
+
+def test_untagged_fence_output_lines_are_not_commands(tmp_path):
+    """Pasted kubectl and docker output in an untagged block is not read as commands."""
+    output = (
+        "serviceaccount/adservice created\n16/16\n5432/tcp\n___________/\n"
+        "Creating db ... done\nStep 1/5 : FROM x\nSuccessfully built abc\n"
+        "CONTAINER ID   IMAGE\n"
+    )
+    assert _claims(tmp_path, f"```\n{output}```\n") == []
+
+
+def test_untagged_fence_keeps_known_commands_paths_and_prompts(tmp_path):
+    """Known commands, path starts and prompted lines still count when untagged."""
+    text = "```\nmake lint\n./run.sh\n$ mytool build\nnpm run dev\n```\n"
+    assert _raws(_claims(tmp_path, text)) == [
+        "make lint",
+        "./run.sh",
+        "mytool build",
+        "npm run dev",
+    ]
+
+
+def test_untagged_fence_accepts_the_projects_own_commands(tmp_path):
+    """A console script of the project counts as a command in an untagged block."""
+    path = tmp_path / "README.md"
+    path.write_text("```\nmytool --verify\nrandomword here\n```\n", encoding="utf-8")
+    assert _raws(extract_claims(path, frozenset({"mytool"}))) == ["mytool --verify"]
+
+
+def test_tagged_fence_still_reads_unknown_first_words(tmp_path):
+    """A tagged shell block keeps reading lines whose first word is not a known command."""
+    claims = _claims(tmp_path, "```bash\nmytool build\n```\n")
+    assert _raws(claims) == ["mytool build"]
+
+
+def test_first_word_with_a_slash_is_a_path_only_with_a_path_start(tmp_path):
+    """In any fence, serviceaccount/x and 16/16 are skipped, ./x and ~/x are kept."""
+    text = (
+        "```bash\nserviceaccount/x created\n16/16\n./a.sh\n../b.sh\n"
+        "/usr/bin/c\n~/d.sh\n```\n"
+    )
+    assert _raws(_claims(tmp_path, text)) == [
+        "./a.sh",
+        "../b.sh",
+        "/usr/bin/c",
+        "~/d.sh",
+    ]
+
+
+def test_ascii_art_is_never_a_command(tmp_path):
+    """Lines made only of punctuation and underscores are not commands, even when tagged."""
+    assert _claims(tmp_path, "```bash\n___________/\n|__/ \\__\n```\n") == []
